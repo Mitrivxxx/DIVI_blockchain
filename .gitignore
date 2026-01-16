@@ -1,0 +1,80 @@
+########################################
+# SYSTEM / OS
+########################################
+.DS_Store
+Thumbs.db
+
+########################################
+# IDE / EDITORS
+########################################
+.vs/
+.idea/
+*.suo
+*.user
+*.userprefs
+*.sln.iml
+
+########################################
+# .NET / ASP.NET CORE
+########################################
+bin/
+obj/
+log/
+artifacts/
+*.pdb
+*.cache
+*.nupkg
+
+# Publish / Azure
+publish/
+*.pubxml
+*.publishproj
+PublishScripts/
+
+# NuGet
+**/packages/*
+!**/packages/build/
+
+########################################
+# NODE / REACT / FRONTEND
+########################################
+node_modules/
+bower_components/
+logs/
+coverage/
+coverage.json
+
+*.sublime*
+*.log
+
+########################################
+# ENV / SECRETS
+########################################
+.env
+.env.*
+
+########################################
+# HARDHAT / WEB3
+########################################
+cache/
+artifacts/
+typechain/
+typechain-types/
+
+# Deployments (commituj tylko .gitkeep)
+deployments/*
+!deployments/.gitkeep
+
+########################################
+# TEST / TEMP
+########################################
+*.tmp
+*.temp
+*.bak
+*~
+
+########################################
+# OPTIONAL
+########################################
+# wwwroot/   # odkomentuj jeśli generowane
+git config --global init.defaultBranch main
