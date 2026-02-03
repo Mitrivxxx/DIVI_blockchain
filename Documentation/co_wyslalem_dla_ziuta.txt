@@ -1,0 +1,17 @@
+Temat pracy:„Zdecentralizowany system potwierdzania autentyczności dokumentów akademickich i zawodowych z wykorzystaniem IPFS oraz smart kontraktów Web3”.
+
+Projekt zakłada stworzenie architektury umożliwiającej publikację i weryfikację
+oryginalnych dokumentów wystawianych przez instytucje. System generuje
+hashe i identyfikatory CID zapisywane w zdecentralizowanym rejestrze oraz wykorzystuje
+smart kontrakt przechowujący dane o wystawcy, identyfikatorze, dacie wydania i właścicielu.
+Interfejs pozwala użytkownikowi publikować zweryfikowane dokumenty na profilach
+zawodowych, a rekruter może szybko potwierdzić ich autentyczność poprzez porównanie
+hashy w blockchainie. Projekt obejmuje również testy funkcjonalne, analizę
+bezpieczeństwa oraz dokumentację techniczną.
+
+Wybór tematu wynika z rosnącego zapotrzebowania rynku pracy na szybkie i wiarygodne potwierdzanie
+kwalifikacji oraz problemu fałszowanych dokumentów. Technologia Web3 eliminuje potrzebę pośredników, 
+zapewniając niezmienność i autentyczność rejestrowanych danych. IPFS umożliwia trwałe przechowywanie
+plików, a smart kontrakt gwarantuje integralność zapisów. Rozwiązanie ma bezpośrednie zastosowanie w
+rekrutacji i pozwala wykazać kompetencje związane z systemami rozproszonymi, bezpieczeństwem danych
+oraz integracją blockchainu..

@@ -1,0 +1,49 @@
+SPRINT 0 — FUNDAMENTY I DYSCYPLINA PROJEKTOWA
+
+Sprint 0 stanowi etap inicjalny projektu, którego celem jest zdefiniowanie podstawowych założeń koncepcyjnych, architektonicznych oraz zakresowych systemu. Na tym etapie nie realizuje się implementacji kodu produkcyjnego. Priorytetem jest ustanowienie spójnych ram decyzyjnych, które determinują dalszy rozwój projektu.
+
+----------------------------------------------------------------
+
+CEL SYSTEMU
+
+Celem projektowanego systemu jest stworzenie zdecentralizowanego mechanizmu potwierdzania autentyczności dokumentów akademickich i zawodowych. System wykorzystuje technologię blockchain oraz rozproszoną sieć IPFS w celu zapewnienia niezmienności, integralności oraz możliwości niezależnej weryfikacji dokumentów.
+
+Proponowane rozwiązanie eliminuje konieczność istnienia centralnego podmiotu zaufania oraz umożliwia globalną weryfikację autentyczności dokumentów bez ujawniania ich pełnej treści.
+
+----------------------------------------------------------------
+
+AKTORZY SYSTEMU
+
+W systemie wyróżniono trzy podstawowe role:
+
+1. Instytucja  
+Instytucja jest podmiotem odpowiedzialnym za wystawianie dokumentów oraz ich pierwotną publikację w systemie. Posiada uprawnienia do zapisu informacji w blockchainie i odpowiada za poprawność danych źródłowych.
+
+2. Właściciel dokumentu  
+Właściciel dokumentu jest osobą, której dokument dotyczy. Posiada prawo do udostępniania dokumentu do weryfikacji, jednak nie ma możliwości jego modyfikacji ani usunięcia po publikacji.
+
+3. Rekruter  
+Rekruter jest podmiotem weryfikującym autentyczność dokumentu. Jego rola ogranicza się wyłącznie do odczytu oraz potwierdzenia zgodności dokumentu z zapisami systemowymi.
+
+----------------------------------------------------------------
+
+ARCHITEKTURA WYSOKIEGO POZIOMU
+
+Architektura systemu opiera się na modelu zdecentralizowanym. Interakcja użytkowników z systemem realizowana jest poprzez warstwę frontendową, natomiast mechanizmy niezmienności danych zapewniają smart kontrakty wdrożone w sieci blockchain.
+
+Dokumenty przechowywane są poza łańcuchem bloków w rozproszonej sieci IPFS. W blockchainie zapisywane są jedynie skróty kryptograficzne dokumentów, które umożliwiają jednoznaczną weryfikację ich integralności i autentyczności.
+
+----------------------------------------------------------------
+
+ZAKRES FUNKCJONALNY MVP
+
+Minimalna wersja systemu (MVP) obejmuje wyłącznie funkcjonalności niezbędne do realizacji głównego celu projektu.
+
+Do funkcji obowiązkowych należą:
+- publikacja skrótu kryptograficznego dokumentu przez instytucję,
+- zapis skrótu dokumentu w smart kontrakcie,
+- weryfikacja autentyczności dokumentu poprzez porównanie skrótów kryptograficznych.
+
+Funkcjonalności dodatkowe, takie jak rozbudowane interfejsy użytkownika, systemy zarządzania uprawnieniami czy integracje zewnętrzne, zostały celowo wykluczone z zakresu MVP.
+
+

@@ -1,0 +1,116 @@
+Sprint 2 — Implementacja backendu .NET + integracja IPFS
+Cel: dodać warstwę backendu, która:
+
+przyjmuje plik,
+liczy hash SHA‑256,
+wysyła plik do IPFS,
+zwraca CID + hash,
+przygotowuje dane do zapisu w smart kontrakcie.
+1) Założenia Sprintu 2 (potwierdź)
+Backend w .NET (Web API).
+IPFS lokalny (np. Kubo) lub publiczny endpoint.
+Brak autoryzacji (MVP) lub prosta autoryzacja instytucji?
+2) Zadania funkcjonalne (krok po kroku)
+
+2.2. Endpoint: Upload dokumentu
+Wejście: plik PDF
+Wyjście: hash, cid
+
+Kroki:
+
+Przyjmij plik jako IFormFile.
+Odczytaj bytes i policz SHA‑256.
+Wyślij bytes do IPFS.
+Odbierz CID.
+Zwróć JSON: { hash, cid }.
+2.3. Serwis IPFS
+Zaimplementuj klienta:
+REST call do IPFS (/api/v0/add)
+Obsłuż błędy:
+timeout,
+brak połączenia,
+błąd serwera IPFS.
+2.4. Serwis Hash
+SHA256.Create() na byte[].
+Zwróć hex lub bytes32 (do kompatybilności z Solidity).
+2.5. Kontrakt – przygotowanie danych
+Zapewnij zgodność:
+bytes32 hash (32 bajty)
+cid do przechowania off-chain (na razie zwracane w API)
+Stwórz endpoint /prepare jeśli potrzebujesz:
+konwersja hash do bytes32 do użycia w ethers.
+3) Testy (MVP)
+Unit tests:
+hash z pliku ma stałą wartość.
+błędy IPFS -> poprawne komunikaty.
+Integration tests:
+realny IPFS na localhost.
+4) Dokumentacja techniczna
+Dodaj do Documentation:
+
+opis API endpointów,
+schemat danych (hash, CID),
+flow publikacji z IPFS (zgodny ze Sprint 1).
+5) Kryteria zakończenia Sprintu 2
+✅ API przyjmuje PDF
+✅ Zwraca hash + cid
+✅ IPFS działa
+✅ Hash = SHA‑256
+✅ Dokumentacja aktualna
+
+----------------------------------------------------
+----------------------------------------------------
+----------------------------------------------------
+
+
+Sprint 2 — Kroki implementacji (krok po kroku)
+Decyzje techniczne
+
+IPFS: lokalny Kubo czy publiczny endpoint?
+Format hasha: hex czy bytes32?
+Autoryzacja: brak (MVP) czy prosta?
+Utwórz projekt backendu
+
+.NET Web API
+Dodaj konfigurację IPFS (endpoint, timeout)
+Zaimplementuj endpoint upload
+
+Wejście: IFormFile (PDF)
+Odczytaj bytes
+Oblicz SHA‑256
+Wyślij bytes do IPFS
+Odbierz CID
+Zwróć JSON { hash, cid }
+Serwis Hash
+
+Funkcja: ComputeSha256(byte[])
+Zwraca hex + opcjonalnie bytes32 (do kompatybilności)
+Serwis IPFS
+
+HTTP POST na /api/v0/add
+Obsługa błędów: timeout, brak połączenia, błąd IPFS
+Testy (MVP)
+
+Unit: hash z pliku = stała wartość
+Unit: obsługa błędów IPFS
+Integration: realny IPFS na localhost
+Dokumentacja
+
+Endpointy i schemat odpowiedzi
+Flow: plik → hash → IPFS → CID → blockchain
+Wymagania uruchomieniowe
+Kryteria zakończenia
+
+API przyjmuje PDF
+Zwraca hash + CID
+Hash = SHA‑256
+IPFS działa
+Dokumentacja aktualna
+Co wysyłasz do blockchainu
+Minimalnie:
+
+documentHash (bytes32) — wynik SHA‑256 pliku
+Opcjonalnie / off‑chain:
+
+CID zostaje w backendzie i UI (zwykle off‑chain)
+Możesz dodać issuer i timestamp na chain (jeśli kontrakt to przewiduje)

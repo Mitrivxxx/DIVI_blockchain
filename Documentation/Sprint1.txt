@@ -1,0 +1,136 @@
+ETAP 1 — DEFINICJA OBIEKTU „DOKUMENT”
+====================================
+
+1. Pojęcie dokumentu w systemie
+
+W projektowanym systemie pojęcie „dokument” oznacza cyfrowy plik
+(np. PDF, skan dyplomu, certyfikat), który stanowi oficjalne potwierdzenie
+uzyskania kwalifikacji akademicznych lub zawodowych.
+
+Dokument ten NIE jest przechowywany bezpośrednio w blockchainie.
+Blockchain, ze względu na swoją architekturę i koszty operacyjne,
+nie jest przeznaczony do składowania dużych zbiorów danych.
+
+
+2. Rozdzielenie treści dokumentu i dowodu jego autentyczności
+
+Treść dokumentu (plik) przechowywana jest poza blockchainem
+w zdecentralizowanym systemie plików IPFS.
+
+Blockchain pełni wyłącznie rolę rejestru:
+- przechowuje kryptograficzny skrót (hash) dokumentu
+- przechowuje metadane niezbędne do jego weryfikacji
+- zapewnia niezmienność zapisanych informacji
+
+Takie rozdzielenie pozwala:
+- ograniczyć koszty przechowywania danych
+- zachować skalowalność systemu
+- zapewnić niezmienność i transparentność dowodów
+
+
+3. Kryptograficzny dowód istnienia dokumentu
+
+Dla każdego dokumentu generowany jest kryptograficzny hash
+z wykorzystaniem algorytmu SHA-256.
+
+Hash:
+- jednoznacznie reprezentuje zawartość dokumentu
+- zmienia się przy najmniejszej modyfikacji pliku
+- nie pozwala na odtworzenie treści dokumentu
+
+Hash stanowi cyfrowy „odcisk palca” dokumentu i jest
+jedynym elementem bezpośrednio zapisywanym w blockchainie.
+
+
+4. Pojęcie autentyczności dokumentu
+
+Autentyczność dokumentu w systemie definiowana jest
+nie przez samą dostępność pliku, lecz przez zgodność jego
+kryptograficznego skrótu z danymi zapisanymi w blockchainie.
+
+Dokument uznaje się za autentyczny, jeżeli spełnione są
+jednocześnie następujące warunki:
+- hash dokumentu obliczony lokalnie jest identyczny
+  z hashem zapisanym w smart kontrakcie
+- hash został zapisany przez uprawnioną instytucję
+  występującą w roli wystawcy (issuer)
+
+Brak spełnienia któregokolwiek z powyższych warunków
+oznacza, że dokument nie może zostać uznany za autentyczny.
+
+
+5. Rola instytucji wystawiającej dokument
+
+Instytucja wystawiająca pełni kluczową rolę w systemie,
+ponieważ to ona:
+- generuje hash dokumentu
+- publikuje dokument w IPFS
+- zapisuje dowód autentyczności w blockchainie
+
+Blockchain nie weryfikuje treści dokumentu,
+lecz niezmiennie rejestruje fakt, że dana instytucja
+potwierdziła istnienie konkretnego dokumentu
+w określonym momencie czasu.
+
+
+6. Konsekwencje przyjętego modelu
+
+Przyjęty model powoduje, że:
+- blockchain staje się źródłem prawdy o autentyczności dokumentu
+- dokument może być weryfikowany bez kontaktu z instytucją
+- każda próba modyfikacji dokumentu jest wykrywalna
+  poprzez zmianę wartości hash
+
+Model ten stanowi fundament dalszej architektury systemu
+i determinuje sposób projektowania smart kontraktów
+oraz procesów weryfikacji.
+
+
+
+
+ETAP 2 — REGUŁY BIZNESOWE 
+---------------------------------------------
+Zapisz dokładnie te zasady:
+
+1. Dokument może zapisać WYŁĄCZNIE instytucja
+2. Jedna instytucja może wystawić wiele dokumentów
+3. Jeden hash = jeden dokument
+4. Ten sam hash nie może zostać zapisany ponownie
+5. Weryfikacja dokumentu nie zmienia stanu blockchaina
+
+
+ETAP 4 — FLOW PUBLIKACJI (KROK PO KROKU)
+---------------------------------------
+Rozpisz dokładnie w tej kolejności:
+
+1. Instytucja posiada plik PDF
+2. Instytucja generuje hash SHA-256 pliku
+3. Instytucja uploaduje plik do IPFS
+4. IPFS zwraca CID
+5. Instytucja wywołuje smart kontrakt i przekazuje:
+   - hash
+   - CID
+   - owner
+   - typ dokumentu
+6. Smart kontrakt:
+   - zapisuje dane
+   - przypisuje issuer = msg.sender
+   - zapisuje timestamp
+
+
+ETAP 5 — FLOW WERYFIKACJI
+------------------------
+Rozpisz w punktach:
+
+1. Użytkownik posiada plik PDF
+2. Użytkownik generuje lokalnie hash SHA-256
+3. Użytkownik podaje hash do systemu
+4. Smart kontrakt:
+   - sprawdza istnienie hash
+   - zwraca zapisane dane
+5. System porównuje hashe
+
+Wynik:
+Zgodność hashy = dokument autentyczny
+
+
