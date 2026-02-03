@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.24;
+pragma solidity ^0.8.20;
 
+/**
+ * @title DocumentRegistry
+ * @notice Minimalny rejestr istnienia dokumentów (hashy)
+ */
 contract DocumentRegistry {
 
     struct Document {
@@ -9,7 +13,6 @@ contract DocumentRegistry {
         bool exists;
     }
 
-    // hash dokumentu => dane
     mapping(bytes32 => Document) private documents;
 
     event DocumentRegistered(
@@ -18,12 +21,9 @@ contract DocumentRegistry {
         uint256 timestamp
     );
 
-    /**
-     * Rejestruje nowy dokument
-     */
-    function registerDocument(bytes32 documentHash) external {
+    function register(bytes32 documentHash) external {
         require(documentHash != bytes32(0), "Invalid hash");
-        require(!documents[documentHash].exists, "Document already registered");
+        require(!documents[documentHash].exists, "Already registered");
 
         documents[documentHash] = Document({
             issuer: msg.sender,
@@ -34,23 +34,16 @@ contract DocumentRegistry {
         emit DocumentRegistered(documentHash, msg.sender, block.timestamp);
     }
 
-    /**
-     * Sprawdza czy dokument istnieje
-     */
     function exists(bytes32 documentHash) external view returns (bool) {
         return documents[documentHash].exists;
     }
 
-    /**
-     * Pobiera dane dokumentu
-     */
-    function getDocument(bytes32 documentHash)
+    function get(bytes32 documentHash)
         external
         view
         returns (address issuer, uint256 timestamp)
     {
-        require(documents[documentHash].exists, "Document not found");
-
+        require(documents[documentHash].exists, "Not found");
         Document memory doc = documents[documentHash];
         return (doc.issuer, doc.timestamp);
     }
