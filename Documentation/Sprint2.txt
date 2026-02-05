@@ -1,116 +1,72 @@
-Sprint 2 — Implementacja backendu .NET + integracja IPFS
-Cel: dodać warstwę backendu, która:
+SPRINT 2 — IPFS (PRZECHOWYWANIE PLIKÓW)
+======================================
 
-przyjmuje plik,
-liczy hash SHA‑256,
-wysyła plik do IPFS,
-zwraca CID + hash,
-przygotowuje dane do zapisu w smart kontrakcie.
-1) Założenia Sprintu 2 (potwierdź)
-Backend w .NET (Web API).
-IPFS lokalny (np. Kubo) lub publiczny endpoint.
-Brak autoryzacji (MVP) lub prosta autoryzacja instytucji?
-2) Zadania funkcjonalne (krok po kroku)
-
-2.2. Endpoint: Upload dokumentu
-Wejście: plik PDF
-Wyjście: hash, cid
-
-Kroki:
-
-Przyjmij plik jako IFormFile.
-Odczytaj bytes i policz SHA‑256.
-Wyślij bytes do IPFS.
-Odbierz CID.
-Zwróć JSON: { hash, cid }.
-2.3. Serwis IPFS
-Zaimplementuj klienta:
-REST call do IPFS (/api/v0/add)
-Obsłuż błędy:
-timeout,
-brak połączenia,
-błąd serwera IPFS.
-2.4. Serwis Hash
-SHA256.Create() na byte[].
-Zwróć hex lub bytes32 (do kompatybilności z Solidity).
-2.5. Kontrakt – przygotowanie danych
-Zapewnij zgodność:
-bytes32 hash (32 bajty)
-cid do przechowania off-chain (na razie zwracane w API)
-Stwórz endpoint /prepare jeśli potrzebujesz:
-konwersja hash do bytes32 do użycia w ethers.
-3) Testy (MVP)
-Unit tests:
-hash z pliku ma stałą wartość.
-błędy IPFS -> poprawne komunikaty.
-Integration tests:
-realny IPFS na localhost.
-4) Dokumentacja techniczna
-Dodaj do Documentation:
-
-opis API endpointów,
-schemat danych (hash, CID),
-flow publikacji z IPFS (zgodny ze Sprint 1).
-5) Kryteria zakończenia Sprintu 2
-✅ API przyjmuje PDF
-✅ Zwraca hash + cid
-✅ IPFS działa
-✅ Hash = SHA‑256
-✅ Dokumentacja aktualna
-
-----------------------------------------------------
-----------------------------------------------------
-----------------------------------------------------
+CEL (NIE DYSKUTUJEMY)
+- Plik ma trafić do IPFS przez Pinata.
+- Hash ma być policzony lokalnie PRZED uploadem.
+- Backend zwraca hash i CID.
+- Zero integracji z blockchainem.
 
 
-Sprint 2 — Kroki implementacji (krok po kroku)
-Decyzje techniczne
+---
 
-IPFS: lokalny Kubo czy publiczny endpoint?
-Format hasha: hex czy bytes32?
-Autoryzacja: brak (MVP) czy prosta?
-Utwórz projekt backendu
+PLAN PRAC — KROK PO KROKU (DO WYKONANIA)
 
-.NET Web API
-Dodaj konfigurację IPFS (endpoint, timeout)
-Zaimplementuj endpoint upload
+1) KONFIGURACJA ŚRODOWISKA
+- Załóż konto w Pinata.
+- Wygeneruj API Key i API Secret.
+- Ustaw je jako zmienne środowiskowe (nigdy w repo).
 
-Wejście: IFormFile (PDF)
-Odczytaj bytes
-Oblicz SHA‑256
-Wyślij bytes do IPFS
-Odbierz CID
-Zwróć JSON { hash, cid }
-Serwis Hash
+2) STRUKTURA BACKENDU
+- Utwórz katalogi:
+  /controllers
+  /services
+  /utils
+- Backend musi się uruchamiać lokalnie bez błędów.
 
-Funkcja: ComputeSha256(byte[])
-Zwraca hex + opcjonalnie bytes32 (do kompatybilności)
-Serwis IPFS
+3) ENDPOINT (JEDYNY)
+- POST /upload-document
+- Przyjmuje:
+  - plik (multipart/form-data)
+  - typ dokumentu
+  - owner (opcjonalnie)
 
-HTTP POST na /api/v0/add
-Obsługa błędów: timeout, brak połączenia, błąd IPFS
-Testy (MVP)
+4) KOLEJNOŚĆ OPERACJI (NIE ZMIENIASZ)
+1. Odbierz plik
+2. Zapisz do pamięci lub katalogu temp
+3. Policz SHA-256 lokalnie
+4. Wyślij plik do Pinata
+5. Odbierz CID
+6. Usuń plik temp
+7. Zwróć JSON:
+   - hash
+   - CID
 
-Unit: hash z pliku = stała wartość
-Unit: obsługa błędów IPFS
-Integration: realny IPFS na localhost
-Dokumentacja
+5) WALIDACJE (OBOWIĄZKOWE)
+- Typ pliku: tylko PDF
+- Rozmiar: max 10 MB
+- Pusty plik: odrzuć
+- Obsłuż błędy:
+  - brak pliku
+  - błąd hashowania
+  - błąd IPFS
 
-Endpointy i schemat odpowiedzi
-Flow: plik → hash → IPFS → CID → blockchain
-Wymagania uruchomieniowe
-Kryteria zakończenia
+6) TEST RĘCZNY (MUSI PRZEJŚĆ)
+- Wgraj PDF → dostajesz hash + CID
+- Pobierz plik po CID
+- Policz hash pobranego pliku
+- Hash musi być identyczny
+- Jeśli nie: wracasz do kroku 3
 
-API przyjmuje PDF
-Zwraca hash + CID
-Hash = SHA‑256
-IPFS działa
-Dokumentacja aktualna
-Co wysyłasz do blockchainu
-Minimalnie:
+7) DOKUMENTACJA TECHNICZNA (DOPISAĆ NA KOŃCU)
+- Dlaczego IPFS
+- Dlaczego Pinata
+- Dlaczego hash liczony lokalnie
+- Co się stanie po modyfikacji pliku
 
-documentHash (bytes32) — wynik SHA‑256 pliku
-Opcjonalnie / off‑chain:
 
-CID zostaje w backendzie i UI (zwykle off‑chain)
-Możesz dodać issuer i timestamp na chain (jeśli kontrakt to przewiduje)
+WYNIK SPRINTU
+✔ Upload do IPFS działa  
+✔ Hash i CID zwracane  
+✔ Dowód integralności pliku  
+✔ Backend gotowy pod smart kontrakt

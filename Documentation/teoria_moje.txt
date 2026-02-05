@@ -1,0 +1,23 @@
+---Warstwa	Odpowiedzialność
+PDF	Treść
+IPFS	Dostępność
+Hash	Integralność
+Blockchain	Dowód istnienia
+Smart Contract	Autoryzacja
+
+---Jak powstaje adres (CID)
+Bierzesz plik (np. PDF)
+Liczysz kryptograficzny hash (domyślnie SHA-256)
+Hash + metadata → CID (Content Identifier)
+
+---IPFS ≠ chmura
+pinning, Peer-to-Peer
+
+---CID (Content Identifier) to skrót/identyfikator treści w IPFS —
+wyliczany z zawartości pliku (content‑addressed).
+Otrzymujesz go w odpowiedzi po wysłaniu pliku do
+Pinata (np. pole IpfsHash), albo z lokalnego noda IPFS po dodaniu pliku.
+
+
+
+

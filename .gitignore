@@ -1,20 +1,111 @@
-# Node modules
-/node_modules
+####################################
+# GLOBAL
+####################################
+*.log
+*.tmp
+*.temp
+*.swp
+*.bak
+*.cache
+*.DS_Store
+Thumbs.db
 
-# Compilation output
-/dist
+.env
+.env.*
+!.env.example
 
-# pnpm deploy output
-/bundle
+####################################
+# .NET / ASP.NET Core (.NET 8)
+####################################
+# Build results
+bin/
+obj/
+out/
 
-# Hardhat Build Artifacts
-/artifacts
+# User-specific
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
 
-# Hardhat compilation (v2) support directory
-/cache
+# Rider / VS / VS Code
+.idea/
+.vs/
+.vscode/
 
-# Typechain output
-/types
+# Test results
+TestResults/
+coverage/
+coverage.cobertura.xml
 
-# Hardhat coverage reports
-/coverage
+# ASP.NET
+appsettings.Development.json
+appsettings.Local.json
+
+# NuGet
+*.nupkg
+packages/
+.nuget/
+
+####################################
+# Docker
+####################################
+**/docker-compose.override.yml
+*.pid
+
+####################################
+# Node.js (Blockchain tooling)
+####################################
+node_modules/
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+####################################
+# Hardhat / Truffle / Foundry
+####################################
+# Hardhat
+artifacts/
+cache/
+typechain/
+coverage/
+
+# Truffle
+build/
+
+# Foundry
+out/
+broadcast/
+
+####################################
+# Blockchain secrets
+####################################
+.privateKey
+.privatekey
+wallet.json
+keystore/
+secrets.json
+
+####################################
+# IPFS
+####################################
+.ipfs/
+ipfs-data/
+ipfs-repo/
+ipfs-cache/
+
+####################################
+# Solidity / Web3 misc
+####################################
+*.abi
+*.bin
+*.addr
+*.address
+
+####################################
+# OS / IDE noise
+####################################
+*.iml
+*.classpath
+*.project
+.settings/

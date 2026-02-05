@@ -20,8 +20,20 @@ public class DocumentController : ControllerBase
         [FromForm] string documentType,
         [FromForm] string? owner)
     {
-        if (file == null || file.Length == 0)
-            return BadRequest("File is required");
+        if (file == null)
+            return BadRequest("file is required");
+
+        if (file.Length == 0)
+            return BadRequest("file is empty");
+
+        const long maxFileSizeBytes = 5 * 1024 * 1024;
+        if (file.Length > maxFileSizeBytes)
+            return BadRequest("file is too large");
+
+        var extension = Path.GetExtension(file.FileName);
+        if (!string.Equals(extension, ".pdf", StringComparison.OrdinalIgnoreCase)
+            && !string.Equals(file.ContentType, "application/pdf", StringComparison.OrdinalIgnoreCase))
+            return BadRequest("only pdf files are allowed");
 
         var result = await _documentService.ProcessDocumentAsync(file);
 
