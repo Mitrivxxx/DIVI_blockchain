@@ -1,12 +1,6 @@
 SPRINT 2 — IPFS (PRZECHOWYWANIE PLIKÓW)
 ======================================
 
-CEL (NIE DYSKUTUJEMY)
-- Plik ma trafić do IPFS przez Pinata.
-- Hash ma być policzony lokalnie PRZED uploadem.
-- Backend zwraca hash i CID.
-- Zero integracji z blockchainem.
-
 
 ---
 

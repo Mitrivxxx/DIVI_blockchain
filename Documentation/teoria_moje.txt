@@ -18,6 +18,52 @@ wyliczany z zawartości pliku (content‑addressed).
 Otrzymujesz go w odpowiedzi po wysłaniu pliku do
 Pinata (np. pole IpfsHash), albo z lokalnego noda IPFS po dodaniu pliku.
 
+---------------
+hash
 
+kryptograficzny odcisk palca dokumentu
+
+JEDYNY dowód integralności
+
+absolutnie kluczowy
+
+cid
+
+wskaźnik na treść off-chain (IPFS)
+
+poprawia UX, ale nie jest źródłem prawdy
+
+może zniknąć → hash nie
+
+owner
+
+logiczny właściciel dokumentu (np. student, pracownik)
+
+NIE ten, kto publikuje
+
+semantycznie ważne rozróżnienie
+
+documentType
+
+klasyfikacja (np. „diploma”, „certificate”)
+
+nie do walidacji, tylko do interpretacji
+
+issuer
+
+adres Ethereum wystawcy
+
+źródło zaufania
+
+najważniejsze pole po hash
+
+timestamp
+
+moment publikacji
+
+dowód istnienia w czasie
+
+przydatne prawnie i audytowo
+------------------------------
 
 

@@ -1,0 +1,47 @@
+SPRINT 3 — SMART KONTRAKT
+Cel: Niezmienny rejestr prawdy.
+
+1) Zakres i model danych
+- Zdefiniuj strukturę metadanych: hash, cid, owner, documentType, issuer, timestamp.
+- Zdecyduj format hash (np. bytes32) i cid (string).
+- Ustal, czy owner to adres czy string.
+
+2) Reguły biznesowe (z Sprint1)
+- Tylko instytucja/issuer może zapisać dokument.
+- Jeden hash = jeden dokument.
+- Brak duplikatów hashy.
+- Weryfikacja nie zmienia stanu.
+
+3) Interfejs kontraktu
+- issueDocument(hash, cid, owner, documentType)
+- verifyDocument(hash) → zwraca metadane
+- Event DocumentIssued(hash, issuer, timestamp)
+
+4) Implementacja kontraktu
+- mapping(bytes32 => Metadata)
+- mapping(bytes32 => bool) dla istnienia
+- Modifier onlyIssuer (whitelist lub owner kontraktu)
+- Walidacje wejścia (hash != 0x0, cid niepusty)
+
+5) Testy jednostkowe (Hardhat)
+- Pozytywny: zapis i odczyt działa
+- Negatywne: duplikat hash, brak uprawnień, pusty hash/cid
+- Weryfikacja nie zmienia stanu (brak eventów)
+
+6) Deployment lokalny
+- Skrypt deploy
+- Sprawdzenie w konsoli: issue + verify
+
+7) Deployment testnet
+- Konfiguracja sieci, klucza, RPC
+- Wdrożenie i zapis adresu kontraktu
+
+8) Dokumentacja Sprint3
+- Opis funkcji i eventów
+- Jak wywołać issueDocument i verifyDocument
+- Przykładowy flow publikacji i weryfikacji
+
+Wynik sprintu
+✔ Kontrakt wdrożony
+✔ Testy Solidity przechodzą
+✔ Zapis i weryfikacja działają
