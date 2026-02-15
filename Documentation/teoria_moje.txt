@@ -19,51 +19,20 @@ Otrzymujesz go w odpowiedzi po wysłaniu pliku do
 Pinata (np. pole IpfsHash), albo z lokalnego noda IPFS po dodaniu pliku.
 
 ---------------
-hash
+ethers.js to popularna biblioteka JavaScript/TypeScript do pracy z
+blockchainem Ethereum – pozwala na podpisywanie transakcji, interakcję ze
+smart kontraktami, odczyt danych z blockchaina i zarządzanie portfelami.
 
-kryptograficzny odcisk palca dokumentu
-
-JEDYNY dowód integralności
-
-absolutnie kluczowy
-
-cid
-
-wskaźnik na treść off-chain (IPFS)
-
-poprawia UX, ale nie jest źródłem prawdy
-
-może zniknąć → hash nie
-
-owner
-
-logiczny właściciel dokumentu (np. student, pracownik)
-
-NIE ten, kto publikuje
-
-semantycznie ważne rozróżnienie
-
-documentType
-
-klasyfikacja (np. „diploma”, „certificate”)
-
-nie do walidacji, tylko do interpretacji
-
-issuer
-
-adres Ethereum wystawcy
-
-źródło zaufania
-
-najważniejsze pole po hash
-
-timestamp
-
-moment publikacji
-
-dowód istnienia w czasie
-
-przydatne prawnie i audytowo
+Hardhat to framework do tworzenia, testowania i wdrażania smart kontraktów
+na Ethereum. Umożliwia lokalne uruchamianie blockchaina do testów,
+automatyzację kompilacji, migracji, testów oraz integrację z
+narzędziami jak ethers.js. Ułatwia cały proces developmentu smart kontraktów.
 ------------------------------
 
 
+Sepolia+infura
+-------------------------
+RPC to adres serwera (węzła blockchain), przez który Twoja aplikacja wysyła i
+odczytuje dane z sieci, np. przy deployu lub wywołaniu smart kontraktu.
+
+Sepolia: 0x004357D393D6e942bA8e5ca244965a413Fd12e34

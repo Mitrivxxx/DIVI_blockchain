@@ -1,47 +1,168 @@
-SPRINT 3 — SMART KONTRAKT
-Cel: Niezmienny rejestr prawdy.
 
-1) Zakres i model danych
-- Zdefiniuj strukturę metadanych: hash, cid, owner, documentType, issuer, timestamp.
-- Zdecyduj format hash (np. bytes32) i cid (string).
-- Ustal, czy owner to adres czy string.
+==============================
+SPRINT 3 – PODSUMOWANIE ZADAŃ
+==============================
 
-2) Reguły biznesowe (z Sprint1)
-- Tylko instytucja/issuer może zapisać dokument.
-- Jeden hash = jeden dokument.
-- Brak duplikatów hashy.
-- Weryfikacja nie zmienia stanu.
+---
 
-3) Interfejs kontraktu
-- issueDocument(hash, cid, owner, documentType)
-- verifyDocument(hash) → zwraca metadane
-- Event DocumentIssued(hash, issuer, timestamp)
+**KROK 1 — Zdefiniuj strukturę danych**
 
-4) Implementacja kontraktu
-- mapping(bytes32 => Metadata)
-- mapping(bytes32 => bool) dla istnienia
-- Modifier onlyIssuer (whitelist lub owner kontraktu)
-- Walidacje wejścia (hash != 0x0, cid niepusty)
+Minimalny model:
+    - hash (bytes32)
+    - issuer (address)
+    - timestamp (uint256)
+    - cid (string)
+    - owner (address)
+    - documentType (string)
 
-5) Testy jednostkowe (Hardhat)
-- Pozytywny: zapis i odczyt działa
-- Negatywne: duplikat hash, brak uprawnień, pusty hash/cid
-- Weryfikacja nie zmienia stanu (brak eventów)
+Architektura:
+    - hash jest kluczem głównym i nie dopuszczamy nadpisywania
 
-6) Deployment lokalny
-- Skrypt deploy
-- Sprawdzenie w konsoli: issue + verify
+---
 
-7) Deployment testnet
-- Konfiguracja sieci, klucza, RPC
-- Wdrożenie i zapis adresu kontraktu
+**FAZA 2 — REGUŁY BIZNESOWE**
 
-8) Dokumentacja Sprint3
-- Opis funkcji i eventów
-- Jak wywołać issueDocument i verifyDocument
-- Przykładowy flow publikacji i weryfikacji
+**KROK 2 — Kontrola dostępu**
+    - Musisz jednoznacznie ustalić:
+        - Kto może wywołać issueDocument? → tylko adresy z listy issuerów.
+        - Gdzie przechowujesz listę? → mapping(address => bool) authorizedIssuers
+        - Kto zarządza listą? → owner kontraktu.
 
-Wynik sprintu
-✔ Kontrakt wdrożony
-✔ Testy Solidity przechodzą
-✔ Zapis i weryfikacja działają
+**KROK 3 — Ochrona przed duplikatem**
+    - Reguła: Jeśli hash istnieje → revert.
+    - Sprawdzenie: require(documents[hash].timestamp == 0, "Document exists");
+    - Dlaczego timestamp? Bo jeśli rekord nie istnieje → timestamp = 0.
+    - To jest reguła integralności.
+
+**KROK 4 — Walidacja danych**
+    - Zanim zapiszesz:
+        - hash != 0x0
+        - owner != address(0)
+        - bytes(cid).length > 0
+        - bytes(documentType).length > 0
+
+
+
+---
+
+**FAZA 3 — ŚRODOWISKO TECHNICZNE**
+
+**KROK 5 — Hardhat**
+    - Sprawdź:
+        - projekt się kompiluje
+        - masz folder:
+            - contracts
+            - scripts
+            - test
+
+**KROK 6 — Konfiguracja sieci**
+    - Decyzje operacyjne:
+        - Testnet: Sepolia
+        - RPC: Alchemy
+        - Klucz prywatny: .env
+        - Nigdy nie commitujesz .env
+
+
+
+---
+
+**FAZA 4 — PLAN TESTÓW (PRZED IMPLEMENTACJĄ)**
+
+**KROK 7 — Testy pozytywne**
+    - Musisz zapisać:
+        - Autoryzowany issuer publikuje dokument
+        - verifyDocument zwraca poprawne dane
+        - timestamp jest ustawiony
+    - Każdy test opisujesz:
+        - kto wywołuje
+        - co podaje
+        - czego oczekujesz
+
+**KROK 8 — Testy negatywne (ważniejsze)**
+    - Musisz przetestować:
+        - Nieautoryzowany issuer → revert
+        - Ten sam hash drugi raz → revert
+        - Pusty CID → revert
+        - owner = zero address → revert
+    - Jeśli nie potrafisz wymyślić testu łamiącego system, to system jest słaby.
+
+---
+
+**FAZA 5 — KOLEJNOŚĆ IMPLEMENTACJI**
+
+Kodujesz w tej kolejności:
+    1. struct Document
+    2. mapping(bytes32 => Document)
+    3. mapping issuerów
+    4. owner
+    5. modifier onlyIssuer
+    6. issueDocument
+    7. verifyDocument
+    8. event DocumentIssued
+    9. walidacje
+
+Nie zmieniasz kolejności. Inaczej będziesz refaktoryzować w panice.
+
+---
+
+**FAZA 6 — DEPLOY**
+
+**KROK 9 — Lokalny deploy**
+    - uruchamiasz local node
+    - deployujesz
+    - ręcznie wywołujesz issue
+    - ręcznie wywołujesz verify
+    - Masz zobaczyć cały flow.
+
+**KROK 10 — Testnet (Sepolia)**
+    - deploy
+    - zapisujesz adres kontraktu
+    - testujesz z MetaMask
+    - zapisujesz transaction hash
+    - To jest symulacja produkcji.
+
+---
+
+**FAZA 7 — CHECKLISTA KOŃCOWA**
+
+
+Zanim przejdziesz dalej, musisz być w stanie powiedzieć:
+    - Wiem dokładnie, co zapisuję on-chain.
+    - Wiem, kto ma prawo publikować.
+    - Wiem, co się dzieje przy próbie duplikatu.
+    - verifyDocument jest funkcją tylko do odczytu.
+    - System nie pozwala na nadpisanie historii.
+
+Jeśli na któreś pytanie odpowiadasz niepewnie — wracasz do etapu projektowego.
+
+---
+
+**TERAZ KONKRETNIE**
+
+Twoje zadanie na dziś:
+    - Spisz model danych.
+    - Spisz reguły dostępu.
+    - Spisz wszystkie require.
+    - Spisz testy (pozytywne + negatywne).
+
+Dopiero potem otwierasz edytor.
+
+Nie kodujesz bez planu.
+To nie jest projekt zabawkowy — to system zaufania publicznego.
+
+--------------
+const address = "0x5fbdb2315678afecb367f032d93f642f64180aa3"; // wstaw adres
+
+--------
+Utwórz konto w MetaMask i przełącz się na sieć Sepolia.
+Zdobądź testowe ETH na Sepolia (np. z faucet).
+Skopiuj swój klucz prywatny z MetaMask (uważaj, nie udostępniaj go nikomu!).
+Utwórz plik .env w katalogu blockchain i wklej tam swój klucz prywatny.
+Skonfiguruj plik hardhat.config.js, aby używał sieci Sepolia i Twojego klucza prywatnego.
+Upewnij się, że Twój kontrakt jest poprawny i gotowy do deployu.
+Uruchom komendę deployującą kontrakt na Sepolia: npx hardhat run deploySepolia.js --network sepolia
+Sprawdź adres wdrożonego kontraktu w konsoli i na etherscan Sepolia.
+
+
+
+
