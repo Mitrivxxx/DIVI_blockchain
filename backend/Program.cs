@@ -5,7 +5,16 @@ using DotNetEnv;
 
 var builder = WebApplication.CreateBuilder(args);
 Env.Load();
-
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("react",
+        policy =>
+        {
+            policy.WithOrigins("http://localhost:3000")
+                  .AllowAnyHeader()
+                  .AllowAnyMethod();
+        });
+});
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
@@ -25,6 +34,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseCors("react");
 
 app.MapControllers();
 
