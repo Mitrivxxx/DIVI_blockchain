@@ -34,3 +34,7 @@ Efekty sprintu (Definition of Done):
 3. Frontend → wywołuje smart kontrakt przez ethers.js
 4. MetaMask → podpis
 5. Transakcja → blockchain
+===========
+Czy w backendzie nie ma błędów, które mogą powodować nieprawidłowe dane (np. hash nie jest hexem)?
+Czy nie masz bardzo wysokiego limitu gas w kodzie lub w MetaMask?Czy w MetaMask masz wybraną sieć Sepolia (nie np. Mainnet, Goerli, Localhost)?
+Czy w MetaMask nie masz ustawionych niestandardowych opłat (np. bardzo wysokiego gas price).
