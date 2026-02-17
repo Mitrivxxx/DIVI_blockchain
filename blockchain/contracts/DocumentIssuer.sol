@@ -4,11 +4,35 @@ pragma solidity ^0.8.20;
 import "./DocumentTypes.sol";
 
 contract DocumentIssuer {
+    // Administrator address (hardcoded)
+    address public admin = 0xeb2a27c7c6E72BC5022a49c4e044E72ab70E9bDb;
+
+    // Modifier to restrict access to admin
+    modifier onlyAdmin() {
+        require(msg.sender == admin, "Not admin");
+        _;
+    }
+
+    // Mapping to track issuer status
+    mapping(address => bool) public isIssuer;
+    // Mapping to track issuer applications
+    mapping(address => bool) public issuerApplications;
+
+    // Function for users to apply to become issuer
+    function applyForIssuer() external {
+        issuerApplications[msg.sender] = true;
+    }
+
+    // Function for admin to approve issuer applications
+    function approveIssuer(address applicant) external onlyAdmin {
+        require(issuerApplications[applicant], "No application");
+        isIssuer[applicant] = true;
+        issuerApplications[applicant] = false;
+    }
+
     address public owner;
     mapping(address => bool) public authorizedIssuers;
     mapping(bytes32 => DocumentTypes.Document) public documents;
-
-
 
     event DocumentIssued(bytes32 indexed hash, address indexed issuer, address indexed documentOwner, bytes32 documentType);
 
@@ -25,14 +49,12 @@ contract DocumentIssuer {
         }
     }
 
-
     function addIssuer(address _issuer) external {
         require(msg.sender == owner, "Only owner can add issuer");
         require(_issuer != address(0), "Zero address");
         require(!authorizedIssuers[_issuer], "Already authorized");
         authorizedIssuers[_issuer] = true;
     }
-
 
     function removeIssuer(address _issuer) external {
         require(msg.sender == owner, "Only owner can remove issuer");

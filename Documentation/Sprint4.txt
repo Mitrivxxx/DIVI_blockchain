@@ -21,8 +21,43 @@ Główne zadania:
 	- Brak uprawnień użytkownika do wykonania operacji
 	- Odpowiednie komunikaty zwrotne w API
 
-Efekty sprintu (Definition of Done):
+4. Dodanie admina
 
+**Kim jest admin?**
+- Admin NIE jest “superuserem blockchaina”.
+- Ma kontrolę nad warstwą aplikacyjną i procesem emisji dokumentów.
+
+**Uprawnienia admina:**
+Admin powinien móc:
+	- Dodać instytucję (np. uczelnia, firma)
+	- Zatwierdzić instytucję (KYC manualne – symulacja)
+	- Zablokować instytucję
+	- Usunąć z listy uprawnionych issuerów
+	- Powiązać adres Ethereum z instytucją
+	- Nadawać role
+	- Odbierać role
+	- Sprawdzać role
+
+**Admin powinien widzieć:**
+	- Liczbę wystawionych dokumentów
+	- Liczbę aktywnych instytucji
+	- Historię transakcji
+	- Timestamp emisji
+
+**Technicznie:**
+```solidity
+mapping(address => bool) authorizedIssuers;
+```
+Funkcje w smart kontrakcie:
+```solidity
+addIssuer(address)
+removeIssuer(address)
+isAuthorized(address)
+```
+
+
+
+Efekty sprintu (Definition of Done):
 ✔ Jedno API — jeden punkt prawdy dla dokumentów (wszystko przez backend)
 ✔ Backend poprawnie komunikuje się zarówno z IPFS, jak i z blockchainem
 ✔ Przypadki błędów są obsłużone i odpowiednio raportowane
@@ -35,6 +70,4 @@ Efekty sprintu (Definition of Done):
 4. MetaMask → podpis
 5. Transakcja → blockchain
 ===========
-Czy w backendzie nie ma błędów, które mogą powodować nieprawidłowe dane (np. hash nie jest hexem)?
-Czy nie masz bardzo wysokiego limitu gas w kodzie lub w MetaMask?Czy w MetaMask masz wybraną sieć Sepolia (nie np. Mainnet, Goerli, Localhost)?
-Czy w MetaMask nie masz ustawionych niestandardowych opłat (np. bardzo wysokiego gas price).
+
