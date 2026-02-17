@@ -2,6 +2,7 @@ using backend.DTOs;
 using backend.Data;
 using backend.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace backend.Controllers
 {
@@ -32,6 +33,20 @@ namespace backend.Controllers
             _db.IssuerApplications.Add(entity);
             await _db.SaveChangesAsync();
             return CreatedAtAction(null, new { id = entity.Id });
+        }
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<IssuerApplicationListDto>>> GetOnlyPending()
+        {
+            var pendingIssuers = await _db.IssuerApplications
+               .Where(x => x.Status == IssuerApplicationStatus.Pending)
+               .Select(x => new IssuerApplicationListDto
+               {
+                   InstitutionName = x.InstitutionName,
+                   Status = x.Status
+               })
+               .ToListAsync();
+
+            return Ok(pendingIssuers);
         }
     }
 }
