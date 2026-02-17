@@ -4,22 +4,18 @@ declare global {
     ethereum?: any;
   }
 }
+
 import React, { useEffect, useState } from 'react';
 import { ethers } from 'ethers';
+import { tabs } from './tabs';
+import type { TabKey } from './tabs';
 
 type SidebarProps = {
-  activeTab: string;
-  setActiveTab: (tab: string) => void;
+  activeTab: TabKey;
+  setActiveTab: (tab: TabKey) => void;
 };
 
-const tabs = [
-  { key: 'dashboard', label: 'Dashboard' },
-  { key: 'upload', label: 'Dodaj Dokument' },
-  { key: 'myDocuments', label: 'Moje Dokumenty' },
-  { key: 'verify', label: 'Weryfikacja' },
-  { key: 'profile', label: 'Profil' },
-  { key: 'help', label: 'Pomoc' },
-];
+// tabs importowane z ./tabs
 
 
 const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => {

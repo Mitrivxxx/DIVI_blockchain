@@ -1,15 +1,10 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-
 namespace backend.DTOs
 {
     public class CreateIssuerApplicationDto
     {
-        public string InstitutionName { get; set; }
-        public string EthereumAddress { get; set; }
-        public string Email { get; set; }
-        public string Description { get; set; }
+        public string InstitutionName { get; set; } = default!;
+        public string EthereumAddress { get; set; } = default!;
+        public string Email { get; set; } = default!;
+        public string Description { get; set; } = default!;
     }
 }
