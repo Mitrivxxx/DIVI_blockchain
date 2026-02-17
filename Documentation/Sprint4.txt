@@ -55,7 +55,8 @@ removeIssuer(address)
 isAuthorized(address)
 ```
 
-
+System nie gwarantuje prawdziwości treści dokumentu, lecz zapewnia jego
+kryptograficzną integralność, niezmienność oraz publiczną weryfikowalność źródła wystawienia.
 
 Efekty sprintu (Definition of Done):
 ✔ Jedno API — jeden punkt prawdy dla dokumentów (wszystko przez backend)
