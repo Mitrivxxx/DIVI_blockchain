@@ -4,7 +4,7 @@ import { BrowserProvider, Contract, id, toUtf8Bytes, zeroPadBytes } from 'ethers
 import { API_URL } from '../api';
 //import MyContractAbi from '../../blockchain/artifacts/contracts/DocumentIssuer.sol/DocumentIssuer.json';
 import MyContractAbi from '../../../blockchain/artifacts/contracts/DocumentIssuer.sol/DocumentIssuer.json';
-const CONTRACT_ADDRESS = "0x004357D393D6e942bA8e5ca244965a413Fd12e34";
+const CONTRACT_ADDRESS = "0x7C0c5b200FCaF7790ff0FA2Fe56f73B57f7eaC6d";
 const CONTRACT_ABI = MyContractAbi.abi;
 
 

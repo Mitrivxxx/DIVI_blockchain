@@ -11,10 +11,12 @@ namespace backend.Controllers
     public class IssuerApplicationController : ControllerBase
     {
         private readonly AppDbContext _db;
+        private readonly BlockchainService _blockchainService;
 
-        public IssuerApplicationController(AppDbContext db)
+        public IssuerApplicationController(AppDbContext db, BlockchainService blockchainService)
         {
             _db = db;
+            _blockchainService = blockchainService;
         }
 
         [HttpPost]
@@ -41,12 +43,38 @@ namespace backend.Controllers
                .Where(x => x.Status == IssuerApplicationStatus.Pending)
                .Select(x => new IssuerApplicationListDto
                {
+                   Id = x.Id,
                    InstitutionName = x.InstitutionName,
+                   EthereumAddress = x.EthereumAddress,
                    Status = x.Status
                })
                .ToListAsync();
 
             return Ok(pendingIssuers);
         }
+        [HttpPatch("{id}/status")]
+        public async Task<IActionResult> UpdateStatus(Guid id, [FromQuery] string status)
+        {
+            var entity = await _db.IssuerApplications.FirstOrDefaultAsync(x => x.Id == id);
+            if (entity == null)
+                return NotFound();
+
+            if (!Enum.TryParse<IssuerApplicationStatus>(status, true, out var newStatus) ||
+                (newStatus != IssuerApplicationStatus.Approved && newStatus != IssuerApplicationStatus.Rejected))
+            {
+                return BadRequest("Status must be 'Approved' or 'Rejected'.");
+            }
+
+            entity.Status = newStatus;
+            await _db.SaveChangesAsync();
+
+            if (newStatus == IssuerApplicationStatus.Approved)
+            {
+                await _blockchainService.AddIssuerAsync(entity.EthereumAddress);
+            }
+
+            return NoContent();
+        }
+
     }
 }

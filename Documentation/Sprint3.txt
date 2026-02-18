@@ -151,7 +151,7 @@ Nie kodujesz bez planu.
 To nie jest projekt zabawkowy — to system zaufania publicznego.
 
 --------------
-const address = "0x5fbdb2315678afecb367f032d93f642f64180aa3"; // wstaw adres
+const address = "0x7C0c5b200FCaF7790ff0FA2Fe56f73B57f7eaC6d"; // wstaw adres
 
 --------
 Utwórz konto w MetaMask i przełącz się na sieć Sepolia.

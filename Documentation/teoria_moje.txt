@@ -35,4 +35,10 @@ Sepolia+infura
 RPC to adres serwera (węzła blockchain), przez który Twoja aplikacja wysyła i
 odczytuje dane z sieci, np. przy deployu lub wywołaniu smart kontraktu.
 
-Sepolia: 0x004357D393D6e942bA8e5ca244965a413Fd12e34
+Sepolia: 0x7C0c5b200FCaF7790ff0FA2Fe56f73B57f7eaC6d
+
+PINATA_API_KEY=9991a72d9_example
+PINATA_API_SECRET=616cda209641082abecd1c_example
+PINATA_JWT=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9_example
+SEPOLIA_RPC_URL=https://sepolia.infura.io/v3/77ae5_example
+SEPOLIA_PRIVATE_KEY=0xbefbd418c68f1c0671e429353b98b5_example

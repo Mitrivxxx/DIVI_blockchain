@@ -8096,6 +8096,7 @@
       "Microsoft.AspNetCore.OpenApi >= 8.0.21",
       "Microsoft.EntityFrameworkCore >= 8.0.0",
       "Microsoft.EntityFrameworkCore.Design >= 8.0.0",
+      "Nethereum.Accounts >= 5.8.0",
       "Nethereum.Contracts >= 5.8.0",
       "Nethereum.Web3 >= 5.8.0",
       "Npgsql.EntityFrameworkCore.PostgreSQL >= 8.0.0",
@@ -8157,6 +8158,10 @@
             "target": "Package",
             "version": "[8.0.0, )"
           },
+          "Nethereum.Accounts": {
+            "target": "Package",
+            "version": "[5.8.0, )"
+          },
           "Nethereum.Contracts": {
             "target": "Package",
             "version": "[5.8.0, )"
@@ -8196,13 +8201,5 @@
         "runtimeIdentifierGraphPath": "/usr/lib/dotnet/sdk/8.0.124/PortableRuntimeIdentifierGraph.json"
       }
     }
-  },
-  "logs": [
-    {
-      "code": "Undefined",
-      "level": "Warning",
-      "warningLevel": 1,
-      "message": "Problem reading the cache file /home/matsma/project/DIVI/backend/obj/project.nuget.cache : Invalid property identifier character: <. Path 'version', line 3, position 0."
-    }
-  ]
+  }
 }
