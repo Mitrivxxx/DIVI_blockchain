@@ -1,0 +1,30 @@
+0. refaktor frontendu
+
+1. docker
+
+2. w obecnym kodzie adres nadawcy jest zawsze taki sam (z backendu),
+niezależnie od konta w Metamask. Dynamiczna zmiana wymaga obsługi podpisu
+po stronie frontendu. (aktualnie jest na sztywno w .env)
+
+3. autoryzacja adminow w backend (JWT):
+    -AddIssuerAsync
+    -ApproveIssuerAsync
+    -RemoveIssuerAsync
+
+4. poprawic abi "blockchainService" (mozna przeniesc StringToBytes32 do UTILS)
+
+5. PiniataClient (chat mi takie glupotki wpylul):
+Obsługa błędów: Warto dodać lepszą obsługę wyjątków (np. try-catch, logowanie błędów).
+Sprawdzenie obecności JWT: Jeśli zmienna środowiskowa jest pusta, konstruktor powinien rzucić wyjątek.
+HttpClient: Jeśli nie korzystasz z DI, unikaj tworzenia wielu instancji HttpClient (może prowadzić do wyczerpania portów).
+Możesz rozważyć asynchroniczne otwieranie pliku (FileStream z FileOptions.Asynchronous).
+Rozważ przeniesienie adresu bazowego i endpointu do konfiguracji.
+
+6. moge dodac komentarze do endpointow w swagger
+
+
+
+
+
+
+

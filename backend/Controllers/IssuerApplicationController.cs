@@ -1,78 +1,39 @@
 using backend.DTOs;
-using backend.Data;
-using backend.Models;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace backend.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/issuer")]
     public class IssuerApplicationController : ControllerBase
     {
-        private readonly AppDbContext _db;
-        private readonly BlockchainService _blockchainService;
+        private readonly backend.Services.Interfaces.IIssuerApplicationService _issuerApplicationService;
 
-        public IssuerApplicationController(AppDbContext db, BlockchainService blockchainService)
+        public IssuerApplicationController(backend.Services.Interfaces.IIssuerApplicationService issuerApplicationService)
         {
-            _db = db;
-            _blockchainService = blockchainService;
+            _issuerApplicationService = issuerApplicationService;
         }
 
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] CreateIssuerApplicationDto dto)
         {
-            var entity = new IssuerApplication
-            {
-                Id = Guid.NewGuid(),
-                InstitutionName = dto.InstitutionName,
-                EthereumAddress = dto.EthereumAddress,
-                Email = dto.Email,
-                Description = dto.Description,
-                Status = IssuerApplicationStatus.Pending,
-                CreatedAt = DateTime.UtcNow
-            };
-            _db.IssuerApplications.Add(entity);
-            await _db.SaveChangesAsync();
+            var entity = await _issuerApplicationService.CreateIssuerAsync(dto);
             return CreatedAtAction(null, new { id = entity.Id });
         }
         [HttpGet]
         public async Task<ActionResult<IEnumerable<IssuerApplicationListDto>>> GetOnlyPending()
         {
-            var pendingIssuers = await _db.IssuerApplications
-               .Where(x => x.Status == IssuerApplicationStatus.Pending)
-               .Select(x => new IssuerApplicationListDto
-               {
-                   Id = x.Id,
-                   InstitutionName = x.InstitutionName,
-                   EthereumAddress = x.EthereumAddress,
-                   Status = x.Status
-               })
-               .ToListAsync();
-
+            var pendingIssuers = await _issuerApplicationService.GetOnlyPendingIssuerAsync();
             return Ok(pendingIssuers);
         }
         [HttpPatch("{id}/status")]
         public async Task<IActionResult> UpdateStatus(Guid id, [FromQuery] string status)
         {
-            var entity = await _db.IssuerApplications.FirstOrDefaultAsync(x => x.Id == id);
-            if (entity == null)
-                return NotFound();
-
-            if (!Enum.TryParse<IssuerApplicationStatus>(status, true, out var newStatus) ||
-                (newStatus != IssuerApplicationStatus.Approved && newStatus != IssuerApplicationStatus.Rejected))
+            var result = await _issuerApplicationService.UpdateStatusIssuerAsync(id, status);
+            if (!result)
             {
-                return BadRequest("Status must be 'Approved' or 'Rejected'.");
+                return BadRequest("Invalid request or status.");
             }
-
-            entity.Status = newStatus;
-            await _db.SaveChangesAsync();
-
-            if (newStatus == IssuerApplicationStatus.Approved)
-            {
-                await _blockchainService.AddIssuerAsync(entity.EthereumAddress);
-            }
-
             return NoContent();
         }
 

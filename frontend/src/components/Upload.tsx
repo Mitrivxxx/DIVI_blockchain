@@ -11,6 +11,7 @@ const CONTRACT_ABI = MyContractAbi.abi;
 const Upload = () => {
   const [file, setFile] = useState<File | null>(null);
   const [documentType, setDocumentType] = useState('');
+  const [owner, setOwner] = useState('');
   const [status, setStatus] = useState('');
   const [hashResult, setHashResult] = useState<{ hash: string, cid: string } | null>(null);
 
@@ -20,10 +21,19 @@ const Upload = () => {
       setStatus('Wybierz plik przed wysłaniem');
       return;
     }
+    if (!documentType) {
+      setStatus('Podaj typ dokumentu');
+      return;
+    }
+    if (!owner) {
+      setStatus('Podaj właściciela dokumentu');
+      return;
+    }
 
     const formData = new FormData();
     formData.append('file', file);
     formData.append('documentType', documentType);
+    formData.append('owner', owner);
 
     try {
       setStatus('Wysyłanie pliku na backend / Pinata...');
@@ -100,6 +110,16 @@ const Upload = () => {
             type="text"
             value={documentType}
             onChange={(e) => setDocumentType(e.target.value)}
+            required
+          />
+        </div>
+
+        <div>
+          <label>Właściciel dokumentu:</label>
+          <input
+            type="text"
+            value={owner}
+            onChange={(e) => setOwner(e.target.value)}
             required
           />
         </div>

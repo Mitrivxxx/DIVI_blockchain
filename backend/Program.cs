@@ -37,6 +37,7 @@ builder.Services.AddSwaggerGen(options =>
 builder.Services.AddScoped<IDocumentService, DocumentService>();
 builder.Services.AddHttpClient<PinataClient>();
 builder.Services.AddScoped<BlockchainService>();
+builder.Services.AddScoped<backend.Services.Interfaces.IIssuerApplicationService, backend.Services.IssuerApplicationService>();
 
 var app = builder.Build();
 

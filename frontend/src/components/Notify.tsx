@@ -17,7 +17,7 @@ const Notify: React.FC = () => {
   useEffect(() => {
     const fetchPending = async () => {
       try {
-        const res = await fetch(`${API_URL}/api/IssuerApplication`);
+        const res = await fetch(`${API_URL}/api/issuer`);
         if (!res.ok) throw new Error("Błąd pobierania danych");
         // Zakładamy, że backend zwraca id, jeśli nie, trzeba poprawić backend
         const data = await res.json();

@@ -3,10 +3,10 @@ pragma solidity ^0.8.20;
 
 library DocumentTypes {
     struct Document {
-        address issuer;
-        address documentOwner;
-        uint256 issuedAt;
-        string cid;
+        address issuer; //wystawca
+        address documentOwner; //wlasciciel dokumentu (np student)
+        uint256 issuedAt; //data wystawienia
+        string cid; 
         bytes32 documentType;
         bool exists;
     }

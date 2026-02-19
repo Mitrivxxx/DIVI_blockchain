@@ -32,7 +32,7 @@ const IssuerRole: React.FC = () => {
     setError('');
     setSuccess(false);
     try {
-      const res = await fetch(`${API_URL}/api/IssuerApplication`, {
+      const res = await fetch(`${API_URL}/api/issuer`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ institutionName, ethereumAddress, email, description })

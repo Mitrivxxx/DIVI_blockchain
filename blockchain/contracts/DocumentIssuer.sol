@@ -7,15 +7,12 @@ contract DocumentIssuer {
     // Administrator address (hardcoded)
     address public admin = 0xeb2a27c7c6E72BC5022a49c4e044E72ab70E9bDb;
 
-    // Modifier to restrict access to admin
     modifier onlyAdmin() {
         require(msg.sender == admin, "Not admin");
         _;
     }
 
-    // Mapping to track issuer status
     mapping(address => bool) public isIssuer;
-    // Mapping to track issuer applications
     mapping(address => bool) public issuerApplications;
 
     // Function for users to apply to become issuer

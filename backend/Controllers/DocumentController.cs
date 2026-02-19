@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Mvc;
-using backend.DTOs;
 using backend.Services;
 
 [ApiController]
@@ -18,13 +17,19 @@ public class DocumentController : ControllerBase
     public async Task<IActionResult> UploadDocument(
         IFormFile file,
         [FromForm] string documentType,
-        [FromForm] string? owner)
+        [FromForm] string owner)
     {
         if (file == null)
             return BadRequest("file is required");
 
         if (file.Length == 0)
             return BadRequest("file is empty");
+
+        if (string.IsNullOrWhiteSpace(documentType))
+            return BadRequest("documentType is required");
+
+        if (string.IsNullOrWhiteSpace(owner))
+            return BadRequest("owner is required");
 
         const long maxFileSizeBytes = 5 * 1024 * 1024;
         if (file.Length > maxFileSizeBytes)
@@ -35,7 +40,8 @@ public class DocumentController : ControllerBase
             && !string.Equals(file.ContentType, "application/pdf", StringComparison.OrdinalIgnoreCase))
             return BadRequest("only pdf files are allowed");
 
-        var result = await _documentService.ProcessDocumentAsync(file);
+        // documentType jako string, konwersja do bytes32 w serwisie/blockchainie
+        var result = await _documentService.ProcessDocumentAsync(file, documentType, owner);
 
         return Ok(result);
     }

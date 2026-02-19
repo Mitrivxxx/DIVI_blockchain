@@ -13,11 +13,6 @@ Hash + metadata → CID (Content Identifier)
 ---IPFS ≠ chmura
 pinning, Peer-to-Peer
 
----CID (Content Identifier) to skrót/identyfikator treści w IPFS —
-wyliczany z zawartości pliku (content‑addressed).
-Otrzymujesz go w odpowiedzi po wysłaniu pliku do
-Pinata (np. pole IpfsHash), albo z lokalnego noda IPFS po dodaniu pliku.
-
 ---------------
 ethers.js to popularna biblioteka JavaScript/TypeScript do pracy z
 blockchainem Ethereum – pozwala na podpisywanie transakcji, interakcję ze
@@ -30,15 +25,34 @@ narzędziami jak ethers.js. Ułatwia cały proces developmentu smart kontraktów
 ------------------------------
 
 
-Sepolia+infura
+Sepolia to testnet dziala tak samo jak mainnet
+
 -------------------------
-RPC to adres serwera (węzła blockchain), przez który Twoja aplikacja wysyła i
+RPC (łączy z infura) to adres serwera (węzła blockchain), przez który Twoja aplikacja wysyła i
 odczytuje dane z sieci, np. przy deployu lub wywołaniu smart kontraktu.
+----------------
+abi - ABI to specyfikacja (w formacie JSON) mówiąca, jak frontend lub
+inny klient ma komunikować się ze smart kontraktem i interpretować jego funkcje oraz eventy.
 
+infura pośrednik między Twoją aplikacją a siecią Ethereum, zapewniający
+stabilny i szybki dostęp.
+
+===================================================================
+===================================================================
 Sepolia: 0x7C0c5b200FCaF7790ff0FA2Fe56f73B57f7eaC6d
-
 PINATA_API_KEY=9991a72d9_example
 PINATA_API_SECRET=616cda209641082abecd1c_example
 PINATA_JWT=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9_example
 SEPOLIA_RPC_URL=https://sepolia.infura.io/v3/77ae5_example
 SEPOLIA_PRIVATE_KEY=0xbefbd418c68f1c0671e429353b98b5_example
+===================================================================
+===================================================================
+1. co to znaczy: Globalny, zdecentralizowany komputer uruchamiający smart kontrakty.
+2. co to klucz prywatny (kontrolowane kluczem prywatnym)
+3. jak zdobyc gas
+4.wytlumacz defi, co to dao, erc-20
+5. kryptografia: SHA256
+6. Konsensus rozproszony: BFT, Nakamoto consensus, Proof of Stake
+7. jak pozwala publicznie weryfikować dokument
+8.co to naczy stakowac, kim jest: walidator
+9. bardziej wytlumacz: dao
