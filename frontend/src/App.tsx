@@ -1,3 +1,4 @@
+import "./index.scss";
 
 import React from 'react';
 import MainLayout from './pages/MainLayout';

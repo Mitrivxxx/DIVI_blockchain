@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import type { TabKey } from "../components/tabs";
 import Sidebar from "../components/Sidebar";
 import Dashboard from "../components/Dashboard";
@@ -11,10 +11,16 @@ import IssuerRole from "../components/IssuerRole";
 import Notify from "../components/Notify";
 import bell from "../assets/icons/bell.svg";
 import user from "../assets/icons/user.svg";
+import "./MainLayout.scss";
 
 const MainLayout: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabKey>("dashboard");
   const [showNotify, setShowNotify] = useState(false);
+
+  // Reset showNotify when activeTab changes
+  useEffect(() => {
+    setShowNotify(false);
+  }, [activeTab]);
 
   const handleBellClick = () => setShowNotify(true);
 
@@ -40,24 +46,16 @@ const MainLayout: React.FC = () => {
   };
 
   return (
-    <div style={{ display: "flex" }}>
+    <div className="mainlayout-root">
       <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
-      <div
-        style={{
-          flex: 1,
-          background: "#f0f2f5",
-          minHeight: "100vh",
-          display: "flex",
-          flexDirection: "column",
-        }}
-      >
+      <div className="mainlayout-content">
         {/* Header */}
-        <div style={{ display: "flex", justifyContent: "flex-end", padding: "10px 20px", background: "#fff", alignItems: "center" }}>
-          <img src={bell} alt="Notifications" style={{ width: "24px", height: "24px", marginRight: "20px", cursor: "pointer" }} onClick={handleBellClick} />
-          <img src={user} alt="User Profile" style={{ width: "24px", height: "24px", cursor: "pointer" }} />
+        <div className="mainlayout-header">
+          <img src={bell} alt="Notifications" className="mainlayout-bell" onClick={handleBellClick} />
+          <img src={user} alt="User Profile" className="mainlayout-user" />
         </div>
         {/* Main content */}
-        <div style={{ flex: 1, padding: "20px" }}>
+        <div className="mainlayout-main">
           {showNotify ? <Notify /> : renderContent()}
         </div>
       </div>

@@ -1,0 +1,38 @@
+
+.mainlayout-root {
+	display: flex;
+}
+
+.mainlayout-content {
+	flex: 1;
+	background: #f0f2f5;
+	min-height: 100vh;
+	display: flex;
+	flex-direction: column;
+}
+
+.mainlayout-header {
+	display: flex;
+	justify-content: flex-end;
+	padding: 10px 20px;
+	background: #fff;
+	align-items: center;
+}
+
+.mainlayout-bell {
+	width: 24px;
+	height: 24px;
+	margin-right: 20px;
+	cursor: pointer;
+}
+
+.mainlayout-user {
+	width: 24px;
+	height: 24px;
+	cursor: pointer;
+}
+
+.mainlayout-main {
+	flex: 1;
+	padding: 20px;
+}
