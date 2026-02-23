@@ -7,25 +7,35 @@ namespace backend.Controllers
     [Route("api/issuer")]
     public class IssuerApplicationController : ControllerBase
     {
-        private readonly backend.Services.Interfaces.IIssuerApplicationService _issuerApplicationService;
-
-        public IssuerApplicationController(backend.Services.Interfaces.IIssuerApplicationService issuerApplicationService)
+        private readonly Services.Interfaces.IIssuerApplicationService _issuerApplicationService;
+        public IssuerApplicationController(Services.Interfaces.IIssuerApplicationService issuerApplicationService)
         {
             _issuerApplicationService = issuerApplicationService;
         }
 
+        /// <summary>
+        /// Creates a new issuer application (applicationissuer -> notify).
+        /// </summary>
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] CreateIssuerApplicationDto dto)
         {
             var entity = await _issuerApplicationService.CreateIssuerAsync(dto);
             return CreatedAtAction(null, new { id = entity.Id });
         }
+
+        /// <summary>
+        /// Gets only pending applications for admin to review.
+        /// </summary>
         [HttpGet]
         public async Task<ActionResult<IEnumerable<IssuerApplicationListDto>>> GetOnlyPending()
         {
             var pendingIssuers = await _issuerApplicationService.GetOnlyPendingIssuerAsync();
             return Ok(pendingIssuers);
         }
+
+        /// <summary>
+        /// Updates application status (notify).
+        /// </summary>
         [HttpPatch("{id}/status")]
         public async Task<IActionResult> UpdateStatus(Guid id, [FromQuery] string status)
         {

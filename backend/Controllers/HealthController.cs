@@ -6,6 +6,9 @@ namespace backend.Controllers;
 [Route("health")]
 public class HealthController : ControllerBase
 {
+    /// <summary>
+    /// Returns the server status.
+    /// </summary>
     [HttpGet]
     public IActionResult Get()
     {

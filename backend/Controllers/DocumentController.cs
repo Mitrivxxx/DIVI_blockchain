@@ -12,6 +12,10 @@ public class DocumentController : ControllerBase
         _documentService = documentService;
     }
 
+    /// <summary>
+    /// Uploads a document, stores it in IPFS, issues it on the blockchain, and saves metadata in the database.
+    /// </summary>
+
     [HttpPost("upload-document")]
     [Consumes("multipart/form-data")]
     public async Task<IActionResult> UploadDocument(
@@ -40,7 +44,6 @@ public class DocumentController : ControllerBase
             && !string.Equals(file.ContentType, "application/pdf", StringComparison.OrdinalIgnoreCase))
             return BadRequest("only pdf files are allowed");
 
-        // documentType jako string, konwersja do bytes32 w serwisie/blockchainie
         var result = await _documentService.ProcessDocumentAsync(file, documentType, owner);
 
         return Ok(result);

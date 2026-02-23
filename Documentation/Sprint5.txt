@@ -1,8 +1,8 @@
 [ERRORY DO NAPRAWY]. 
-+(chyba)-jak akceptuje w notify i blockchain nieprzejdzie to
-tak czy siak db przechodzi 
++(chyba)-jak akceptuje w notify i blockchain nieprzejdzie to tak czy siak db przechodzi 
 +-applyIssuer nie ma ethadres
 +-popracowac z gas bo jakies dziwne rzeczy
+-admin na blockchain
 
 !!! 1. docker
 
@@ -15,7 +15,7 @@ po stronie frontendu. (aktualnie jest na sztywno w .env)
     -ApproveIssuerAsync
     -RemoveIssuerAsync
 
-4. poprawic abi "blockchainService" (mozna przeniesc StringToBytes32 do UTILS)
++4. poprawic abi "blockchainService" (mozna przeniesc StringToBytes32 do UTILS)
 
 5. PiniataClient (chat mi takie glupotki wpylul):
 Obsługa błędów: Warto dodać lepszą obsługę wyjątków (np. try-catch, logowanie błędów).
@@ -24,13 +24,14 @@ HttpClient: Jeśli nie korzystasz z DI, unikaj tworzenia wielu instancji HttpCli
 Możesz rozważyć asynchroniczne otwieranie pliku (FileStream z FileOptions.Asynchronous).
 Rozważ przeniesienie adresu bazowego i endpointu do konfiguracji.
 
-6. moge dodac komentarze do endpointow w swagger
++6. moge dodac komentarze do endpointow w swagger
 
 7. refaktor frontendu
 
 8. zainteresowac sie czym jest logger w .net
 
 --------------------------------
++X. taka stroktora
 project-root/
 │
 ├── public/
