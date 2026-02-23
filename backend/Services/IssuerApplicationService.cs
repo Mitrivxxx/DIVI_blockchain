@@ -60,14 +60,20 @@ namespace backend.Services
                 return false;
             }
 
-            entity.Status = newStatus;
-            await _db.SaveChangesAsync();
-
             if (newStatus == IssuerApplicationStatus.Approved)
             {
-                await _blockchainService.AddIssuerAsync(entity.EthereumAddress);
+                try
+                {
+                    await _blockchainService.AddIssuerAsync(entity.EthereumAddress);
+                }
+                catch
+                {
+                    // Blockchain failed, do not update DB
+                    return false;
+                }
             }
-
+            entity.Status = newStatus;
+            await _db.SaveChangesAsync();
             return true;
         }
     }

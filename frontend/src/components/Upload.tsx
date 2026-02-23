@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { BrowserProvider, Contract, id, toUtf8Bytes, zeroPadBytes } from 'ethers';
-import { API_URL } from '../api';
+import { API_URL } from '../types/api';
 //import MyContractAbi from '../../blockchain/artifacts/contracts/DocumentIssuer.sol/DocumentIssuer.json';
 import MyContractAbi from '../../../blockchain/artifacts/contracts/DocumentIssuer.sol/DocumentIssuer.json';
 const CONTRACT_ADDRESS = "0x7C0c5b200FCaF7790ff0FA2Fe56f73B57f7eaC6d";

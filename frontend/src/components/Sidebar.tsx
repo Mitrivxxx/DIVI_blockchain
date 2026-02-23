@@ -9,13 +9,13 @@ import React, { useEffect, useState } from 'react';
 import { ethers } from 'ethers';
 import { tabs } from './tabs';
 import type { TabKey } from './tabs';
+import './Sidebar.scss';
 
 type SidebarProps = {
   activeTab: TabKey;
   setActiveTab: (tab: TabKey) => void;
 };
 
-// tabs importowane z ./tabs
 
 
 const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => {
@@ -44,30 +44,23 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => {
   const shortAddress = (addr: string) => addr.slice(0, 6) + '...' + addr.slice(-4);
 
   return (
-    <div style={{ width: '220px', background: '#f8f9fa', padding: '20px', minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+    <div className="sidebar-root">
       <div>
-        <h2>System</h2>
-        <ul style={{ listStyle: 'none', padding: 0 }}>
+        <h2 className="sidebar-title">System</h2>
+        <ul className="sidebar-list">
           {tabs.map(tab => (
             <li
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
-              style={{
-                padding: '12px 16px',
-                margin: '6px 0',
-                cursor: 'pointer',
-                borderRadius: '6px',
-                background: activeTab === tab.key ? '#007bff' : 'transparent',
-                color: activeTab === tab.key ? '#fff' : '#333',
-              }}
+              className={"sidebar-item" + (activeTab === tab.key ? " active" : "")}
             >
               {tab.label}
             </li>
           ))}
         </ul>
       </div>
-      <div style={{ marginTop: 'auto', paddingTop: '24px', fontSize: '14px', color: '#666' }}>
-        Adres ETH: {walletAddress ? <span style={{ fontWeight: 600 }}>{shortAddress(walletAddress)}</span> : <span style={{ color: '#bbb' }}>Brak połączenia</span>}
+      <div className="sidebar-footer">
+        Adres ETH: {walletAddress ? <span>{shortAddress(walletAddress)}</span> : <span className="no-connection">Brak połączenia</span>}
       </div>
     </div>
   );

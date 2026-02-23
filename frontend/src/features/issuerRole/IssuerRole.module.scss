@@ -1,0 +1,19 @@
+.container {
+  max-width: 500px;
+  margin: 40px auto;
+  padding: 32px 24px;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.08);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.container h2 {
+  font-size: 2rem;
+  font-weight: 600;
+  margin-bottom: 24px;
+  color: #222;
+  letter-spacing: 0.01em;
+}

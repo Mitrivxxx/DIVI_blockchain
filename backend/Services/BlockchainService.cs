@@ -13,17 +13,22 @@ public class BlockchainService : IBlockchainService
 
         var privateKey = Environment.GetEnvironmentVariable("SEPOLIA_PRIVATE_KEY")
             ?? throw new ArgumentNullException("SEPOLIA_PRIVATE_KEY missing");
+        Console.WriteLine($"[BlockchainService] SEPOLIA_PRIVATE_KEY loaded: {privateKey.Substring(0, 6)}... (length: {privateKey.Length})");
 
         var rpcUrl = config["Blockchain:RpcUrl"]
             ?? throw new ArgumentNullException("Blockchain:RpcUrl missing");
+        Console.WriteLine($"[BlockchainService] Blockchain:RpcUrl loaded: {rpcUrl}");
 
         _contractAddress = config["Blockchain:ContractAddress"]
             ?? throw new ArgumentNullException("Blockchain:ContractAddress missing");
+        Console.WriteLine($"[BlockchainService] Blockchain:ContractAddress loaded: {_contractAddress}");
 
         var account = new Account(privateKey);
+        Console.WriteLine($"[BlockchainService] Account address: {account.Address}");
         _web3 = new Web3(account, rpcUrl);
 
         _abi = ABI;
+        Console.WriteLine("[BlockchainService] ABI loaded");
     }
 
     // =============================
@@ -37,13 +42,21 @@ public class BlockchainService : IBlockchainService
         string documentType)
     {
 
+        Console.WriteLine($"[IssueDocumentAsync] Called with hash={hash}, cid={cid}, owner={owner}, documentType={documentType}");
         var contract = _web3.Eth.GetContract(_abi, _contractAddress);
+        Console.WriteLine($"[IssueDocumentAsync] Contract loaded at {_contractAddress}");
         var function = contract.GetFunction("issueDocument");
+        Console.WriteLine("[IssueDocumentAsync] Function 'issueDocument' loaded");
         var hashBytes32 = StringToBytes32(hash, true);
         var documentTypeBytes32 = StringToBytes32(documentType);
+        Console.WriteLine($"[IssueDocumentAsync] hashBytes32: {BitConverter.ToString(hashBytes32)}");
+        Console.WriteLine($"[IssueDocumentAsync] documentTypeBytes32: {BitConverter.ToString(documentTypeBytes32)}");
+
+        var fromAddress = _web3.TransactionManager.Account.Address;
+        Console.WriteLine($"[IssueDocumentAsync] From address: {fromAddress}");
 
         var gasEstimate = await function.EstimateGasAsync(
-            from: _web3.TransactionManager.Account.Address,
+            from: fromAddress,
             null,
             null,
             hashBytes32,
@@ -51,37 +64,51 @@ public class BlockchainService : IBlockchainService
             owner,
             documentTypeBytes32
         );
+        Console.WriteLine($"[IssueDocumentAsync] Gas estimate: {gasEstimate.Value}");
         var gasWithBuffer = new Nethereum.Hex.HexTypes.HexBigInteger(gasEstimate.Value + (gasEstimate.Value / 10));
+        Console.WriteLine($"[IssueDocumentAsync] Gas with buffer: {gasWithBuffer.Value}");
 
-        var txHash = await function.SendTransactionAsync(
-            from: _web3.TransactionManager.Account.Address,
-            gas: gasWithBuffer,
-            value: null,
-            functionInput: new object[]
-            {
-                hashBytes32,
-                cid,
-                owner,
-                documentTypeBytes32
-            });
-
-        return txHash;
+        try
+        {
+            var txHash = await function.SendTransactionAsync(
+                from: fromAddress,
+                gas: gasWithBuffer,
+                value: null,
+                functionInput: new object[]
+                {
+                    hashBytes32,
+                    cid,
+                    owner,
+                    documentTypeBytes32
+                });
+            Console.WriteLine($"[IssueDocumentAsync] Transaction hash: {txHash}");
+            return txHash;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[IssueDocumentAsync] Exception: {ex.Message}\n{ex.StackTrace}");
+            throw;
+        }
     }
 
     public async Task<bool> VerifyDocumentAsync(string hash)
     {
+        Console.WriteLine($"[VerifyDocumentAsync] Called with hash={hash}");
         var contract = _web3.Eth.GetContract(_abi, _contractAddress);
         var function = contract.GetFunction("verifyDocument");
-
-        return await function.CallAsync<bool>(StringToBytes32(hash, true));
+        var hashBytes32 = StringToBytes32(hash, true);
+        Console.WriteLine($"[VerifyDocumentAsync] hashBytes32: {BitConverter.ToString(hashBytes32)}");
+        return await function.CallAsync<bool>(hashBytes32);
     }
 
     public async Task<List<object>> GetDocumentAsync(string hash)
     {
+        Console.WriteLine($"[GetDocumentAsync] Called with hash={hash}");
         var contract = _web3.Eth.GetContract(_abi, _contractAddress);
         var function = contract.GetFunction("getDocument");
-
-        return await function.CallAsync<List<object>>(StringToBytes32(hash, true));
+        var hashBytes32 = StringToBytes32(hash, true);
+        Console.WriteLine($"[GetDocumentAsync] hashBytes32: {BitConverter.ToString(hashBytes32)}");
+        return await function.CallAsync<List<object>>(hashBytes32);
     }
 
     // =============================
@@ -92,12 +119,26 @@ public class BlockchainService : IBlockchainService
     {
         var contract = _web3.Eth.GetContract(_abi, _contractAddress);
         var function = contract.GetFunction("addIssuer");
+        var fromAddress = _web3.TransactionManager.Account.Address;
 
-        return await function.SendTransactionAsync(
-            from: _web3.TransactionManager.Account.Address,
-            gas: null,
+
+        // Estimate gas
+        var gasEstimate = await function.EstimateGasAsync(
+            from: fromAddress,
+            null,
+            null,
+            issuerAddress
+        );
+        var gasWithBuffer = new Nethereum.Hex.HexTypes.HexBigInteger(gasEstimate.Value + (gasEstimate.Value / 10));
+
+
+        var txHash = await function.SendTransactionAsync(
+            from: fromAddress,
+            gas: gasWithBuffer,
             value: null,
             functionInput: issuerAddress);
+        return txHash;
+
     }
 
     public async Task<string> ApproveIssuerAsync(string applicantAddress)

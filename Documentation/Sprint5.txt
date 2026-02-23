@@ -1,6 +1,10 @@
-0. refaktor frontendu
+[ERRORY DO NAPRAWY]. 
++(chyba)-jak akceptuje w notify i blockchain nieprzejdzie to
+tak czy siak db przechodzi 
++-applyIssuer nie ma ethadres
++-popracowac z gas bo jakies dziwne rzeczy
 
-1. docker
+!!! 1. docker
 
 2. w obecnym kodzie adres nadawcy jest zawsze taki sam (z backendu),
 niezależnie od konta w Metamask. Dynamiczna zmiana wymaga obsługi podpisu
@@ -22,8 +26,103 @@ Rozważ przeniesienie adresu bazowego i endpointu do konfiguracji.
 
 6. moge dodac komentarze do endpointow w swagger
 
+7. refaktor frontendu
 
+8. zainteresowac sie czym jest logger w .net
 
+--------------------------------
+project-root/
+│
+├── public/
+│   ├── index.html
+│   └── favicon.ico
+│
+├── src/
+│   │
+│   ├── app/                     # konfiguracja aplikacji
+│   │   ├── App.tsx
+│   │   ├── main.tsx
+│   │   ├── routes.tsx
+│   │   ├── providers.tsx        # context, theme, query client itp.
+│   │   └── layout/
+│   │       ├── MainLayout.tsx
+│   │       └── AdminLayout.tsx
+│   │
+│   ├── pages/                   # tylko entry-pointy z routera
+│   │   ├── DashboardPage/
+│   │   │   └── DashboardPage.tsx
+│   │   ├── LoginPage/
+│   │   ├── ProfilePage/
+│   │   └── NotFoundPage/
+│   │
+│   ├── features/                # 🔥 SERCE APLIKACJI
+│   │   ├── auth/
+│   │   │   ├── components/
+│   │   │   ├── hooks/
+│   │   │   ├── services/
+│   │   │   ├── types/
+│   │   │   └── index.ts
+│   │   │
+│   │   ├── documents/
+│   │   │   ├── components/
+│   │   │   ├── hooks/
+│   │   │   ├── services/
+│   │   │   ├── utils/
+│   │   │   ├── types/
+│   │   │   └── index.ts
+│   │   │
+│   │   ├── issuer/
+│   │   │   ├── components/
+│   │   │   ├── hooks/
+│   │   │   ├── services/
+│   │   │   ├── types/
+│   │   │   └── index.ts
+│   │   │
+│   │   └── notifications/
+│   │
+│   ├── components/              # globalne UI (design system)
+│   │   ├── Button/
+│   │   ├── Modal/
+│   │   ├── Table/
+│   │   ├── Input/
+│   │   └── Spinner/
+│   │
+│   ├── services/                # globalne serwisy
+│   │   ├── apiClient.ts
+│   │   ├── interceptors.ts
+│   │   └── storageService.ts
+│   │
+│   ├── store/                   # Redux / Zustand
+│   │   ├── index.ts
+│   │   └── slices/
+│   │
+│   ├── hooks/                   # globalne hooki
+│   │   ├── useDebounce.ts
+│   │   ├── useAuth.ts
+│   │   └── usePermissions.ts
+│   │
+│   ├── utils/                   # czyste funkcje
+│   │   ├── validators.ts
+│   │   ├── formatters.ts
+│   │   └── constants.ts
+│   │
+│   ├── types/                   # wspólne typy
+│   │   └── api.types.ts
+│   │
+│   ├── styles/
+│   │   ├── globals.scss
+│   │   ├── variables.scss
+│   │   └── mixins.scss
+│   │
+│   └── assets/
+│       ├── icons/
+│       ├── images/
+│       └── fonts/
+│
+├── .env
+├── tsconfig.json
+├── package.json
+└── vite.config.ts / webpack.config.js
 
 
 
