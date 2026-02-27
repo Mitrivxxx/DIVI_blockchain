@@ -1,26 +1,32 @@
 
 import React from "react";
-import { NotifyList } from "./components/IssuerList";
+import PendingIssuerApplications from "./components/PendingIssuerApplications";
 import { usePendingIssuerApplications } from "./hooks/usePendingIssuerApplications";
 import styles from "./Notify.module.scss";
+import { parseJwt } from '@/app/utils/jwt';
+
+
 
 const Notify: React.FC = () => {
+  const token = localStorage.getItem("token");
+  const decoded = parseJwt(token);
+  console.log('Notify token:', token);
+  console.log('Notify decoded:', decoded);
   const { pending, loading, error, handleUpdateStatus } = usePendingIssuerApplications();
+  const isAdmin = decoded?.["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"] !== "Admin";
 
+
+if (!isAdmin) {
+    return null;
+  }
   return (
-    <div className={styles.container}>
-      <h2>Pending Issuer Applications</h2>
-      {loading && <p>Loading...</p>}
-      {error && <p className={styles.error}>{error}</p>}
-      {!loading && pending.length === 0 && <p>No pending applications.</p>}
-      {!loading && pending.length > 0 && (
-        <NotifyList
-          pending={pending}
-          onApprove={id => handleUpdateStatus(id, 'Approved')}
-          onReject={id => handleUpdateStatus(id, 'Rejected')}
-        />
-      )}
-    </div>
+    <PendingIssuerApplications
+      pending={pending}
+      loading={loading}
+      error={error}
+      onApprove={id => handleUpdateStatus(id, 'Approved')}
+      onReject={id => handleUpdateStatus(id, 'Rejected')}
+    />
   );
 };
 

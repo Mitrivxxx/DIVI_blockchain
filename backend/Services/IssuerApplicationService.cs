@@ -19,6 +19,7 @@ namespace backend.Services
 
         public async Task<IssuerApplication> CreateIssuerAsync(CreateIssuerApplicationDto dto)
         {
+            Console.WriteLine($"[IssuerApplicationService] CreateIssuerAsync - Creating for {dto?.InstitutionName}, {dto?.EthereumAddress}");
             var entity = new IssuerApplication
             {
                 Id = Guid.NewGuid(),
@@ -31,12 +32,14 @@ namespace backend.Services
             };
             _db.IssuerApplications.Add(entity);
             await _db.SaveChangesAsync();
+            Console.WriteLine($"[IssuerApplicationService] Created entity with id: {entity.Id}");
             return entity;
         }
 
         public async Task<IEnumerable<IssuerApplicationListDto>> GetOnlyPendingIssuerAsync()
         {
-            return await _db.IssuerApplications
+            Console.WriteLine("[IssuerApplicationService] GetOnlyPendingIssuerAsync called");
+            var result = await _db.IssuerApplications
                 .Where(x => x.Status == IssuerApplicationStatus.Pending)
                 .Select(x => new IssuerApplicationListDto
                 {
@@ -46,17 +49,24 @@ namespace backend.Services
                     Status = x.Status
                 })
                 .ToListAsync();
+            Console.WriteLine($"[IssuerApplicationService] Pending found: {result.Count}");
+            return result;
         }
 
         public async Task<bool> UpdateStatusIssuerAsync(Guid id, string status)
         {
+            Console.WriteLine($"[IssuerApplicationService] UpdateStatusIssuerAsync - id: {id}, status: {status}");
             var entity = await _db.IssuerApplications.FirstOrDefaultAsync(x => x.Id == id);
             if (entity == null)
+            {
+                Console.WriteLine("[IssuerApplicationService] UpdateStatusIssuerAsync - entity not found");
                 return false;
+            }
 
             if (!Enum.TryParse<IssuerApplicationStatus>(status, true, out var newStatus) ||
                 (newStatus != IssuerApplicationStatus.Approved && newStatus != IssuerApplicationStatus.Rejected))
             {
+                Console.WriteLine("[IssuerApplicationService] UpdateStatusIssuerAsync - invalid status");
                 return false;
             }
 
@@ -66,14 +76,15 @@ namespace backend.Services
                 {
                     await _blockchainService.AddIssuerAsync(entity.EthereumAddress);
                 }
-                catch
+                catch (Exception ex)
                 {
-                    // Blockchain failed, do not update DB
+                    Console.WriteLine($"[IssuerApplicationService] Blockchain error: {ex.Message}");
                     return false;
                 }
             }
             entity.Status = newStatus;
             await _db.SaveChangesAsync();
+            Console.WriteLine($"[IssuerApplicationService] Status updated to {newStatus}");
             return true;
         }
     }

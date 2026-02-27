@@ -39,7 +39,7 @@ stabilny i szybki dostęp.
 
 ===================================================================
 ===================================================================
-Sepolia: 0x7C0c5b200FCaF7790ff0FA2Fe56f73B57f7eaC6d
+Sepolia: 0xbdCF60E0876BdE8159c959164340264D219b4d53
 PINATA_API_KEY=9991a72d9_example
 PINATA_API_SECRET=616cda209641082abecd1c_example
 PINATA_JWT=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9_example

@@ -26,32 +26,70 @@ namespace backend.Services
 
             try
             {
-                // 3. SHA-256
+                // 1. SHA-256
                 string hash;
                 await using (var stream = File.OpenRead(tempPath))
                 {
                     using var sha256 = SHA256.Create();
                     var hashBytes = await sha256.ComputeHashAsync(stream);
-                        hash = "0x" + Convert.ToHexString(hashBytes).ToLower();
+                    hash = "0x" + Convert.ToHexString(hashBytes).ToLower();
                 }
 
-                // 4–5. PINATA → CID
-                var cid = await _pinataClient.UploadAsync(tempPath, file.FileName);
+                // 2. Sprawdź czy dokument już istnieje w blockchain
+                var exists = await _blockchainService.VerifyDocumentAsync(hash);
+                if (exists)
+                {
+                    return new UploadResultDto
+                    {
+                        Hash = hash,
+                        Cid = string.Empty,
+                        Message = "Taki dokument już istnieje w blockchain, nie możesz go wrzucić jeszcze raz."
+                    };
+                }
 
-                // Konwersja documentType (string) do bytes32
+                // 3. Upload do Pinata → CID
+                string cid;
+                try
+                {
+                    cid = await _pinataClient.UploadAsync(tempPath, file.FileName);
+                }
+                catch (Exception ex)
+                {
+                    return new UploadResultDto
+                    {
+                        Hash = hash,
+                        Cid = string.Empty,
+                        Message = $"Błąd uploadu do Pinata: {ex.Message}"
+                    };
+                }
 
-                // 6. Zapis do blockchaina (przekazujemy oryginalny documentType, konwersja w BlockchainService)
-                await _blockchainService.IssueDocumentAsync(hash, cid, owner, documentType);
+                // 4. Zapis do blockchaina (status Pending, potem Confirmed po sukcesie)
+                try
+                {
+                    // Załóżmy, że IssueDocumentAsync ustawia status Pending, a potem Confirmed
+                    await _blockchainService.IssueDocumentAsync(hash, cid, owner, documentType);
+                }
+                catch (Exception ex)
+                {
+                    // Plik jest już w Pinata, ale nie ma wpisu w blockchain
+                    return new UploadResultDto
+                    {
+                        Hash = hash,
+                        Cid = cid,
+                        Message = $"Błąd zapisu do blockchain: {ex.Message} (plik jest już w Pinata)"
+                    };
+                }
 
                 return new UploadResultDto
                 {
                     Hash = hash,
-                    Cid = cid
+                    Cid = cid,
+                    Message = "Dokument został zapisany w Pinata i blockchain (Confirmed)."
                 };
             }
             finally
             {
-                // 7. CLEANUP
+                // 5. CLEANUP
                 if (File.Exists(tempPath))
                     File.Delete(tempPath);
             }

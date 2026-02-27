@@ -2,22 +2,35 @@
 +(chyba)-jak akceptuje w notify i blockchain nieprzejdzie to tak czy siak db przechodzi 
 +-applyIssuer nie ma ethadres
 +-popracowac z gas bo jakies dziwne rzeczy
--admin na blockchain
 
-!!! 1. docker
 
-2. w obecnym kodzie adres nadawcy jest zawsze taki sam (z backendu),
+!!!!PAMIETAJ "JAK BENDE ROBIL REFACTOR NA BLOCKCHAIN
++-admin na blockchain (jest na sztywno)
++-jesli jestem adminem to jednoczesnie nie moge byc issuerem
++-Mechanizm statusów (enterprise approach)
+    Wprowadzasz status w kontrakcie:
+    enum DocumentStatus { Pending, Confirmed }
+    Flow:
+    Upload do Pinata
+    Wywołanie createDocument(hash, cid) → status = Pending
+    Jeśli tx fail → nic nie ma
+    Jeśli tx success → status Confirmed
+
+
+1. docker
+
++2. w obecnym kodzie adres nadawcy jest zawsze taki sam (z backendu),
 niezależnie od konta w Metamask. Dynamiczna zmiana wymaga obsługi podpisu
 po stronie frontendu. (aktualnie jest na sztywno w .env)
 
-3. autoryzacja adminow w backend (JWT):
+!!!!(nastepny sprint)3. autoryzacja adminow w backend (JWT):
     -AddIssuerAsync
     -ApproveIssuerAsync
     -RemoveIssuerAsync
 
 +4. poprawic abi "blockchainService" (mozna przeniesc StringToBytes32 do UTILS)
 
-5. PiniataClient (chat mi takie glupotki wpylul):
++5. PiniataClient (chat mi takie glupotki wpylul):
 Obsługa błędów: Warto dodać lepszą obsługę wyjątków (np. try-catch, logowanie błędów).
 Sprawdzenie obecności JWT: Jeśli zmienna środowiskowa jest pusta, konstruktor powinien rzucić wyjątek.
 HttpClient: Jeśli nie korzystasz z DI, unikaj tworzenia wielu instancji HttpClient (może prowadzić do wyczerpania portów).
@@ -27,8 +40,16 @@ Rozważ przeniesienie adresu bazowego i endpointu do konfiguracji.
 +6. moge dodac komentarze do endpointow w swagger
 
 7. refaktor frontendu
+    (podzial na issuer/admin/user)
 
-8. zainteresowac sie czym jest logger w .net
+8. upload file
+    +-gdy tranzakcja nie przejdzie to plik i tak pojawia sie w piniata, generuje hash i cid
+        (confirm, pending - refactor blockchain)
+    +-(walidacja) gdy jest taki sam plik w piniacie juz
+    -przyspiesz w metamask niedziala (xd huj wie co to)
+
+9. zainteresowac sie czym jest logger w .net
+    dlaczego nie Guid
 
 --------------------------------
 +X. taka stroktora

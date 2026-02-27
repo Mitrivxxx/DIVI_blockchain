@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
 import type { TabKey } from "../components/tabs";
 import { tabs } from "../components/tabs";
-import Sidebar from "../components/Sidebar";
+import Sidebar from "../components/sidebar/Sidebar";
 import Dashboard from "../components/Dashboard";
-import Upload from "../components/Upload";
+import Upload from "../features/uploadFile/Upload";
 import MyDocuments from "../components/MyDocuments";
 import Verify from "../components/Verify";
 import Profile from "../components/Profile";
