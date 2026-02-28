@@ -1,10 +1,12 @@
 using Nethereum.Web3;
 using Nethereum.Web3.Accounts;
+using Microsoft.Extensions.Configuration;
 
-
-public class BlockchainService : IBlockchainService
+namespace backend.Services.Blockchain
 {
-    private readonly Web3 _web3;
+	public class BlockchainService : IBlockchainService
+	{
+		    private readonly Web3 _web3;
     private readonly string _contractAddress;
     private readonly string _abi;
 
@@ -150,5 +152,5 @@ public class BlockchainService : IBlockchainService
 
         return await function.CallAsync<bool>(address);
     }
-
+	}
 }

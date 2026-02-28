@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Nethereum.Signer;
-using backend.Services.Interfaces;
+using backend.Services.Auth;
 using backend.Data;
 using backend.DTOs;
 using backend.Models;
@@ -45,7 +45,7 @@ namespace backend.Controllers
         [HttpPost("verify")]
         public async Task<IActionResult> Verify([FromBody] VerifyDto dto)
         {
-            Console.WriteLine($"[AuthController] POST /auth/verify - address: {dto?.Address}");
+            Console.WriteLine($"[AuthController] POST /auth/verify - address: {dto!.Address}");
             var message = dto.Nonce;
             var signer = new EthereumMessageSigner();
             var recoveredAddress = signer.EncodeUTF8AndEcRecover(message, dto.Signature);
@@ -65,8 +65,8 @@ namespace backend.Controllers
 
     public class VerifyDto
     {
-        public string Address { get; set; }
-        public string Nonce { get; set; }
-        public string Signature { get; set; }
+        public string Address { get; set; }= string.Empty;
+        public string Nonce { get; set; } = string.Empty;
+        public string Signature { get; set; } = string.Empty;
     }
 }

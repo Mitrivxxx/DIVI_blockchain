@@ -6,7 +6,7 @@ declare global {
 }
 
 import React from 'react';
-import type { TabKey } from '../tabs';
+import type { TabKey } from './tabs';
 import './Sidebar.scss';
 import { fetchUserRole } from './api/api';
 import { useWalletAddress } from './hooks/useWalletAddress';
@@ -49,7 +49,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => {
     <div className="sidebar-root">
       <div>
         <h2 className="sidebar-title">System</h2>
-        <SidebarTabs activeTab={activeTab} setActiveTab={setActiveTab} />
+        <SidebarTabs activeTab={activeTab} setActiveTab={setActiveTab} userRole={userRole} />
       </div>
       <SidebarFooter
         userRole={userRole}

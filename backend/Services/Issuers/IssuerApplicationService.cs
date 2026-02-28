@@ -1,17 +1,18 @@
 using backend.Data;
 using backend.DTOs;
 using backend.Models;
-using backend.Services.Interfaces;
+using backend.Services.Issuers;
+using backend.Services.Blockchain;
 using Microsoft.EntityFrameworkCore;
 
-namespace backend.Services
+namespace backend.Services.Issuers
 {
-    public class IssuerApplicationService : IIssuerApplicationService
-    {
+	public class IssuerApplicationService : IIssuerApplicationService
+	 {
         private readonly AppDbContext _db;
-        private readonly BlockchainService _blockchainService;
+        private readonly IBlockchainService _blockchainService;
 
-        public IssuerApplicationService(AppDbContext db, BlockchainService blockchainService)
+        public IssuerApplicationService(AppDbContext db, IBlockchainService blockchainService)
         {
             _db = db;
             _blockchainService = blockchainService;
@@ -19,7 +20,7 @@ namespace backend.Services
 
         public async Task<IssuerApplication> CreateIssuerAsync(CreateIssuerApplicationDto dto)
         {
-            Console.WriteLine($"[IssuerApplicationService] CreateIssuerAsync - Creating for {dto?.InstitutionName}, {dto?.EthereumAddress}");
+            Console.WriteLine($"[IssuerApplicationService] CreateIssuerAsync - Creating for {dto?.InstitutionName}, {dto!.EthereumAddress}");
             var entity = new IssuerApplication
             {
                 Id = Guid.NewGuid(),

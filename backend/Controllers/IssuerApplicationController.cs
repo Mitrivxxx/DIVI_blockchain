@@ -7,8 +7,8 @@ namespace backend.Controllers
     [Route("api/issuer")]
     public class IssuerApplicationController : ControllerBase
     {
-        private readonly Services.Interfaces.IIssuerApplicationService _issuerApplicationService;
-        public IssuerApplicationController(Services.Interfaces.IIssuerApplicationService issuerApplicationService)
+        private readonly Services.Issuers.IIssuerApplicationService _issuerApplicationService;
+        public IssuerApplicationController(Services.Issuers.IIssuerApplicationService issuerApplicationService)
         {
             _issuerApplicationService = issuerApplicationService;
         }
@@ -17,9 +17,10 @@ namespace backend.Controllers
         /// Creates a new issuer application (applicationissuer -> notify).
         /// </summary>
         [HttpPost]
+        [Microsoft.AspNetCore.Authorization.Authorize(Roles = "User")]
         public async Task<IActionResult> Create([FromBody] CreateIssuerApplicationDto dto)
         {
-            Console.WriteLine($"[IssuerApplicationController] POST /api/issuer - Received: {dto?.InstitutionName}, {dto?.EthereumAddress}");
+            Console.WriteLine($"[IssuerApplicationController] POST /api/issuer - Received: {dto?.InstitutionName}, {dto!.EthereumAddress}");
             var entity = await _issuerApplicationService.CreateIssuerAsync(dto);
             Console.WriteLine($"[IssuerApplicationController] Created issuer application with id: {entity.Id}");
             return CreatedAtAction(null, new { id = entity.Id });

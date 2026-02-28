@@ -1,15 +1,16 @@
 using System.Security.Cryptography;
 using backend.DTOs;
 using backend.Infrastructure;
+using backend.Services.Blockchain;
 
-namespace backend.Services
+namespace backend.Services.Documents
 {
-    public class DocumentService : IDocumentService
-    {
+	public class DocumentService : IDocumentService
+	  {
         private readonly PinataClient _pinataClient;
-        private readonly BlockchainService _blockchainService;
+        private readonly IBlockchainService _blockchainService;
 
-        public DocumentService(PinataClient pinataClient, BlockchainService blockchainService)
+        public DocumentService(PinataClient pinataClient, IBlockchainService blockchainService)
         {
             _pinataClient = pinataClient;
             _blockchainService = blockchainService;

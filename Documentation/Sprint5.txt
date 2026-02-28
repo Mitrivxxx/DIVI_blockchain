@@ -23,7 +23,7 @@
 niezależnie od konta w Metamask. Dynamiczna zmiana wymaga obsługi podpisu
 po stronie frontendu. (aktualnie jest na sztywno w .env)
 
-!!!!(nastepny sprint)3. autoryzacja adminow w backend (JWT):
++-3. autoryzacja adminow w backend (JWT):
     -AddIssuerAsync
     -ApproveIssuerAsync
     -RemoveIssuerAsync
@@ -39,17 +39,20 @@ Rozważ przeniesienie adresu bazowego i endpointu do konfiguracji.
 
 +6. moge dodac komentarze do endpointow w swagger
 
-7. refaktor frontendu
++7. refaktor frontendu (mozna jeszcze troche dopracowac)
     (podzial na issuer/admin/user)
 
-8. upload file
++8. upload file
     +-gdy tranzakcja nie przejdzie to plik i tak pojawia sie w piniata, generuje hash i cid
         (confirm, pending - refactor blockchain)
     +-(walidacja) gdy jest taki sam plik w piniacie juz
-    -przyspiesz w metamask niedziala (xd huj wie co to)
+    -przyspiesz w metamask niedziala (xd huj wie co to) -> ogolnie wszystkie
+    dodatkowe akcje w metamask
 
-9. zainteresowac sie czym jest logger w .net
-    dlaczego nie Guid
++9. zainteresowac sie czym jest logger w .net
+
+
++10. poprawic service w backend (foldery->scieszki)
 
 --------------------------------
 +X. taka stroktora

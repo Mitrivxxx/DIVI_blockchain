@@ -2,7 +2,12 @@
 using backend.Infrastructure.Pinata;
 using backend.Infrastructure;
 using backend.Infrastructure.Swagger;
-using backend.Services;
+using backend.Services.Auth;
+using backend.Services.Blockchain;
+using backend.Services.Documents;
+using backend.Services.Issuers;
+using backend.Services.Roles;
+using backend.Services.BackgroundJobs;
 using backend.Data;
 using DotNetEnv;
 using Microsoft.EntityFrameworkCore;
@@ -67,13 +72,14 @@ builder.Services.AddSwaggerGen(options =>
     }
 });
 builder.Services.AddScoped<IDocumentService, DocumentService>();
-builder.Services.AddHttpClient<PinataClient>();
-builder.Services.AddScoped<BlockchainService>();
+builder.Services.AddScoped<IBlockchainService, BlockchainService>();
 builder.Services.AddScoped<IUserRoleService, UserRoleService>();
-builder.Services.AddScoped<backend.Services.Interfaces.IIssuerApplicationService, backend.Services.IssuerApplicationService>();
-builder.Services.AddScoped<backend.Services.Interfaces.IAuthService, backend.Services.AuthService>();
-builder.Services.AddScoped<backend.Services.Interfaces.IJwtService, backend.Services.JwtService>();
-builder.Services.AddHostedService<backend.Services.NonceCleanupService>();
+builder.Services.AddScoped<IIssuerApplicationService, IssuerApplicationService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IJwtService, JwtService>();
+builder.Services.AddHostedService<NonceCleanupService>();
+builder.Services.AddHttpClient<PinataClient>();
+
 
 
 var app = builder.Build();
