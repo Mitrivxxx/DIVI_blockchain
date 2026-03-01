@@ -9,12 +9,7 @@ import { FileInput } from './components/FileInput';
 import { TextInput } from './components/TextInput';
 import { Status } from './components/Status';
 import { HashResult } from './components/HashResult';
-import { BrowserProvider, Contract, id, toUtf8Bytes, zeroPadBytes } from 'ethers';
 import { uploadDocument } from './api/api';
-//import MyContractAbi from '../../blockchain/artifacts/contracts/DocumentIssuer.sol/DocumentIssuer.json';
-import MyContractAbi from '../../../../blockchain/artifacts/contracts/DocumentIssuer.sol/DocumentIssuer.json';
-const CONTRACT_ADDRESS = "0xbdCF60E0876BdE8159c959164340264D219b4d53";
-const CONTRACT_ABI = MyContractAbi.abi;
 
 
 const Upload = () => {

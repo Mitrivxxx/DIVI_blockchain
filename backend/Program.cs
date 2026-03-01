@@ -10,6 +10,7 @@ using backend.Services.Roles;
 using backend.Services.BackgroundJobs;
 using backend.Data;
 using DotNetEnv;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 
 
@@ -22,6 +23,9 @@ var dbName = Environment.GetEnvironmentVariable("DB_NAME") ?? "IssuerDb";
 var dbUser = Environment.GetEnvironmentVariable("DB_USER") ?? "postgres";
 var dbPassword = Environment.GetEnvironmentVariable("DB_PASSWORD") ?? "";
 var connectionString = $"Host={dbHost};Port={dbPort};Database={dbName};Username={dbUser};Password={dbPassword}";
+var corsOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
+    ?? new[] { "http://localhost:3000" };
+
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(connectionString));
 
@@ -30,10 +34,16 @@ builder.Services.AddCors(options =>
     options.AddPolicy("react",
         policy =>
         {
-            policy.WithOrigins("http://localhost:3000")
+            policy.WithOrigins(corsOrigins)
                   .AllowAnyHeader()
                   .AllowAnyMethod();
         });
+});
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.KnownNetworks.Clear();
+    options.KnownProxies.Clear();
 });
 builder.Services.Configure<PinataOptions>(builder.Configuration.GetSection("Pinata"));
 builder.Services.AddControllers();
@@ -84,6 +94,21 @@ builder.Services.AddHttpClient<PinataClient>();
 
 var app = builder.Build();
 
+for (var attempt = 1; attempt <= 10; attempt++)
+{
+    try
+    {
+        using var scope = app.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        db.Database.Migrate();
+        break;
+    }
+    catch when (attempt < 10)
+    {
+        await Task.Delay(TimeSpan.FromSeconds(3));
+    }
+}
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
@@ -91,8 +116,12 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseForwardedHeaders();
 
-app.UseHttpsRedirection();
+if (app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
 
 // CORS musi być przed autoryzacją
 app.UseCors("react");

@@ -1,0 +1,18 @@
+[Unit]
+Description=DIVI Backend API
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/divi/backend
+ExecStart=/usr/bin/dotnet /opt/divi/backend/backend.dll
+Restart=always
+RestartSec=5
+KillSignal=SIGINT
+SyslogIdentifier=divi-backend
+User=www-data
+Environment=ASPNETCORE_ENVIRONMENT=Production
+Environment=ASPNETCORE_URLS=http://127.0.0.1:5021
+
+[Install]
+WantedBy=multi-user.target

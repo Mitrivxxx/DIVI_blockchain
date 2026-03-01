@@ -17,7 +17,7 @@
     Jeśli tx success → status Confirmed
 
 
-1. docker
++1. docker
 
 +2. w obecnym kodzie adres nadawcy jest zawsze taki sam (z backendu),
 niezależnie od konta w Metamask. Dynamiczna zmiana wymaga obsługi podpisu
