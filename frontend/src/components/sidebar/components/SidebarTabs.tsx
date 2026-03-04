@@ -18,14 +18,28 @@ const visibleTabsByRole: Record<string, TabKey[]> = {
   // Niezalogowany (null/undefined): traktujemy jak Issuer
 };
 
+const publicTabs: TabKey[] = ['verify'];
+
 
 function getVisibleTabs(userRole: string | null | undefined, tabs: Tab[]): Tab[] {
+  const ensurePublicTabs = (tabKeys: TabKey[]) =>
+    Array.from(new Set([...tabKeys, ...publicTabs]));
+
   if (!userRole || userRole === 'Issuer') {
-    const allowed = visibleTabsByRole['Issuer'] ?? tabs.map(tab => tab.key);
+    const allowed = ensurePublicTabs(visibleTabsByRole['Issuer'] ?? tabs.map(tab => tab.key));
     return tabs.filter(tab => allowed.includes(tab.key));
   }
+
+  const roleTabs = visibleTabsByRole[userRole];
+  if (roleTabs) {
+    const allowed = ensurePublicTabs(roleTabs);
+    return tabs.filter(tab => allowed.includes(tab.key));
+  }
+
+  const allTabs = ensurePublicTabs(tabs.map(tab => tab.key));
+  return tabs.filter(tab => allTabs.includes(tab.key));
+
   // Jeśli chcesz dodać inne role, dodaj do visibleTabsByRole
-  return tabs;
 }
 
 

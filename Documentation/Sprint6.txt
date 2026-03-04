@@ -1,20 +1,23 @@
-1. db
+0. moj frontend to gowno (podzial na niezalogowanych + panel/app)
+    -ukladanie kto ma gdzie dostep
+    -praca nad wygladem
+
++1. db
     -zamienić pole Id z Guid na int (najlepiej z autoinkrementacją w bazie danych)
     -lepsza walidacja
 
 2. .net 
-    -dodaj loggera
     -napisac testy
 
-3. frontendu    
++3. frontendu    
     -zainteresowac sie nginx
 
-4. blockchain
++4. blockchain
     -sprawdzanie czy dokument isnieje w blockchain
 
 5. zainteresowac sie https - czy bedzie dzialac z blockchain
 
-6. w docker
++6. w docker
     7️⃣ Czego juniorzy nie rozumieją
     ❌ Wystawiają backend bezpośrednio na 5000
     ❌ Nie mają SSL
@@ -22,4 +25,4 @@
     ❌ Nie mają firewalla
     ❌ Nie robią backupów
 
-7.
+7. cala logika blockchaina (roznego rodzaju walidacje, duzo testow)

@@ -15,3 +15,20 @@ export const uploadDocument = async (file: File, documentType: string, owner: st
 
   return response.data;
 };
+
+export const verifyDocument = async (file: File) => {
+  const formData = new FormData();
+  formData.append('file', file);
+
+  const response = await axios.post(
+    `${API_URL}/api/documents/verify-document`,
+    formData,
+    { headers: { 'Content-Type': 'multipart/form-data' } }
+  );
+
+  return response.data as {
+    hash: string;
+    isAuthentic: boolean;
+    message: string;
+  };
+};

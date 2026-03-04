@@ -44,7 +44,7 @@ namespace backend.Controllers
         /// </summary>
         [HttpPatch("{id}/status")]
         [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin")]
-        public async Task<IActionResult> UpdateStatus(Guid id, [FromQuery] string status)
+        public async Task<IActionResult> UpdateStatus(int id, [FromQuery] string status)
         {
             Console.WriteLine($"[IssuerApplicationController] PATCH /api/issuer/{{id}}/status - id: {id}, status: {status}");
             var result = await _issuerApplicationService.UpdateStatusIssuerAsync(id, status);

@@ -7,6 +7,6 @@ namespace backend.Services.Issuers
 	{
 		Task<IssuerApplication> CreateIssuerAsync(CreateIssuerApplicationDto dto);
 		Task<IEnumerable<IssuerApplicationListDto>> GetOnlyPendingIssuerAsync();
-		Task<bool> UpdateStatusIssuerAsync(Guid id, string status);
+		Task<bool> UpdateStatusIssuerAsync(int id, string status);
 	}
 }

@@ -23,7 +23,6 @@ namespace backend.Services.Issuers
             Console.WriteLine($"[IssuerApplicationService] CreateIssuerAsync - Creating for {dto?.InstitutionName}, {dto!.EthereumAddress}");
             var entity = new IssuerApplication
             {
-                Id = Guid.NewGuid(),
                 InstitutionName = dto.InstitutionName,
                 EthereumAddress = dto.EthereumAddress,
                 Email = dto.Email,
@@ -44,7 +43,6 @@ namespace backend.Services.Issuers
                 .Where(x => x.Status == IssuerApplicationStatus.Pending)
                 .Select(x => new IssuerApplicationListDto
                 {
-                    Id = x.Id,
                     InstitutionName = x.InstitutionName,
                     EthereumAddress = x.EthereumAddress,
                     Status = x.Status
@@ -54,7 +52,7 @@ namespace backend.Services.Issuers
             return result;
         }
 
-        public async Task<bool> UpdateStatusIssuerAsync(Guid id, string status)
+        public async Task<bool> UpdateStatusIssuerAsync(int id, string status)
         {
             Console.WriteLine($"[IssuerApplicationService] UpdateStatusIssuerAsync - id: {id}, status: {status}");
             var entity = await _db.IssuerApplications.FirstOrDefaultAsync(x => x.Id == id);

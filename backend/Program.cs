@@ -5,6 +5,7 @@ using backend.Infrastructure.Swagger;
 using backend.Services.Auth;
 using backend.Services.Blockchain;
 using backend.Services.Documents;
+using backend.Services.DocumentVerification;
 using backend.Services.Issuers;
 using backend.Services.Roles;
 using backend.Services.BackgroundJobs;
@@ -82,6 +83,7 @@ builder.Services.AddSwaggerGen(options =>
     }
 });
 builder.Services.AddScoped<IDocumentService, DocumentService>();
+builder.Services.AddScoped<IDocumentVerification, DocumentVerificationService>();
 builder.Services.AddScoped<IBlockchainService, BlockchainService>();
 builder.Services.AddScoped<IUserRoleService, UserRoleService>();
 builder.Services.AddScoped<IIssuerApplicationService, IssuerApplicationService>();
@@ -118,7 +120,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseForwardedHeaders();
 
-if (app.Environment.IsDevelopment())
+if (!app.Environment.IsDevelopment())
 {
     app.UseHttpsRedirection();
 }

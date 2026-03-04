@@ -26,9 +26,10 @@
     <PackageReference Include="Nethereum.Signer" Version="5.8.0" />
     <PackageReference Include="Nethereum.Web3" Version="5.8.0" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.0" />
+    <PackageReference Include="Serilog.AspNetCore" Version="7.0.0" />
+    <PackageReference Include="Serilog.Sinks.Console" Version="6.1.1" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
-  </ItemGroup>
-
+</ItemGroup>
   <ItemGroup>
     <Content Update="Infrastructure/Contracts/*.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
