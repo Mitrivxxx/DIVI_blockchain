@@ -1,0 +1,168 @@
+
+==============================
+SPRINT 3 – PODSUMOWANIE ZADAŃ
+==============================
+
+---
+
+**KROK 1 — Zdefiniuj strukturę danych**
+
+Minimalny model:
+    - hash (bytes32)
+    - issuer (address)
+    - timestamp (uint256)
+    - cid (string)
+    - owner (address)
+    - documentType (string)
+
+Architektura:
+    - hash jest kluczem głównym i nie dopuszczamy nadpisywania
+
+---
+
+**FAZA 2 — REGUŁY BIZNESOWE**
+
+**KROK 2 — Kontrola dostępu**
+    - Musisz jednoznacznie ustalić:
+        - Kto może wywołać issueDocument? → tylko adresy z listy issuerów.
+        - Gdzie przechowujesz listę? → mapping(address => bool) authorizedIssuers
+        - Kto zarządza listą? → owner kontraktu.
+
+**KROK 3 — Ochrona przed duplikatem**
+    - Reguła: Jeśli hash istnieje → revert.
+    - Sprawdzenie: require(documents[hash].timestamp == 0, "Document exists");
+    - Dlaczego timestamp? Bo jeśli rekord nie istnieje → timestamp = 0.
+    - To jest reguła integralności.
+
+**KROK 4 — Walidacja danych**
+    - Zanim zapiszesz:
+        - hash != 0x0
+        - owner != address(0)
+        - bytes(cid).length > 0
+        - bytes(documentType).length > 0
+
+
+
+---
+
+**FAZA 3 — ŚRODOWISKO TECHNICZNE**
+
+**KROK 5 — Hardhat**
+    - Sprawdź:
+        - projekt się kompiluje
+        - masz folder:
+            - contracts
+            - scripts
+            - test
+
+**KROK 6 — Konfiguracja sieci**
+    - Decyzje operacyjne:
+        - Testnet: Sepolia
+        - RPC: Alchemy
+        - Klucz prywatny: .env
+        - Nigdy nie commitujesz .env
+
+
+
+---
+
+**FAZA 4 — PLAN TESTÓW (PRZED IMPLEMENTACJĄ)**
+
+**KROK 7 — Testy pozytywne**
+    - Musisz zapisać:
+        - Autoryzowany issuer publikuje dokument
+        - verifyDocument zwraca poprawne dane
+        - timestamp jest ustawiony
+    - Każdy test opisujesz:
+        - kto wywołuje
+        - co podaje
+        - czego oczekujesz
+
+**KROK 8 — Testy negatywne (ważniejsze)**
+    - Musisz przetestować:
+        - Nieautoryzowany issuer → revert
+        - Ten sam hash drugi raz → revert
+        - Pusty CID → revert
+        - owner = zero address → revert
+    - Jeśli nie potrafisz wymyślić testu łamiącego system, to system jest słaby.
+
+---
+
+**FAZA 5 — KOLEJNOŚĆ IMPLEMENTACJI**
+
+Kodujesz w tej kolejności:
+    1. struct Document
+    2. mapping(bytes32 => Document)
+    3. mapping issuerów
+    4. owner
+    5. modifier onlyIssuer
+    6. issueDocument
+    7. verifyDocument
+    8. event DocumentIssued
+    9. walidacje
+
+Nie zmieniasz kolejności. Inaczej będziesz refaktoryzować w panice.
+
+---
+
+**FAZA 6 — DEPLOY**
+
+**KROK 9 — Lokalny deploy**
+    - uruchamiasz local node
+    - deployujesz
+    - ręcznie wywołujesz issue
+    - ręcznie wywołujesz verify
+    - Masz zobaczyć cały flow.
+
+**KROK 10 — Testnet (Sepolia)**
+    - deploy
+    - zapisujesz adres kontraktu
+    - testujesz z MetaMask
+    - zapisujesz transaction hash
+    - To jest symulacja produkcji.
+
+---
+
+**FAZA 7 — CHECKLISTA KOŃCOWA**
+
+
+Zanim przejdziesz dalej, musisz być w stanie powiedzieć:
+    - Wiem dokładnie, co zapisuję on-chain.
+    - Wiem, kto ma prawo publikować.
+    - Wiem, co się dzieje przy próbie duplikatu.
+    - verifyDocument jest funkcją tylko do odczytu.
+    - System nie pozwala na nadpisanie historii.
+
+Jeśli na któreś pytanie odpowiadasz niepewnie — wracasz do etapu projektowego.
+
+---
+
+**TERAZ KONKRETNIE**
+
+Twoje zadanie na dziś:
+    - Spisz model danych.
+    - Spisz reguły dostępu.
+    - Spisz wszystkie require.
+    - Spisz testy (pozytywne + negatywne).
+
+Dopiero potem otwierasz edytor.
+
+Nie kodujesz bez planu.
+To nie jest projekt zabawkowy — to system zaufania publicznego.
+
+--------------
+const address = "0x7C0c5b200FCaF7790ff0FA2Fe56f73B57f7eaC6d"; // wstaw adres
+
+--------
+Utwórz konto w MetaMask i przełącz się na sieć Sepolia.
+Zdobądź testowe ETH na Sepolia (np. z faucet).
+Skopiuj swój klucz prywatny z MetaMask (uważaj, nie udostępniaj go nikomu!).
+Utwórz plik .env w katalogu blockchain i wklej tam swój klucz prywatny.
+Skonfiguruj plik hardhat.config.js, aby używał sieci Sepolia i Twojego klucza prywatnego.
+Upewnij się, że Twój kontrakt jest poprawny i gotowy do deployu.
+Uruchom komendę deployującą kontrakt na Sepolia: npx hardhat run deploySepolia.js --network sepolia
+Sprawdź adres wdrożonego kontraktu w konsoli i na etherscan Sepolia.
+
+
+
+

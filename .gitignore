@@ -1,80 +1,111 @@
-########################################
-# SYSTEM / OS
-########################################
-.DS_Store
-Thumbs.db
-
-########################################
-# IDE / EDITORS
-########################################
-.vs/
-.idea/
-*.suo
-*.user
-*.userprefs
-*.sln.iml
-
-########################################
-# .NET / ASP.NET CORE
-########################################
-bin/
-obj/
-log/
-artifacts/
-*.pdb
-*.cache
-*.nupkg
-
-# Publish / Azure
-publish/
-*.pubxml
-*.publishproj
-PublishScripts/
-
-# NuGet
-**/packages/*
-!**/packages/build/
-
-########################################
-# NODE / REACT / FRONTEND
-########################################
-node_modules/
-bower_components/
-logs/
-coverage/
-coverage.json
-
-*.sublime*
+####################################
+# GLOBAL
+####################################
 *.log
-
-########################################
-# ENV / SECRETS
-########################################
-.env
-.env.*
-
-########################################
-# HARDHAT / WEB3
-########################################
-cache/
-artifacts/
-typechain/
-typechain-types/
-
-# Deployments (commituj tylko .gitkeep)
-deployments/*
-!deployments/.gitkeep
-
-########################################
-# TEST / TEMP
-########################################
 *.tmp
 *.temp
+*.swp
 *.bak
-*~
+*.cache
+*.DS_Store
+Thumbs.db
 
-########################################
-# OPTIONAL
-########################################
-# wwwroot/   # odkomentuj jeśli generowane
-git config --global init.defaultBranch main
+.env
+.env.*
+!.env.example
+
+####################################
+# .NET / ASP.NET Core (.NET 8)
+####################################
+# Build results
+bin/
+obj/
+out/
+
+# User-specific
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Rider / VS / VS Code
+.idea/
+.vs/
+.vscode/
+
+# Test results
+TestResults/
+coverage/
+coverage.cobertura.xml
+
+# ASP.NET
+appsettings.Development.json
+appsettings.Local.json
+
+# NuGet
+*.nupkg
+packages/
+.nuget/
+
+####################################
+# Docker
+####################################
+**/docker-compose.override.yml
+*.pid
+
+####################################
+# Node.js (Blockchain tooling)
+####################################
+node_modules/
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+####################################
+# Hardhat / Truffle / Foundry
+####################################
+# Hardhat
+artifacts/
+cache/
+typechain/
+coverage/
+
+# Truffle
+build/
+
+# Foundry
+out/
+broadcast/
+
+####################################
+# Blockchain secrets
+####################################
+.privateKey
+.privatekey
+wallet.json
+keystore/
+secrets.json
+
+####################################
+# IPFS
+####################################
+.ipfs/
+ipfs-data/
+ipfs-repo/
+ipfs-cache/
+
+####################################
+# Solidity / Web3 misc
+####################################
+*.abi
+*.bin
+*.addr
+*.address
+
+####################################
+# OS / IDE noise
+####################################
+*.iml
+*.classpath
+*.project
+.settings/

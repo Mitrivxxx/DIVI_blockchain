@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg  width="50px" height="50px" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Bell body -->
+  <path d="M8 2C5.23858 2 3 4.23858 3 7V11.5C3 12.3284 2.32843 13 1.5 13H14.5C13.6716 13 13 12.3284 13 11.5V7C13 4.23858 10.7614 2 8 2Z" fill="#000000"/>
+  <!-- Bell clapper -->
+  <circle cx="8" cy="14" r="1" fill="#000000"/>
+</svg>

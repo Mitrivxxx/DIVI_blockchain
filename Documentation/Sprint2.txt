@@ -1,0 +1,66 @@
+SPRINT 2 — IPFS (PRZECHOWYWANIE PLIKÓW)
+======================================
+
+
+---
+
+PLAN PRAC — KROK PO KROKU (DO WYKONANIA)
+
+1) KONFIGURACJA ŚRODOWISKA
+- Załóż konto w Pinata.
+- Wygeneruj API Key i API Secret.
+- Ustaw je jako zmienne środowiskowe (nigdy w repo).
+
+2) STRUKTURA BACKENDU
+- Utwórz katalogi:
+  /controllers
+  /services
+  /utils
+- Backend musi się uruchamiać lokalnie bez błędów.
+
+3) ENDPOINT (JEDYNY)
+- POST /upload-document
+- Przyjmuje:
+  - plik (multipart/form-data)
+  - typ dokumentu
+  - owner (opcjonalnie)
+
+4) KOLEJNOŚĆ OPERACJI (NIE ZMIENIASZ)
+1. Odbierz plik
+2. Zapisz do pamięci lub katalogu temp
+3. Policz SHA-256 lokalnie
+4. Wyślij plik do Pinata
+5. Odbierz CID
+6. Usuń plik temp
+7. Zwróć JSON:
+   - hash
+   - CID
+
+5) WALIDACJE (OBOWIĄZKOWE)
+- Typ pliku: tylko PDF
+- Rozmiar: max 10 MB
+- Pusty plik: odrzuć
+- Obsłuż błędy:
+  - brak pliku
+  - błąd hashowania
+  - błąd IPFS
+
+6) TEST RĘCZNY (MUSI PRZEJŚĆ)
+- Wgraj PDF → dostajesz hash + CID
+- Pobierz plik po CID
+- Policz hash pobranego pliku
+- Hash musi być identyczny
+- Jeśli nie: wracasz do kroku 3
+
+7) DOKUMENTACJA TECHNICZNA (DOPISAĆ NA KOŃCU)
+- Dlaczego IPFS
+- Dlaczego Pinata
+- Dlaczego hash liczony lokalnie
+- Co się stanie po modyfikacji pliku
+
+
+WYNIK SPRINTU
+✔ Upload do IPFS działa  
+✔ Hash i CID zwracane  
+✔ Dowód integralności pliku  
+✔ Backend gotowy pod smart kontrakt

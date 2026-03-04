@@ -1,0 +1,13 @@
+bin/
+obj/
+.vs/
+.vscode/
+*.user
+*.suo
+*.swp
+
+.env
+.env.*
+!.env.example
+
+Dockerfile*

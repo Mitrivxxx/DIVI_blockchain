@@ -1,0 +1,54 @@
+.mainlayout-root {
+  display: flex;
+  height: 100vh;
+  background: #f5f7fa;
+}
+
+/* SIDEBAR */
+.sidebar {
+  width: 250px;
+  background: #ffffff;
+  border-right: 1px solid #e5e7eb;
+}
+
+/* PRAWA STRONA */
+.mainlayout-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* HEADER */
+.mainlayout-header {
+  height: 70px;
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 30px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.mainlayout-title {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #222;
+  letter-spacing: 0.01em;
+  margin: 0;
+  display: flex;
+  align-items: center;
+}
+
+.mainlayout-header-icons {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+/* MAIN */
+.mainlayout-main {
+  flex: 1;
+  padding: 30px;
+  overflow-y: auto;
+}
+
