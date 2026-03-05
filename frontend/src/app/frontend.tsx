@@ -10,7 +10,14 @@ import { createRoot } from "react-dom/client";
 import App from "./App";
 import "./index.scss";
 
-const elem = document.getElementById("root")!;
+const mountId = window.location.pathname.startsWith("/app") ? "app" : "root";
+document.body.dataset.mount = mountId;
+
+const elem = document.getElementById(mountId);
+if (!elem) {
+  throw new Error(`Missing mount element: #${mountId}`);
+}
+
 const app = (
   <StrictMode>
     <App />

@@ -1,54 +1,36 @@
 .mainlayout-root {
-  display: flex;
   height: 100vh;
-  background: #f5f7fa;
-}
-
-/* SIDEBAR */
-.sidebar {
-  width: 250px;
-  background: #ffffff;
-  border-right: 1px solid #e5e7eb;
-}
-
-/* PRAWA STRONA */
-.mainlayout-content {
-  flex: 1;
   display: flex;
   flex-direction: column;
+  background: var(--app-bg);
 }
 
-/* HEADER */
-.mainlayout-header {
-  height: 70px;
-  background: white;
+/* BODY (NAV + MAIN) */
+.mainlayout-body {
+  flex: 1;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 30px;
-  border-bottom: 1px solid #e5e7eb;
+  min-height: 650px;
+  margin: 6px clamp(4px, 1vw, 10px);
+  background: var(--app-amaranth-light);
+  border-radius: 30px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
 }
 
-.mainlayout-title {
-  font-size: 1.6rem;
-  font-weight: 700;
-  color: #222;
-  letter-spacing: 0.01em;
-  margin: 0;
-  display: flex;
-  align-items: center;
-}
-
-.mainlayout-header-icons {
-  display: flex;
-  align-items: center;
-  gap: 18px;
+/* NAV */
+.mainlayout-nav {
+  width: 250px;
+  flex-shrink: 0;
+  background: transparent;
+  border-right: 1px solid rgba(0, 0, 0, 0.15);
 }
 
 /* MAIN */
 .mainlayout-main {
   flex: 1;
-  padding: 30px;
+  min-width: 0;
+  padding: 32px clamp(24px, 8vw, 80px);
   overflow-y: auto;
 }
 
