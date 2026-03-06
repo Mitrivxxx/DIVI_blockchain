@@ -1,5 +1,4 @@
 import { API_URL } from '@/types/api';
-import { useWeb3Auth } from "@/app/context/Web3AuthContext";
 
 export interface IssuerRoleApplication {
   institutionName: string;
@@ -9,9 +8,9 @@ export interface IssuerRoleApplication {
 }
 
 export function submitIssuerRoleApplication(
-  data: IssuerRoleApplication
+  data: IssuerRoleApplication,
+  jwt?: string
 ): Promise<{ success: boolean; message?: string }> {
-  const { jwt } = useWeb3Auth();
   return (async () => {
     try {
       const res = await fetch(`${API_URL}/api/issuer`, {

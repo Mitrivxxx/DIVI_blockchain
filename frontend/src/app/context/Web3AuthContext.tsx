@@ -20,7 +20,7 @@ export const Web3AuthProvider = ({ children }: { children: ReactNode }) => {
   const [provider, setProvider] = useState<ethers.BrowserProvider | null>(null);
   const [signer, setSigner] = useState<ethers.JsonRpcSigner | null>(null);
   const [address, setAddress] = useState<string | null>(null);
-  const [jwt, setJwt] = useState<string | null>(null);
+  const [jwt, setJwt] = useState<string | null>(() => localStorage.getItem("token"));
 
 
 

@@ -2,8 +2,8 @@ import type { IssuerApplicationListDto } from "../api/notifyApi";
 
 interface NotifyListProps {
   pending: IssuerApplicationListDto[];
-  onApprove: (id: string) => void;
-  onReject: (id: string) => void;
+  onApprove: (id: number) => void;
+  onReject: (id: number) => void;
 }
 
 export const NotifyList: React.FC<NotifyListProps> = ({ pending, onApprove, onReject }) => (

@@ -1,4 +1,4 @@
-0. moj frontend to gowno (podzial na niezalogowanych + panel/app)
++0. moj frontend to gowno (podzial na niezalogowanych + panel/app)
     -ukladanie kto ma gdzie dostep
     -praca nad wygladem
 
@@ -8,6 +8,8 @@
 
 2. .net 
     -napisac testy
+    -zainteresowac sie git actions
+    -caly proces devOps
 
 +3. frontendu    
     -zainteresowac sie nginx
@@ -25,4 +27,23 @@
     ❌ Nie mają firewalla
     ❌ Nie robią backupów
 
-7. cala logika blockchaina (roznego rodzaju walidacje, duzo testow)
+7. japierdole mam przejebane
+    -refaktor db xddd
+    -pewnie wszystko sie spierdoli wiec testy wszystkiego
+    -niewiem wsumie nic
+
+8. cala logika blockchaina (roznego rodzaju walidacje, duzo testow)
+
+
+
+
+(7)-------------------------
+--Member--
+Id – lepiej int z autoinkrementacją (łatwiejsze zarządzanie, wydajność).
+Name (opcjonalne) – pozwala na personalizację.
+EthereumAddress – powiązanie z blockchainem, unikalność.
+Role – zarządzanie uprawnieniami.
+Email – kontakt, logowanie.
+Bio – opis użytkownika.
+CreatedAt – śledzenie rejestracji.
+AvatarUrl – personalizacja profilu.

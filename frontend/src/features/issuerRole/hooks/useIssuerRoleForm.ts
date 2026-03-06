@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { submitIssuerRoleApplication } from '../api/issuerRoleApi';
+import { useWeb3Auth } from '@/app/context/Web3AuthContext';
 
 export function useIssuerRoleForm() {
+  const { jwt } = useWeb3Auth();
   const [institutionName, setInstitutionName] = useState('');
   const [email, setEmail] = useState('');
   const [description, setDescription] = useState('');
@@ -50,7 +52,7 @@ export function useIssuerRoleForm() {
       return;
     }
     try {
-      const result = await submitIssuerRoleApplication(values);
+      const result = await submitIssuerRoleApplication(values, jwt);
       if (result.success) {
         setSuccess(true);
         setInstitutionName('');

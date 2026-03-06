@@ -6,8 +6,8 @@ interface PendingIssuerApplicationsProps {
   pending: any[];
   loading: boolean;
   error: string | null;
-  onApprove: (id: string) => void;
-  onReject: (id: string) => void;
+  onApprove: (id: number) => void;
+  onReject: (id: number) => void;
 }
 
 const PendingIssuerApplications: React.FC<PendingIssuerApplicationsProps> = ({

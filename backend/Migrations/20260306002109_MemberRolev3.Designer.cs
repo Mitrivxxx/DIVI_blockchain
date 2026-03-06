@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using backend.Data;
@@ -11,9 +12,11 @@ using backend.Data;
 namespace backend.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260306002109_MemberRolev3")]
+    partial class MemberRolev3
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -21,6 +24,24 @@ namespace backend.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
+
+            modelBuilder.Entity("backend.Models.Admin", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("EthereumAddress")
+                        .IsRequired()
+                        .HasMaxLength(42)
+                        .HasColumnType("character varying(42)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Admin");
+                });
 
             modelBuilder.Entity("backend.Models.IssuerApplication", b =>
                 {
@@ -98,15 +119,6 @@ namespace backend.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Members");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 2,
-                            CreatedAt = new DateTime(2026, 3, 6, 0, 21, 35, 566, DateTimeKind.Utc).AddTicks(2560),
-                            EthereumAddress = "0xeb2a27c7c6E72BC5022a49c4e044E72ab70E9bDb",
-                            Role = 0
-                        });
                 });
 
             modelBuilder.Entity("backend.Models.Nonce", b =>
