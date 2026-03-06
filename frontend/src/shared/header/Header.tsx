@@ -1,6 +1,7 @@
 
 import React from "react";
 import bell from "../../assets/icons/bell.svg";
+import user from "../../assets/icons/user.svg";
 import logo from "../../assets/icons/divi_icon_demo.png";
 
 import "./Header.scss";
@@ -9,6 +10,7 @@ type HeaderProps = {
   showBell?: boolean;
   showUser?: boolean;
   onBellClick?: () => void;
+  onUserClick?: () => void;
   showNotifyPanel?: boolean;
   notifyContent?: React.ReactNode;
   authMode?: "default" | "connect" | "status";
@@ -22,6 +24,7 @@ const Header: React.FC<HeaderProps> = ({
   showBell = true,
   showUser = true,
   onBellClick,
+  onUserClick,
   showNotifyPanel = false,
   notifyContent,
   authMode = "default",
@@ -50,6 +53,14 @@ const Header: React.FC<HeaderProps> = ({
               <div className="header-notify-panel">{notifyContent}</div>
             )}
           </div>
+        )}
+        {showUser && (
+          <img
+            src={user}
+            alt="User"
+            className="header-user"
+            onClick={onUserClick}
+          />
         )}
         {showUser && (
           authMode === "connect" ? (

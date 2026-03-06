@@ -5,7 +5,7 @@ import Dashboard from "../components/Dashboard";
 import Upload from "../features/uploadFile/Upload";
 import MyDocuments from "../components/MyDocuments";
 import Verify from "../components/Verify";
-import Profile from "../components/Profile";
+import Profile from "../components/profile/Profile";
 import Help from "../components/Help";
 import IssuerRole from "../features/issuerRole/IssuerRole";
 import Notify from "../shared/header/notify/Notify";
@@ -24,6 +24,7 @@ const MainLayout: React.FC = () => {
   const shortAddress = (addr: string) => addr.slice(0, 6) + "..." + addr.slice(-4);
 
   const handleBellClick = () => setActiveTab("notify");
+  const handleUserClick = () => setActiveTab("profile");
 
   const renderContent = () => {
     switch (activeTab) {
@@ -40,7 +41,7 @@ const MainLayout: React.FC = () => {
       case "verify":
         return <Verify />;
       case "profile":
-        return <Profile />;
+        return <Profile userRole={userRole} walletAddress={address} />;
       case "help":
         return <Help />;
       default:
@@ -52,6 +53,7 @@ const MainLayout: React.FC = () => {
     <div className="mainlayout-root">
       <Header
         onBellClick={handleBellClick}
+        onUserClick={handleUserClick}
         authMode="status"
         userRole={userRole}
         walletAddress={address}

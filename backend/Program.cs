@@ -10,6 +10,7 @@ using backend.Services.DocumentVerification;
 using backend.Services.Issuers;
 using backend.Services.Roles;
 using backend.Services.BackgroundJobs;
+using backend.Services.GetProfile;
 using backend.Data;
 using DotNetEnv;
 using Microsoft.AspNetCore.HttpOverrides;
@@ -125,6 +126,7 @@ builder.Services.AddScoped<IUserRoleService, UserRoleService>();
 builder.Services.AddScoped<IIssuerApplicationService, IssuerApplicationService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IJwtService, JwtService>();
+builder.Services.AddScoped<IGetProfileService, GetProfileService>();
 builder.Services.AddHostedService<NonceCleanupService>();
 builder.Services.AddHttpClient<PinataClient>();
 

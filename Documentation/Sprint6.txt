@@ -34,8 +34,13 @@
 
 8. cala logika blockchaina (roznego rodzaju walidacje, duzo testow)
 
-
-
+9. blockchain
+    -lista dokumentow urzytkownikow (kto wystawil, komu, co, kiedy)
+    -kiedy ktos zostal issuerem
+    -lista hashy dokumentów danego użytkownika (czyli jakie dokumenty wystawil issuer)
+    -filtrowanie dokumentow po typie (dyplom, certyfikat, swiadectwo pracy)
+    -historia calego kontraktu, czyli cos typu etherscan tylko prostsze
+    
 
 (7)-------------------------
 --Member--
