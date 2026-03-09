@@ -1,12 +1,15 @@
 using Nethereum.Web3;
 using Nethereum.Web3.Accounts;
 using Microsoft.Extensions.Configuration;
+using Nethereum.RPC.Eth.DTOs;
 
 namespace backend.Services.Blockchain
 {
 	public class BlockchainService : IBlockchainService
 	{
-		    private readonly Web3 _web3;
+    private const string LegacyIssueDocumentAbi = "[{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"hash\",\"type\":\"bytes32\"},{\"internalType\":\"string\",\"name\":\"cid\",\"type\":\"string\"},{\"internalType\":\"address\",\"name\":\"documentOwner\",\"type\":\"address\"},{\"internalType\":\"bytes32\",\"name\":\"documentType\",\"type\":\"bytes32\"}],\"name\":\"issueDocument\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]";
+
+    private readonly Web3 _web3;
     private readonly string _contractAddress;
     private readonly string _abi;
 
@@ -16,11 +19,13 @@ namespace backend.Services.Blockchain
         var privateKey = Environment.GetEnvironmentVariable("SEPOLIA_PRIVATE_KEY")
             ?? throw new ArgumentNullException("SEPOLIA_PRIVATE_KEY missing");
 
-        var rpcUrl = config["Blockchain:RpcUrl"]
-            ?? throw new ArgumentNullException("Blockchain:RpcUrl missing");
+        var rpcUrl = Environment.GetEnvironmentVariable("BLOCKCHAIN_RPC_URL")
+            ?? config["Blockchain:RpcUrl"]
+            ?? throw new ArgumentNullException("BLOCKCHAIN_RPC_URL / Blockchain:RpcUrl missing");
 
-        _contractAddress = config["Blockchain:ContractAddress"]
-            ?? throw new ArgumentNullException("Blockchain:ContractAddress missing");
+        _contractAddress = Environment.GetEnvironmentVariable("BLOCKCHAIN_CONTRACT_ADDRESS")
+            ?? config["Blockchain:ContractAddress"]
+            ?? throw new ArgumentNullException("BLOCKCHAIN_CONTRACT_ADDRESS / Blockchain:ContractAddress missing");
 
         var account = new Account(privateKey);
         _web3 = new Web3(account, rpcUrl);
@@ -38,18 +43,113 @@ namespace backend.Services.Blockchain
     // DOCUMENTS
     // =============================
 
+    public async Task PrecheckIssueDocumentAsync(
+        string hash,
+        string owner,
+        byte documentType)
+    {
+        try
+        {
+            var function = GetIssueDocumentFunction();
+            var hashBytes32 = Utils.StringToBytes32(hash, true);
+            var fromAddress = _web3.TransactionManager.Account.Address;
+
+            // Dry-run by gas estimation to catch contract reverts before Pinata upload.
+            await function.EstimateGasAsync(
+                from: fromAddress,
+                null,
+                null,
+                hashBytes32,
+                "precheck",
+                owner,
+                documentType
+            );
+        }
+        catch (Exception ex) when (ShouldTryLegacyIssueDocument(ex))
+        {
+            await EstimateLegacyIssueDocumentGasAsync(hash, "precheck", owner, documentType);
+        }
+    }
+
     public async Task<string> IssueDocumentAsync(
         string hash,
         string cid,
         string owner,
-        string documentType)
+        byte documentType)
     {
+        try
+        {
+            var function = GetIssueDocumentFunction();
+            var hashBytes32 = Utils.StringToBytes32(hash, true);
 
+            var fromAddress = _web3.TransactionManager.Account.Address;
+
+            var gasEstimate = await function.EstimateGasAsync(
+                from: fromAddress,
+                null,
+                null,
+                hashBytes32,
+                cid,
+                owner,
+                documentType
+            );
+            var gasWithBuffer = new Nethereum.Hex.HexTypes.HexBigInteger(gasEstimate.Value + (gasEstimate.Value / 10));
+
+            var txHash = await function.SendTransactionAsync(
+                from: fromAddress,
+                gas: gasWithBuffer,
+                value: null,
+                functionInput: new object[]
+                {
+                    hashBytes32,
+                    cid,
+                    owner,
+                    documentType
+                });
+
+            return await WaitForMinedSuccessAsync(txHash);
+        }
+        catch (Exception ex) when (ShouldTryLegacyIssueDocument(ex))
+        {
+            return await SendLegacyIssueDocumentTransactionAsync(hash, cid, owner, documentType);
+        }
+    }
+
+    private Nethereum.Contracts.Function GetIssueDocumentFunction()
+    {
         var contract = _web3.Eth.GetContract(_abi, _contractAddress);
-        var function = contract.GetFunction("issueDocument");
-        var hashBytes32 = Utils.StringToBytes32(hash, true);
-        var documentTypeBytes32 = Utils.StringToBytes32(documentType);
+        return contract.GetFunction("issueDocument");
+    }
 
+    private Nethereum.Contracts.Function GetLegacyIssueDocumentFunction()
+    {
+        var contract = _web3.Eth.GetContract(LegacyIssueDocumentAbi, _contractAddress);
+        return contract.GetFunction("issueDocument");
+    }
+
+    private async Task EstimateLegacyIssueDocumentGasAsync(string hash, string cid, string owner, byte documentType)
+    {
+        var function = GetLegacyIssueDocumentFunction();
+        var hashBytes32 = Utils.StringToBytes32(hash, true);
+        var legacyDocumentTypeBytes32 = Utils.StringToBytes32(MapDocumentTypeToLegacyLabel(documentType));
+        var fromAddress = _web3.TransactionManager.Account.Address;
+
+        await function.EstimateGasAsync(
+            from: fromAddress,
+            null,
+            null,
+            hashBytes32,
+            cid,
+            owner,
+            legacyDocumentTypeBytes32
+        );
+    }
+
+    private async Task<string> SendLegacyIssueDocumentTransactionAsync(string hash, string cid, string owner, byte documentType)
+    {
+        var function = GetLegacyIssueDocumentFunction();
+        var hashBytes32 = Utils.StringToBytes32(hash, true);
+        var legacyDocumentTypeBytes32 = Utils.StringToBytes32(MapDocumentTypeToLegacyLabel(documentType));
         var fromAddress = _web3.TransactionManager.Account.Address;
 
         var gasEstimate = await function.EstimateGasAsync(
@@ -59,8 +159,9 @@ namespace backend.Services.Blockchain
             hashBytes32,
             cid,
             owner,
-            documentTypeBytes32
+            legacyDocumentTypeBytes32
         );
+
         var gasWithBuffer = new Nethereum.Hex.HexTypes.HexBigInteger(gasEstimate.Value + (gasEstimate.Value / 10));
 
         var txHash = await function.SendTransactionAsync(
@@ -72,9 +173,52 @@ namespace backend.Services.Blockchain
                 hashBytes32,
                 cid,
                 owner,
-                documentTypeBytes32
+                legacyDocumentTypeBytes32
             });
+
+        return await WaitForMinedSuccessAsync(txHash);
+    }
+
+    private async Task<string> WaitForMinedSuccessAsync(string txHash)
+    {
+        TransactionReceipt? receipt = await _web3.TransactionManager.TransactionReceiptService
+            .PollForReceiptAsync(txHash);
+
+        if (receipt is null)
+        {
+            throw new Exception($"Nie udało się pobrać potwierdzenia transakcji on-chain. txHash: {txHash}");
+        }
+
+        if (receipt.Status is null || receipt.Status.Value == 0)
+        {
+            throw new Exception($"Transakcja została odrzucona on-chain (status=0). txHash: {txHash}");
+        }
+
         return txHash;
+    }
+
+    private static bool ShouldTryLegacyIssueDocument(Exception ex)
+    {
+        var message = ex.Message?.ToLowerInvariant() ?? string.Empty;
+
+        // If the call reverted without a reason, this often means selector/ABI mismatch.
+        return message.Contains("smart contract error")
+            || message.Contains("execution reverted")
+            || message.Contains("without a reason")
+            || message.Contains("function selector was not recognized");
+    }
+
+    private static string MapDocumentTypeToLegacyLabel(byte documentType)
+    {
+        return documentType switch
+        {
+            0 => "Education",
+            1 => "Professional certificates",
+            2 => "Employment documents",
+            3 => "License",
+            4 => "Other documents",
+            _ => "Other documents"
+        };
     }
 
     public async Task<bool> VerifyDocumentAsync(string hash)

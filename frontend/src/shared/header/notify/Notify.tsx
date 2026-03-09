@@ -17,7 +17,9 @@ const Notify: React.FC = () => {
 
 
 if (isAdmin) {
-    return null;
+    return <>
+    <h1>Powiadomienia</h1>
+    </>;
   }
   return (
     <PendingIssuerApplications

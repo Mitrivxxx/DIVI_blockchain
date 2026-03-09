@@ -12,10 +12,15 @@ interface SidebarTabsProps {
 import type { Tab } from '../tabs';
 
 // Konfiguracja widocznych tabów dla ról
+const tabsWithoutIssuerRole = tabs.filter(tab => tab.key !== 'issuerRole').map(tab => tab.key);
+const adminTabs = tabs
+  .filter(tab => tab.key !== 'issuerRole' && tab.key !== 'myDocuments')
+  .map(tab => tab.key);
+
 const visibleTabsByRole: Record<string, TabKey[]> = {
-  Issuer: tabs.filter(tab => tab.key !== 'issuerRole').map(tab => tab.key),
-  // Przykład: Admin: [...], User: [...]
-  // Niezalogowany (null/undefined): traktujemy jak Issuer
+  issuer: tabsWithoutIssuerRole,
+  admin: adminTabs,
+  // Niezalogowany (null/undefined): traktujemy jak issuer
 };
 
 const publicTabs: TabKey[] = ['verify'];
@@ -25,12 +30,14 @@ function getVisibleTabs(userRole: string | null | undefined, tabs: Tab[]): Tab[]
   const ensurePublicTabs = (tabKeys: TabKey[]) =>
     Array.from(new Set([...tabKeys, ...publicTabs]));
 
-  if (!userRole || userRole === 'Issuer') {
-    const allowed = ensurePublicTabs(visibleTabsByRole['Issuer'] ?? tabs.map(tab => tab.key));
+  const normalizedRole = userRole?.trim().toLowerCase();
+
+  if (!normalizedRole || normalizedRole === 'issuer') {
+    const allowed = ensurePublicTabs(visibleTabsByRole['issuer'] ?? tabs.map(tab => tab.key));
     return tabs.filter(tab => allowed.includes(tab.key));
   }
 
-  const roleTabs = visibleTabsByRole[userRole];
+  const roleTabs = visibleTabsByRole[normalizedRole];
   if (roleTabs) {
     const allowed = ensurePublicTabs(roleTabs);
     return tabs.filter(tab => allowed.includes(tab.key));

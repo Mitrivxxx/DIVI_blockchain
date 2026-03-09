@@ -1,5 +1,6 @@
 using backend.DTOs;
 using Microsoft.AspNetCore.Mvc;
+using Serilog;
 
 namespace backend.Controllers
 {
@@ -50,7 +51,7 @@ namespace backend.Controllers
             var result = await _issuerApplicationService.UpdateStatusIssuerAsync(id, status);
             if (!result)
             {
-                Console.WriteLine("[IssuerApplicationController] UpdateStatus failed: Invalid request or status.");
+                Log.Error("[IssuerApplicationController] UpdateStatus failed: Invalid request or status.");
                 return BadRequest("Invalid request or status.");
             }
             Console.WriteLine("[IssuerApplicationController] UpdateStatus succeeded");

@@ -1,20 +1,6 @@
-.sidebar-footer-refresh-btn {
-  background: none;
-  border: none;
-  padding: 0 0 0 2px;
-  cursor: pointer;
-  vertical-align: middle;
-  display: inline-flex;
-  align-items: center;
-  transition: opacity 0.2s;
-  opacity: 0.7;
-}
-.sidebar-footer-refresh-btn:hover {
-  opacity: 1;
-}
 .sidebar-root {
   width: 220px;
-  background: #f8f9fa;
+  background: white;
   padding: 20px;
   height: 100vh;
   display: flex;
@@ -38,7 +24,7 @@
   margin: 6px 0;
   cursor: pointer;
   border-radius: 6px;
-  background: transparent;
+  background: white;
   color: #333;
   transition: background 0.2s, color 0.2s;
 }
@@ -46,65 +32,4 @@
 .sidebar-item.active {
   background: #007bff;
   color: #fff;
-}
-
-
-.sidebar-footer-auth {
-  margin-top: auto;
-  padding-top: 24px;
-  font-size: 14px;
-  color: #666;
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-}
-
-.sidebar-footer-auth-block {
-  background: #fff;
-  border-radius: 10px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-  padding: 18px 14px 14px 14px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.sidebar-footer-auth-title {
-  font-size: 1.1rem;
-  font-weight: 700;
-  margin-bottom: 10px;
-  color: #007bff;
-}
-
-.sidebar-footer-auth-status {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.sidebar-footer-auth-btn {
-  background: #007bff;
-  color: #fff;
-  border: none;
-  border-radius: 6px;
-  padding: 10px 18px;
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  margin-top: 8px;
-  transition: background 0.2s;
-}
-.sidebar-footer-auth-btn:hover {
-  background: #0056b3;
-}
-
-.sidebar-footer-auth-address {
-  font-weight: 600;
-  color: #222;
-  margin-bottom: 4px;
-}
-.sidebar-footer-auth-role {
-  font-size: 0.95rem;
-  color: #555;
 }

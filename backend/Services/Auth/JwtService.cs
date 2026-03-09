@@ -39,7 +39,7 @@ namespace backend.Services.Auth
 				issuer: jwtIssuer,
 				audience: jwtIssuer,
 				claims: claims,
-				expires: DateTime.UtcNow.AddHours(1),
+				expires: DateTime.UtcNow.AddMinutes(15),
 				signingCredentials: creds
 			);
 

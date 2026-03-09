@@ -1,0 +1,55 @@
+.container {
+  max-width: 720px;
+}
+
+.title {
+  margin-bottom: 16px;
+}
+
+.form {
+  display: grid;
+  gap: 12px;
+}
+
+.label {
+  display: block;
+}
+
+.fileInput {
+  display: none;
+}
+
+.dropzone {
+  border: 2px dashed currentColor;
+  border-radius: 8px;
+  padding: 24px;
+  text-align: center;
+  cursor: pointer;
+  opacity: 1;
+  transition: opacity 0.15s ease-in-out;
+  margin-top: 8px;
+}
+
+.dropzone[data-dragging='true'] {
+  opacity: 0.8;
+}
+
+.fileName {
+  margin-top: 8px;
+}
+
+.button {
+  width: fit-content;
+}
+
+.status {
+  margin-top: 12px;
+}
+
+.result {
+  margin-top: 12px;
+}
+
+.resultTitle {
+  margin-bottom: 8px;
+}

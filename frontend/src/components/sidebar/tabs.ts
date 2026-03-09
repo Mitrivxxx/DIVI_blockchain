@@ -1,4 +1,4 @@
-export type TabKey = 'dashboard' | 'issuerRole' | 'upload' | 'myDocuments' | 'verify' | 'profile' | 'help';
+export type TabKey = 'dashboard' | 'issuerRole' | 'upload' | 'myDocuments' | 'verify' | 'profile' | 'help' | 'notify';
 
 export interface Tab {
   key: TabKey;

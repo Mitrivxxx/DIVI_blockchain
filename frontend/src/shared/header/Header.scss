@@ -1,0 +1,127 @@
+.logo-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  justify-content: flex-start;
+}
+.header {
+  height: 70px;
+  background: var(--app-bg);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px clamp(24px, 10vw, 80px);
+}
+
+.header-icons {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.header-bell-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.header-bell {
+  cursor: pointer;
+  width: auto;
+  height: 40px;
+}
+
+.header-user {
+  cursor: pointer;
+  width: auto;
+  height: 40px;
+}
+
+.header-notify-panel {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  z-index: 20;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.header-login {
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  color: var(--app-amaranth);
+  font: inherit;
+  padding: 0;
+  text-transform: lowercase;
+}
+
+.header-auth-status {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.header-auth-btn {
+  background: #007bff;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 14px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.header-logout-btn {
+  background: transparent;
+  color: #fff;
+  border: 1px solid #fff;
+  border-radius: 6px;
+  padding: 7px 12px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.header-logout-btn:hover {
+  background: #fff;
+  color: #111;
+}
+
+.header-auth-btn:hover {
+  background: #0056b3;
+}
+
+.header-auth-address {
+  font-weight: 600;
+  color: #fff;
+  margin-bottom: 2px;
+  display: flex;
+  align-items: center;
+}
+
+.header-auth-role {
+  font-size: 0.85rem;
+  color: #fff;
+}
+
+// Logo styles
+.logo-container {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  justify-content: flex-start;
+}
+.logo {
+  height: 70px;
+  width: auto;
+}
+.logo-text {
+  font-family:cursive;
+  font-weight: bold;
+  color: var(--app-amaranth);
+  font-size: 30px;
+} 

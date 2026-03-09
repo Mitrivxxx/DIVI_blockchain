@@ -12,20 +12,28 @@ export function usePendingIssuerApplications() {
   const { jwt } = useWeb3Auth();
 
   useEffect(() => {
-    if (!jwt) return;
-    fetchPendingIssuerApplicationsWithJwt(jwt)
+    const token = jwt ?? localStorage.getItem("token");
+    if (!token) {
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+    fetchPendingIssuerApplicationsWithJwt(token)
       .then(setPending)
       .catch(e => setError(e.message || "Błąd"))
       .finally(() => setLoading(false));
   }, [jwt]);
 
-  const handleUpdateStatus = async (id: string, status: 'Approved' | 'Rejected') => {
+  const handleUpdateStatus = async (id: number, status: 'Approved' | 'Rejected') => {
     try {
       if (!jwt) throw new Error("Brak JWT");
-      await updateIssuerApplicationStatusWithJwt(id, status, jwt);
-      setPending(pending => pending.filter(item => item.id !== id));
+      const parsedId = Number(id);
+      if (!Number.isFinite(parsedId)) throw new Error("Nieprawidłowe ID wniosku");
+      await updateIssuerApplicationStatusWithJwt(parsedId, status, jwt);
+      setPending(pending => pending.filter(item => item.id !== parsedId));
     } catch (e: any) {
-      setError('Blockchain error');
+      setError(e?.message || 'Błąd aktualizacji statusu');
     }
   };
 
