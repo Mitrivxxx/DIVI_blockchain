@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback } from "react";
+import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
 import type { ReactNode } from "react";
 import { ethers } from "ethers";
 import { API_URL } from "../../types/api";
@@ -12,15 +12,74 @@ interface Web3AuthContextProps {
   connect: () => Promise<void>;
   setJwt: (token: string) => void;
   signAndVerifyNonce: () => Promise<void>;
+  logout: () => void;
 }
+
+const TOKEN_STORAGE_KEY = "token";
+
+const parseJwtPayload = (token: string): Record<string, unknown> | null => {
+  try {
+    const payload = token.split(".")[1];
+    if (!payload) {
+      return null;
+    }
+    const normalizedPayload = payload.replace(/-/g, "+").replace(/_/g, "/");
+    const paddingLength = (4 - (normalizedPayload.length % 4)) % 4;
+    const paddedPayload = normalizedPayload + "=".repeat(paddingLength);
+    return JSON.parse(atob(paddedPayload)) as Record<string, unknown>;
+  } catch {
+    return null;
+  }
+};
+
+const getJwtExpiryMs = (token: string): number | null => {
+  const payload = parseJwtPayload(token);
+  const exp = payload?.exp;
+  if (typeof exp !== "number") {
+    return null;
+  }
+  return exp * 1000;
+};
+
+const getAddressFromJwt = (token: string): string | null => {
+  const payload = parseJwtPayload(token);
+  const claim = payload?.["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"];
+  return typeof claim === "string" ? claim : null;
+};
+
+const getValidStoredToken = (): string | null => {
+  const token = localStorage.getItem(TOKEN_STORAGE_KEY);
+  if (!token) {
+    return null;
+  }
+
+  const expiresAt = getJwtExpiryMs(token);
+  if (!expiresAt || expiresAt <= Date.now()) {
+    localStorage.removeItem(TOKEN_STORAGE_KEY);
+    return null;
+  }
+
+  return token;
+};
 
 const Web3AuthContext = createContext<Web3AuthContextProps | undefined>(undefined);
 
 export const Web3AuthProvider = ({ children }: { children: ReactNode }) => {
+  const initialToken = getValidStoredToken();
   const [provider, setProvider] = useState<ethers.BrowserProvider | null>(null);
   const [signer, setSigner] = useState<ethers.JsonRpcSigner | null>(null);
-  const [address, setAddress] = useState<string | null>(null);
-  const [jwt, setJwt] = useState<string | null>(() => localStorage.getItem("token"));
+  const [address, setAddress] = useState<string | null>(() => (initialToken ? getAddressFromJwt(initialToken) : null));
+  const [jwt, setJwtState] = useState<string | null>(initialToken);
+
+  const setJwt = useCallback((token: string) => {
+    setJwtState(token);
+    localStorage.setItem(TOKEN_STORAGE_KEY, token);
+
+    const tokenAddress = getAddressFromJwt(token);
+    if (tokenAddress) {
+      setAddress(tokenAddress);
+    }
+  }, []);
 
 
 
@@ -74,12 +133,40 @@ export const Web3AuthProvider = ({ children }: { children: ReactNode }) => {
     console.log("[Web3Auth] Otrzymany JWT:", data.token);
     if (data.token) {
       setJwt(data.token);
-      localStorage.setItem("token", data.token);
     } else throw new Error("Brak JWT w odpowiedzi");
-  }, [signer, address]);
+  }, [signer, address, setJwt]);
+
+  const logout = useCallback(() => {
+    setJwtState(null);
+    setAddress(null);
+    setSigner(null);
+    setProvider(null);
+    localStorage.removeItem(TOKEN_STORAGE_KEY);
+  }, []);
+
+  useEffect(() => {
+    if (!jwt) {
+      return;
+    }
+
+    const expiresAt = getJwtExpiryMs(jwt);
+    if (!expiresAt) {
+      logout();
+      return;
+    }
+
+    const remainingTime = expiresAt - Date.now();
+    if (remainingTime <= 0) {
+      logout();
+      return;
+    }
+
+    const timer = window.setTimeout(() => logout(), remainingTime);
+    return () => window.clearTimeout(timer);
+  }, [jwt, logout]);
 
   return (
-    <Web3AuthContext.Provider value={{ provider, signer, address, jwt, connect, setJwt, signAndVerifyNonce }}>
+    <Web3AuthContext.Provider value={{ provider, signer, address, jwt, connect, setJwt, signAndVerifyNonce, logout }}>
       {children}
     </Web3AuthContext.Provider>
   );

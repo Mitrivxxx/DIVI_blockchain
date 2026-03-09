@@ -18,6 +18,7 @@ type HeaderProps = {
   walletAddress?: string | null;
   shortAddress?: (addr: string) => string;
   connect?: () => void | Promise<void>;
+  onLogout?: () => void;
 };
 
 const Header: React.FC<HeaderProps> = ({
@@ -32,6 +33,7 @@ const Header: React.FC<HeaderProps> = ({
   walletAddress,
   shortAddress,
   connect,
+  onLogout,
 }) => {
   return (
     <div className="header">
@@ -61,6 +63,11 @@ const Header: React.FC<HeaderProps> = ({
             className="header-user"
             onClick={onUserClick}
           />
+        )}
+        {showUser && authMode === "status" && (
+          <button className="header-logout-btn" onClick={onLogout} type="button">
+            Wyloguj sie
+          </button>
         )}
         {showUser && (
           authMode === "connect" ? (

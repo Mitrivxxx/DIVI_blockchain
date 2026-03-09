@@ -11,6 +11,16 @@ import { Status } from './components/Status';
 import { HashResult } from './components/HashResult';
 import { uploadDocument } from './api/api';
 
+const documentTypeOptions = [
+  { value: 'Education', label: 'Education' },
+  { value: 'Professional certificates', label: 'Professional Certificates' },
+  { value: 'Employment documents', label: 'Employment Documents' },
+  { value: 'License', label: 'License' },
+  { value: 'Other documents', label: 'Other Documents' },
+] as const;
+
+const ethereumAddressRegex = /^0x[a-fA-F0-9]{40}$/;
+
 
 const Upload = () => {
   const { file, setFile } = useFile();
@@ -31,6 +41,10 @@ const Upload = () => {
     }
     if (!owner) {
       setStatus('Podaj właściciela dokumentu');
+      return;
+    }
+    if (!ethereumAddressRegex.test(owner.trim())) {
+      setStatus('Podaj poprawny adres Ethereum właściciela (format 0x...).');
       return;
     }
 
@@ -65,23 +79,33 @@ const Upload = () => {
           inputClassName={styles.input}
         />
         <TextInput
-          value={documentType}
-          onChange={setDocumentType}
-          label="Typ dokumentu:"
-          required
-          className={styles.formGroup}
-          labelClassName={styles.label}
-          inputClassName={styles.input}
-        />
-        <TextInput
           value={owner}
           onChange={setOwner}
-          label="Właściciel dokumentu:"
+          label="Adres właściciela dokumentu (Ethereum):"
           required
           className={styles.formGroup}
           labelClassName={styles.label}
           inputClassName={styles.input}
         />
+        <div className={styles.formGroup}>
+          <label className={styles.label} htmlFor="documentType">Typ dokumentu:</label>
+          <select
+            id="documentType"
+            className={styles.input}
+            value={documentType}
+            onChange={(e) => setDocumentType(e.target.value)}
+            required
+          >
+            <option value="" disabled>
+              Wybierz typ dokumentu
+            </option>
+            {documentTypeOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </div>
         <button className={styles.button} type="submit">Wyślij dokument</button>
       </form>
       <Status status={status} className={styles.status} />

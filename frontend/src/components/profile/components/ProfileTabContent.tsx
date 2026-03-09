@@ -1,5 +1,8 @@
 import React from "react";
 import type { EditableField } from "../types";
+import clockIcon from "../../../assets/icons/clock.svg";
+import emailIcon from "../../../assets/icons/email.svg";
+import ethIcon from "../../../assets/icons/eth.svg";
 
 type ProfileTabContentProps = {
   avatar: string;
@@ -7,7 +10,9 @@ type ProfileTabContentProps = {
   displayName: string | null;
   email: string | null;
   bio: string | null;
+  profileAddress: string | null;
   shortAddress: string | null;
+  copiedAddress: boolean;
   joinedAt: string | null;
   saving: boolean;
   menuOpenFor: EditableField | null;
@@ -19,6 +24,7 @@ type ProfileTabContentProps = {
   onCancelEditing: () => void;
   onSaveField: (field: EditableField) => Promise<void>;
   onDeleteField: (field: EditableField) => Promise<void>;
+  onCopyAddress: () => Promise<void> | void;
 };
 
 const ProfileTabContent: React.FC<ProfileTabContentProps> = ({
@@ -27,7 +33,9 @@ const ProfileTabContent: React.FC<ProfileTabContentProps> = ({
   displayName,
   email,
   bio,
+  profileAddress,
   shortAddress,
+  copiedAddress,
   joinedAt,
   saving,
   menuOpenFor,
@@ -39,6 +47,7 @@ const ProfileTabContent: React.FC<ProfileTabContentProps> = ({
   onCancelEditing,
   onSaveField,
   onDeleteField,
+  onCopyAddress,
 }) => {
   return (
     <>
@@ -98,18 +107,24 @@ const ProfileTabContent: React.FC<ProfileTabContentProps> = ({
 
       <ul className="profile-details" aria-label="Szczegóły profilu">
         <li className="profile-row">
-          <span className="profile-row-icon">⟠</span>
+          <img src={ethIcon} alt="ETH" className="profile-row-icon" />
           {shortAddress ? (
-            <span>{shortAddress}</span>
+            <>
+              <span>{shortAddress}</span>
+              <button type="button" className="profile-copy-btn" onClick={onCopyAddress}>
+                Skopiuj adres
+              </button>
+              {copiedAddress && <span className="profile-copy-status">Skopiowano</span>}
+            </>
           ) : (
             <>
-              <span>Brak adresu ETH</span>
+              <span>{profileAddress ?? "Brak adresu ETH"}</span>
               <button type="button" className="profile-add-btn">Dodaj adres ETH</button>
             </>
           )}
         </li>
         <li className="profile-row">
-          <span className="profile-row-icon">✉</span>
+          <img src={emailIcon} alt="E-mail" className="profile-row-icon" />
           {editingField === "email" ? (
             <div className="profile-edit-inline profile-edit-inline--row">
               <input
@@ -154,7 +169,7 @@ const ProfileTabContent: React.FC<ProfileTabContentProps> = ({
         </li>
         {joinedAt && (
           <li className="profile-row">
-            <span className="profile-row-icon">◷</span>
+            <img src={clockIcon} alt="Data dołączenia" className="profile-row-icon" />
             <span>Dołączono: {joinedAt}</span>
           </li>
         )}

@@ -22,6 +22,17 @@ using Serilog.Sinks.SystemConsole.Themes;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Prefer one shared env file in project root for local runs.
+var sharedEnvPath = Path.GetFullPath(Path.Combine(builder.Environment.ContentRootPath, "..", ".env"));
+if (File.Exists(sharedEnvPath))
+{
+    Env.Load(sharedEnvPath);
+}
+else
+{
+    Env.Load();
+}
+
 var minimumLevel = builder.Environment.IsDevelopment()
     ? LogEventLevel.Debug
     : LogEventLevel.Information;
@@ -54,7 +65,6 @@ Log.Logger = new LoggerConfiguration()
         outputTemplate: "[{Level:u3}] {Message:lj}{NewLine}{Exception}")
     .CreateLogger();
 builder.Host.UseSerilog();
-Env.Load();
 var dbHost = Environment.GetEnvironmentVariable("DB_HOST") ?? "localhost";
 var dbPort = Environment.GetEnvironmentVariable("DB_PORT") ?? "5432";
 var dbName = Environment.GetEnvironmentVariable("DB_NAME") ?? "IssuerDb";

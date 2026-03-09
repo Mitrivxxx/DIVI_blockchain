@@ -165,8 +165,10 @@
 
 .profile-row-icon {
   width: 24px;
-  text-align: center;
-  font-weight: 700;
+  height: 24px;
+  display: block;
+  object-fit: contain;
+  flex-shrink: 0;
 }
 
 .profile-add-btn {
@@ -178,6 +180,22 @@
   padding: 4px 12px;
   font-size: 0.9rem;
   cursor: pointer;
+}
+
+.profile-copy-btn {
+  border: 1px solid var(--app-bg);
+  background: transparent;
+  color: var(--app-bg);
+  border-radius: 999px;
+  padding: 4px 12px;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.profile-copy-status {
+  margin-left: auto;
+  font-size: 0.9rem;
+  font-weight: 700;
 }
 
 .profile-edit-inline {

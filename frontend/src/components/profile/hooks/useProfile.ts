@@ -147,6 +147,7 @@ export const useProfile = ({ userRole, walletAddress, fallbackAvatar }: UseProfi
     displayName,
     email,
     bio,
+    profileAddress,
     shortAddress,
     joinedAt,
     avatar,

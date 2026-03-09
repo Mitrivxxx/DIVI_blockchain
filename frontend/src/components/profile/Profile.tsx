@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import userIcon from "../../assets/icons/user.svg";
 import ProfileTabContent from "./components/ProfileTabContent";
 import ProfileTabs from "./components/ProfileTabs";
@@ -18,6 +18,7 @@ const Profile: React.FC<ProfileProps> = ({ userRole, walletAddress }) => {
     displayName,
     email,
     bio,
+    profileAddress,
     shortAddress,
     joinedAt,
     avatar,
@@ -32,6 +33,30 @@ const Profile: React.FC<ProfileProps> = ({ userRole, walletAddress }) => {
 
   const handleMenuToggle = (field: "name" | "email" | "bio") => {
     setMenuOpenFor(menuOpenFor === field ? null : field);
+  };
+
+  const [copiedAddress, setCopiedAddress] = useState(false);
+
+  const handleCopyAddress = async () => {
+    if (!profileAddress) {
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(profileAddress);
+    } catch {
+      const textArea = document.createElement("textarea");
+      textArea.value = profileAddress;
+      textArea.style.position = "fixed";
+      textArea.style.opacity = "0";
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand("copy");
+      document.body.removeChild(textArea);
+    }
+
+    setCopiedAddress(true);
+    window.setTimeout(() => setCopiedAddress(false), 1400);
   };
 
   if (loading) {
@@ -53,7 +78,9 @@ const Profile: React.FC<ProfileProps> = ({ userRole, walletAddress }) => {
           displayName={displayName}
           email={email}
           bio={bio}
+          profileAddress={profileAddress}
           shortAddress={shortAddress}
+          copiedAddress={copiedAddress}
           joinedAt={joinedAt}
           saving={saving}
           menuOpenFor={menuOpenFor}
@@ -65,6 +92,7 @@ const Profile: React.FC<ProfileProps> = ({ userRole, walletAddress }) => {
           onCancelEditing={cancelEditing}
           onSaveField={saveField}
           onDeleteField={deleteField}
+          onCopyAddress={handleCopyAddress}
         />
       ) : (
         <div className="profile-empty-tab" />

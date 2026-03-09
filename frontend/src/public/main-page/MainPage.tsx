@@ -7,8 +7,14 @@ import "./MainPage.scss";
 
 const PublicPage = () => {
   const navigate = useNavigate();
-  const { address, connect, signAndVerifyNonce } = useWeb3Auth();
+  const { address, jwt, connect, signAndVerifyNonce } = useWeb3Auth();
   const [pendingAuthorization, setPendingAuthorization] = useState(false);
+
+  useEffect(() => {
+    if (jwt) {
+      navigate("/app", { replace: true });
+    }
+  }, [jwt, navigate]);
 
   const handleConnect = async () => {
     await connect();

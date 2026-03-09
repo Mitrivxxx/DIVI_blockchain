@@ -6,9 +6,8 @@
     -zamienić pole Id z Guid na int (najlepiej z autoinkrementacją w bazie danych)
     -lepsza walidacja
 
-2. .net 
++2. .net 
     -napisac testy
-    -zainteresowac sie git actions
     -caly proces devOps
 
 +3. frontendu    
@@ -27,7 +26,7 @@
     ❌ Nie mają firewalla
     ❌ Nie robią backupów
 
-7. japierdole mam przejebane
++7. japierdole mam przejebane
     -refaktor db xddd
     -pewnie wszystko sie spierdoli wiec testy wszystkiego
     -niewiem wsumie nic
@@ -40,7 +39,20 @@
     -lista hashy dokumentów danego użytkownika (czyli jakie dokumenty wystawil issuer)
     -filtrowanie dokumentow po typie (dyplom, certyfikat, swiadectwo pracy)
     -historia calego kontraktu, czyli cos typu etherscan tylko prostsze
-    
+----
+    typ dokumentu jako enum:
+        -Education
+        -Professional certificates
+        -Employment documents
+        -Other documents
+
+    -lista hashy dokumentow danego urzytkownika + adres kto wystawil ten dokument + data
+    (czyli uzytkownik wchodzi na swoj profil i widzi wszystkie swoje dokumenty)
+    -
+------------
+zakladka niewidoczna dla admina: Moje Dokumenty (na frontedzie)
+ 
+
 
 (7)-------------------------
 --Member--

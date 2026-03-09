@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import type { TabKey } from "../components/sidebar/tabs";
 import Sidebar from "../components/sidebar/Sidebar";
 import Dashboard from "../components/Dashboard";
@@ -16,7 +17,8 @@ import { useWeb3Auth } from "../app/hooks/useWeb3Auth";
 import "./MainLayout.scss";
 
 const MainLayout: React.FC = () => {
-  const { address } = useWeb3Auth();
+  const navigate = useNavigate();
+  const { address, jwt, logout } = useWeb3Auth();
   const [userRole] = useUserRole(address, fetchUserRole);
 
   const [activeTab, setActiveTab] = useState<TabKey>("dashboard");
@@ -25,6 +27,16 @@ const MainLayout: React.FC = () => {
 
   const handleBellClick = () => setActiveTab("notify");
   const handleUserClick = () => setActiveTab("profile");
+  const handleLogout = () => {
+    logout();
+    navigate("/");
+  };
+
+  useEffect(() => {
+    if (!jwt) {
+      navigate("/", { replace: true });
+    }
+  }, [jwt, navigate]);
 
   const renderContent = () => {
     switch (activeTab) {
@@ -58,6 +70,7 @@ const MainLayout: React.FC = () => {
         userRole={userRole}
         walletAddress={address}
         shortAddress={shortAddress}
+        onLogout={handleLogout}
       />
       <div className="mainlayout-body">
         <nav className="mainlayout-nav">

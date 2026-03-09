@@ -5,6 +5,12 @@ pragma solidity ^0.8.20;
 import "./DocumentTypes.sol";
 
 contract DocumentIssuer {
+    struct OwnerDocumentInfo {
+        bytes32 hash;
+        address issuer;
+        uint256 issuedAt;
+    }
+
     // Admins mapping, default admin is hardcoded
     mapping(address => bool) public isAdmin;
     address public constant DEFAULT_ADMIN = 0xeb2a27c7c6E72BC5022a49c4e044E72ab70E9bDb;
@@ -49,8 +55,9 @@ contract DocumentIssuer {
     address public owner;
     mapping(address => bool) public authorizedIssuers;
     mapping(bytes32 => DocumentTypes.Document) public documents;
+    mapping(address => bytes32[]) private ownerDocumentHashes;
 
-    event DocumentIssued(bytes32 indexed hash, address indexed issuer, address indexed documentOwner, bytes32 documentType, DocumentTypes.DocumentStatus status);
+    event DocumentIssued(bytes32 indexed hash, address indexed issuer, address indexed documentOwner, DocumentTypes.DocumentType documentType, DocumentTypes.DocumentStatus status);
 
     modifier onlyIssuer() {
         require(authorizedIssuers[msg.sender], "Not authorized");
@@ -82,11 +89,10 @@ contract DocumentIssuer {
         authorizedIssuers[_issuer] = false;
     }
 
-    function issueDocument(bytes32 hash, string calldata cid, address documentOwner, bytes32 documentType) external onlyIssuer {
+    function issueDocument(bytes32 hash, string calldata cid, address documentOwner, DocumentTypes.DocumentType documentType) external onlyIssuer {
         require(hash != bytes32(0), "Hash required");
         require(bytes(cid).length > 0, "CID required");
         require(documentOwner != address(0), "Owner required");
-        require(documentType != bytes32(0), "Document type required");
         require(!documents[hash].exists, "Already issued");
         documents[hash] = DocumentTypes.Document({
             issuer: msg.sender,
@@ -97,7 +103,28 @@ contract DocumentIssuer {
             exists: true,
             status: DocumentTypes.DocumentStatus.Confirmed
         });
+        ownerDocumentHashes[documentOwner].push(hash);
         emit DocumentIssued(hash, msg.sender, documentOwner, documentType, DocumentTypes.DocumentStatus.Confirmed);
+    }
+
+    function getDocumentsByOwner(address documentOwner) external view returns (OwnerDocumentInfo[] memory) {
+        require(documentOwner != address(0), "Owner required");
+
+        bytes32[] storage hashes = ownerDocumentHashes[documentOwner];
+        OwnerDocumentInfo[] memory result = new OwnerDocumentInfo[](hashes.length);
+
+        for (uint256 i = 0; i < hashes.length; i++) {
+            bytes32 docHash = hashes[i];
+            DocumentTypes.Document storage doc = documents[docHash];
+
+            result[i] = OwnerDocumentInfo({
+                hash: docHash,
+                issuer: doc.issuer,
+                issuedAt: doc.issuedAt
+            });
+        }
+
+        return result;
     }
 
     function exists(bytes32 hash) external view returns (bool) {
