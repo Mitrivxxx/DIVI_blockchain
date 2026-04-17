@@ -15,6 +15,27 @@ const dateFormatter = new Intl.DateTimeFormat('pl-PL', {
   minute: '2-digit',
 });
 
+const formatTransactionHash = (transactionHash: string): string => {
+  if (transactionHash.length <= 10) {
+    return transactionHash;
+  }
+
+  return `${transactionHash.slice(0, 5)}...${transactionHash.slice(-4)}`;
+};
+
+const CONTRACT_ADDRESS = import.meta.env.VITE_BLOCKCHAIN_CONTRACT_ADDRESS ?? '';
+const EXPLORER_BASE_URL = 'https://sepolia.etherscan.io';
+
+const getContractExplorerUrl = (contractAddress: string): string => {
+  const trimmedAddress = contractAddress.trim();
+
+  if (!trimmedAddress) {
+    return EXPLORER_BASE_URL;
+  }
+
+  return `${EXPLORER_BASE_URL}/address/${trimmedAddress}`;
+};
+
 export const VerifyBlockchainInfo = ({
   transactionHash,
   blockNumber,
@@ -33,7 +54,7 @@ export const VerifyBlockchainInfo = ({
         {transactionHash && (
           <div className={styles.fileMetaRow}>
             <dt className={styles.fileMetaLabel}>Transaction hash</dt>
-            <dd className={styles.fileMetaValue}>{transactionHash}</dd>
+            <dd className={styles.fileMetaValue}>{formatTransactionHash(transactionHash)}</dd>
           </div>
         )}
 
@@ -58,6 +79,15 @@ export const VerifyBlockchainInfo = ({
           </div>
         )}
       </dl>
+
+      <a
+        className={styles.explorerButton}
+        href={getContractExplorerUrl(CONTRACT_ADDRESS)}
+        target="_blank"
+        rel="noreferrer"
+      >
+        Pokaż w eksplorze
+      </a>
     </section>
   );
 };
