@@ -1,4 +1,5 @@
 import styles from './Verify.module.scss';
+import { VerifyFileInfo } from './components/VerifyFileInfo';
 import { VerifyDropzone } from './components/VerifyDropzone';
 import { VerifyResult } from './components/VerifyResult';
 import { useVerify } from './hooks/useVerify';
@@ -6,6 +7,8 @@ import { useVerify } from './hooks/useVerify';
 const Verify: React.FC = () => {
   const {
     file,
+    selectedAt,
+    showFileInfo,
     isDragging,
     status,
     isVerifying,
@@ -45,23 +48,25 @@ const Verify: React.FC = () => {
               title="WERYFIKUJĘ"
               description="Sprawdzam dokument w blockchain..."
               className={styles.verificationBanner}
+              contentClassName={styles.verificationContent}
               titleClassName={styles.verificationTitle}
               descriptionClassName={styles.verificationDescription}
             />
           ) : verificationOutcome ? (
-            <>
-              <VerifyResult
-                variant={verificationOutcome.kind}
-                title={verificationOutcome.title}
-                description={verificationOutcome.description}
-                className={styles.verificationBanner}
-                titleClassName={styles.verificationTitle}
-                descriptionClassName={styles.verificationDescription}
-              />
+            <VerifyResult
+              variant={verificationOutcome.kind}
+              title={verificationOutcome.title}
+              description={verificationOutcome.description}
+              className={styles.verificationBanner}
+              contentClassName={styles.verificationContent}
+              titleClassName={styles.verificationTitle}
+              descriptionClassName={styles.verificationDescription}
+              actionsClassName={styles.verificationActions}
+            >
               <button className={styles.resetButton} type="button" onClick={handleReset}>
                 Zweryfikuj kolejny dokument
               </button>
-            </>
+            </VerifyResult>
           ) : (
             <button className={styles.verifyButton} type="submit">
               Zweryfikuj dokument
@@ -69,6 +74,8 @@ const Verify: React.FC = () => {
           )}
         </div>
       </form>
+
+      {showFileInfo && file && selectedAt && <VerifyFileInfo file={file} selectedAt={selectedAt} />}
 
       {status && !verificationOutcome && <p className={styles.status}>{status}</p>}
     </div>

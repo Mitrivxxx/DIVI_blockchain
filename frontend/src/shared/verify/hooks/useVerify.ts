@@ -31,6 +31,8 @@ type VerificationOutcome = {
 
 export const useVerify = () => {
   const [file, setFile] = useState<File | null>(null);
+  const [selectedAt, setSelectedAt] = useState<Date | null>(null);
+  const [showFileInfo, setShowFileInfo] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [status, setStatus] = useState('');
   const [isVerifying, setIsVerifying] = useState(false);
@@ -44,12 +46,16 @@ export const useVerify = () => {
 
     if (!isPdfFile(selectedFile)) {
       setFile(null);
+      setSelectedAt(null);
+      setShowFileInfo(false);
       setVerificationOutcome(null);
       setStatus(PDF_ERROR_MESSAGE);
       return;
     }
 
     setFile(selectedFile);
+    setSelectedAt(new Date());
+    setShowFileInfo(false);
     setVerificationOutcome(null);
     setStatus('');
   };
@@ -76,6 +82,7 @@ export const useVerify = () => {
       return;
     }
 
+    setShowFileInfo(true);
     setIsVerifying(true);
     setStatus('Weryfikuję dokument w blockchain...');
     setVerificationOutcome(null);
@@ -108,6 +115,8 @@ export const useVerify = () => {
 
   const handleReset = () => {
     setFile(null);
+    setSelectedAt(null);
+    setShowFileInfo(false);
     setIsDragging(false);
     setStatus('');
     setIsVerifying(false);
@@ -120,6 +129,8 @@ export const useVerify = () => {
 
   return {
     file,
+    selectedAt,
+    showFileInfo,
     isDragging,
     status,
     isVerifying,

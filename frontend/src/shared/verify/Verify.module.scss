@@ -45,33 +45,33 @@
 }
 
 .formFooter {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
+  display: grid;
   gap: 12px;
-  flex-wrap: wrap;
   width: 100%;
 }
 
 .verifyButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   width: 100%;
-  min-height: 76px;
-  padding: 18px 20px;
-  border: 1px solid rgba(77, 156, 240, 0.45);
+  min-height: 96px;
+  padding: 18px 24px;
+  border: 1px solid rgba(77, 156, 240, 0.28);
   border-radius: 12px;
   background: transparent;
   color: #4d9cf0;
   font-weight: 700;
   font-size: 1rem;
   cursor: pointer;
-  box-shadow: none;
-  transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+  transition: border-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
 }
 
 .verifyButton:hover {
-  background: rgba(77, 156, 240, 0.08);
-  border-color: rgba(77, 156, 240, 0.65);
+  border-color: rgba(77, 156, 240, 0.42);
   transform: translateY(-1px);
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.1);
 }
 
 .resetButton {
@@ -92,11 +92,13 @@
 }
 
 .verificationBanner {
-  display: grid;
-  gap: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
   width: 100%;
-  min-height: 76px;
-  padding: 16px 18px;
+  min-height: 96px;
+  padding: 18px 24px;
   border-radius: 12px;
   color: #ffffff;
   box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
@@ -121,6 +123,13 @@
 .verificationBanner[data-variant='verifying'] {
   background: linear-gradient(135deg, #b9b9b9 0%, #9f9f9f 100%);
   color: #2b2b2b;
+}
+
+.verificationContent {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  flex: 1 1 auto;
 }
 
 .verificationTitle {
@@ -152,8 +161,54 @@
   color: inherit;
 }
 
+.verificationActions {
+  display: flex;
+  justify-content: flex-end;
+  flex: 0 0 auto;
+}
+
 .status {
   margin-top: 12px;
+}
+
+.fileMetaCard {
+  padding: 16px 18px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 12px;
+  background: #f8fafc;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
+}
+
+.fileMetaTitle {
+  margin: 0 0 12px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.fileMetaList {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+}
+
+.fileMetaRow {
+  display: grid;
+  gap: 4px;
+}
+
+.fileMetaLabel {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: rgba(15, 23, 42, 0.65);
+}
+
+.fileMetaValue {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #1e293b;
+  word-break: break-word;
 }
 
 @keyframes verificationPulse {
