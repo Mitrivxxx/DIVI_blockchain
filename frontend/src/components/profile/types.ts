@@ -15,3 +15,9 @@ export type ProfileData = {
 
 export type EditableField = "name" | "email" | "bio";
 export type ProfileTab = "profile" | "certyfikat" | "transactions";
+
+export type OwnerCertificate = {
+  hash: string;
+  issuer: string;
+  issuedAt: string;
+};

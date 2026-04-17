@@ -1,5 +1,5 @@
 import { API_URL } from "../../../types/api";
-import type { EditableField, ProfileData } from "../types";
+import type { EditableField, OwnerCertificate, ProfileData } from "../types";
 
 const getFieldEndpoint = (field: EditableField) => {
   if (field === "name") return "name";
@@ -54,4 +54,14 @@ export const deleteProfileFieldApi = async (token: string, field: EditableField)
   });
 
   return response.ok;
+};
+
+export const fetchOwnerCertificatesApi = async (ownerAddress: string): Promise<OwnerCertificate[]> => {
+  const response = await fetch(`${API_URL}/api/documents/owner/${encodeURIComponent(ownerAddress)}`);
+
+  if (!response.ok) {
+    throw new Error("Nie udało się pobrać certyfikatów właściciela.");
+  }
+
+  return (await response.json()) as OwnerCertificate[];
 };

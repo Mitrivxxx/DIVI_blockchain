@@ -9,7 +9,7 @@ function App() {
       <Web3AuthProvider>
         <Routes>
           <Route path="/" element={<PublicPage />} />
-          <Route path="/app" element={<MainLayout />} />
+          <Route path="/app/:tabPath?" element={<MainLayout />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Web3AuthProvider>

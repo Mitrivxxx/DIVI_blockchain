@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { deleteProfileFieldApi, fetchProfileApi, patchProfileFieldApi } from "../api/profileApi";
-import type { EditableField, ProfileData, ProfileTab } from "../types";
+import { deleteProfileFieldApi, fetchOwnerCertificatesApi, fetchProfileApi, patchProfileFieldApi } from "../api/profileApi";
+import type { EditableField, OwnerCertificate, ProfileData, ProfileTab } from "../types";
 
 type UseProfileParams = {
   userRole?: string | null;
@@ -16,6 +16,9 @@ export const useProfile = ({ userRole, walletAddress, fallbackAvatar }: UseProfi
   const [editingValue, setEditingValue] = useState("");
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState<ProfileTab>("profile");
+  const [ownerCertificates, setOwnerCertificates] = useState<OwnerCertificate[]>([]);
+  const [certificatesLoading, setCertificatesLoading] = useState(false);
+  const [certificatesError, setCertificatesError] = useState<string | null>(null);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -136,10 +139,35 @@ export const useProfile = ({ userRole, walletAddress, fallbackAvatar }: UseProfi
     [cancelEditing, editingField],
   );
 
+  const loadOwnerCertificates = useCallback(async (ownerAddress: string | null | undefined) => {
+    const normalizedAddress = ownerAddress?.trim();
+
+    if (!normalizedAddress) {
+      setOwnerCertificates([]);
+      setCertificatesError("Brak adresu właściciela do pobrania certyfikatów.");
+      return;
+    }
+
+    try {
+      setCertificatesLoading(true);
+      setCertificatesError(null);
+      const certificates = await fetchOwnerCertificatesApi(normalizedAddress);
+      setOwnerCertificates(certificates);
+    } catch (error) {
+      setOwnerCertificates([]);
+      setCertificatesError(error instanceof Error ? error.message : "Nie udało się pobrać certyfikatów.");
+    } finally {
+      setCertificatesLoading(false);
+    }
+  }, []);
+
   return {
     loading,
     saving,
     activeTab,
+    ownerCertificates,
+    certificatesLoading,
+    certificatesError,
     menuOpenFor,
     editingField,
     editingValue,
@@ -158,5 +186,6 @@ export const useProfile = ({ userRole, walletAddress, fallbackAvatar }: UseProfi
     cancelEditing,
     saveField,
     deleteField,
+    loadOwnerCertificates,
   };
 };

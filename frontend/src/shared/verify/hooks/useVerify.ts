@@ -23,11 +23,18 @@ const getErrorMessage = (error: unknown): string => {
   return 'Błąd podczas weryfikacji dokumentu';
 };
 
+type VerificationOutcome = {
+  kind: 'verified' | 'missing' | 'error';
+  title: string;
+  description: string;
+};
+
 export const useVerify = () => {
   const [file, setFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [status, setStatus] = useState('');
-  const [result, setResult] = useState<VerifyResult | null>(null);
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [verificationOutcome, setVerificationOutcome] = useState<VerificationOutcome | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const handleFileSelect = (selectedFile: File | null) => {
@@ -37,13 +44,13 @@ export const useVerify = () => {
 
     if (!isPdfFile(selectedFile)) {
       setFile(null);
-      setResult(null);
+      setVerificationOutcome(null);
       setStatus(PDF_ERROR_MESSAGE);
       return;
     }
 
     setFile(selectedFile);
-    setResult(null);
+    setVerificationOutcome(null);
     setStatus('');
   };
 
@@ -69,14 +76,45 @@ export const useVerify = () => {
       return;
     }
 
+    setIsVerifying(true);
+    setStatus('Weryfikuję dokument w blockchain...');
+    setVerificationOutcome(null);
+
     try {
-      setStatus('Weryfikuję dokument w blockchain...');
       const response = await verifyDocument(file);
-      setResult(response);
-      setStatus(response.message);
+      setVerificationOutcome(response.isAuthentic
+        ? {
+            kind: 'verified',
+            title: 'ZWERYFIKOWANY',
+            description: 'Dokument jest autentyczny i nie został zmodyfikowany.',
+          }
+        : {
+            kind: 'missing',
+            title: 'BRAK W BLOCKCHAIN',
+            description: 'Nie mamy dowodu, że ten dokument został kiedykolwiek zarejestrowany.',
+          });
+      setStatus('');
     } catch (error) {
-      setResult(null);
-      setStatus(getErrorMessage(error));
+      setVerificationOutcome({
+        kind: 'error',
+        title: 'NIEZGODNY',
+        description: getErrorMessage(error),
+      });
+      setStatus('');
+    } finally {
+      setIsVerifying(false);
+    }
+  };
+
+  const handleReset = () => {
+    setFile(null);
+    setIsDragging(false);
+    setStatus('');
+    setIsVerifying(false);
+    setVerificationOutcome(null);
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
     }
   };
 
@@ -84,12 +122,14 @@ export const useVerify = () => {
     file,
     isDragging,
     status,
-    result,
+    isVerifying,
+    verificationOutcome,
     fileInputRef,
     setIsDragging,
     handleFileSelect,
     openFileDialog,
     handleDrop,
     handleSubmit,
+    handleReset,
   };
 };

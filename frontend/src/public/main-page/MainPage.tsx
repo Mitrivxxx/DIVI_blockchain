@@ -12,7 +12,7 @@ const PublicPage = () => {
 
   useEffect(() => {
     if (jwt) {
-      navigate("/app", { replace: true });
+      navigate("/app/dashboard", { replace: true });
     }
   }, [jwt, navigate]);
 
@@ -29,7 +29,7 @@ const PublicPage = () => {
     const authorize = async () => {
       try {
         await signAndVerifyNonce();
-        navigate("/app");
+        navigate("/app/dashboard");
       } finally {
         setPendingAuthorization(false);
       }

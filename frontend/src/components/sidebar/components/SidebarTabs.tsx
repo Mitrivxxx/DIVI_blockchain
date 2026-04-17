@@ -5,7 +5,7 @@ import type { TabKey } from '../tabs';
 
 interface SidebarTabsProps {
   activeTab: TabKey;
-  setActiveTab: (tab: TabKey) => void;
+  onTabSelect: (tab: TabKey) => void;
   userRole?: string | null;
 }
 
@@ -50,14 +50,14 @@ function getVisibleTabs(userRole: string | null | undefined, tabs: Tab[]): Tab[]
 }
 
 
-const SidebarTabs: React.FC<SidebarTabsProps> = ({ activeTab, setActiveTab, userRole }) => {
+const SidebarTabs: React.FC<SidebarTabsProps> = ({ activeTab, onTabSelect, userRole }) => {
   const visibleTabs = getVisibleTabs(userRole, tabs);
   return (
     <ul className="sidebar-list">
       {visibleTabs.map(tab => (
         <li
           key={tab.key}
-          onClick={() => setActiveTab(tab.key)}
+          onClick={() => onTabSelect(tab.key)}
           className={"sidebar-item" + (activeTab === tab.key ? " active" : "")}
         >
           {tab.label}

@@ -13,18 +13,18 @@ import SidebarTabs from './components/SidebarTabs';
 
 type SidebarProps = {
   activeTab: TabKey;
-  setActiveTab: (tab: TabKey) => void;
+  onTabSelect: (tab: TabKey) => void;
   userRole?: string | null;
 };
 
 
 
-const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, userRole }) => {
+const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabSelect, userRole }) => {
   return (
     <div className="sidebar-root">
       <div>
         <h2 className="sidebar-title">System</h2>
-        <SidebarTabs activeTab={activeTab} setActiveTab={setActiveTab} userRole={userRole} />
+        <SidebarTabs activeTab={activeTab} onTabSelect={onTabSelect} userRole={userRole} />
       </div>
     </div>
   );

@@ -1,15 +1,32 @@
-import { type VerifyResult as VerifyResultData } from '../api/verifyApi';
-
 type VerifyResultProps = {
-  result: VerifyResultData;
+  variant: 'verified' | 'missing' | 'error' | 'verifying';
+  title: string;
+  description: string;
   className?: string;
   titleClassName?: string;
+  descriptionClassName?: string;
 };
 
-export const VerifyResult = ({ result, className, titleClassName }: VerifyResultProps) => (
-  <div className={className}>
-    <h2 className={titleClassName}>Wynik weryfikacji</h2>
-    <p><strong>Hash:</strong> {result.hash}</p>
-    <p><strong>Status:</strong> {result.isAuthentic ? 'Autentyczny' : 'Nieautentyczny'}</p>
+const ICON_BY_VARIANT: Record<VerifyResultProps['variant'], string> = {
+  verified: '✓',
+  missing: '?',
+  error: '×',
+  verifying: '…',
+};
+
+export const VerifyResult = ({
+  variant,
+  title,
+  description,
+  className,
+  titleClassName,
+  descriptionClassName,
+}: VerifyResultProps) => (
+  <div className={className} data-variant={variant}>
+    <div className={titleClassName}>
+      <span aria-hidden="true">{ICON_BY_VARIANT[variant]}</span>
+      <span>{title}</span>
+    </div>
+    <p className={descriptionClassName}>{description}</p>
   </div>
 );

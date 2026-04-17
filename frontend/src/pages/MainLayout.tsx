@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import type { TabKey } from "../components/sidebar/tabs";
+import React, { useEffect } from "react";
+import { Navigate, useNavigate, useParams } from "react-router-dom";
+import { defaultTabKey, getTabKeyByPath, getTabPath, type TabKey } from "../components/sidebar/tabs";
 import Sidebar from "../components/sidebar/Sidebar";
 import Dashboard from "../components/Dashboard";
 import Upload from "../features/uploadFile/Upload";
@@ -18,15 +18,19 @@ import "./MainLayout.scss";
 
 const MainLayout: React.FC = () => {
   const navigate = useNavigate();
+  const { tabPath } = useParams<{ tabPath?: string }>();
   const { address, jwt, logout } = useWeb3Auth();
   const [userRole] = useUserRole(address, fetchUserRole);
-
-  const [activeTab, setActiveTab] = useState<TabKey>("dashboard");
+  const activeTab = getTabKeyByPath(tabPath);
 
   const shortAddress = (addr: string) => addr.slice(0, 6) + "..." + addr.slice(-4);
 
-  const handleBellClick = () => setActiveTab("notify");
-  const handleUserClick = () => setActiveTab("profile");
+  const navigateToTab = (tab: TabKey) => {
+    navigate(`/app/${getTabPath(tab)}`);
+  };
+
+  const handleBellClick = () => navigateToTab("notify");
+  const handleUserClick = () => navigateToTab("profile");
   const handleLogout = () => {
     logout();
     navigate("/");
@@ -37,6 +41,14 @@ const MainLayout: React.FC = () => {
       navigate("/", { replace: true });
     }
   }, [jwt, navigate]);
+
+  if (!tabPath) {
+    return <Navigate to={`/app/${getTabPath(defaultTabKey)}`} replace />;
+  }
+
+  if (!activeTab) {
+    return <Navigate to={`/app/${getTabPath(defaultTabKey)}`} replace />;
+  }
 
   const renderContent = () => {
     switch (activeTab) {
@@ -74,7 +86,7 @@ const MainLayout: React.FC = () => {
       />
       <div className="mainlayout-body">
         <nav className="mainlayout-nav">
-          <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} userRole={userRole} />
+          <Sidebar activeTab={activeTab} onTabSelect={navigateToTab} userRole={userRole} />
         </nav>
         <main className="mainlayout-main">
           {renderContent()}

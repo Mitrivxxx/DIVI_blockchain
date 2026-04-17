@@ -1,6 +1,11 @@
 using Serilog;
 using backend.Infrastructure.Logging;
 using backend.Extensions;
+using DotNetEnv;
+
+
+Env.Load("../.env");
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,8 +21,13 @@ builder.Services.AddPresentation();
 
 var app = builder.Build();
 
-// Test log on startup
-Log.Information("Starting API in {Environment}", app.Environment.EnvironmentName);
+app.Lifetime.ApplicationStarted.Register(() =>
+{
+	Log.Information(
+		"Starting API in {Environment} on {Urls}",
+		app.Environment.EnvironmentName,
+		string.Join(", ", app.Urls));
+});
 
 app.UseApplicationPipeline();
 
