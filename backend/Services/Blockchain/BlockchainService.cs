@@ -1,13 +1,22 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Numerics;
+using backend.DTOs;
+using Nethereum.ABI.FunctionEncoding.Attributes;
 using Nethereum.Web3;
 using Nethereum.Web3.Accounts;
 using Microsoft.Extensions.Configuration;
 using Nethereum.RPC.Eth.DTOs;
+using Nethereum.Hex.HexTypes;
 
 namespace backend.Services.Blockchain
 {
 	public class BlockchainService : IBlockchainService
 	{
     private const string LegacyIssueDocumentAbi = "[{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"hash\",\"type\":\"bytes32\"},{\"internalType\":\"string\",\"name\":\"cid\",\"type\":\"string\"},{\"internalType\":\"address\",\"name\":\"documentOwner\",\"type\":\"address\"},{\"internalType\":\"bytes32\",\"name\":\"documentType\",\"type\":\"bytes32\"}],\"name\":\"issueDocument\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]";
+    private const string OwnerDocumentsAbi = "[{\"inputs\":[{\"internalType\":\"address\",\"name\":\"documentOwner\",\"type\":\"address\"}],\"name\":\"getDocumentsByOwner\",\"outputs\":[{\"components\":[{\"internalType\":\"bytes32\",\"name\":\"hash\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"issuer\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"issuedAt\",\"type\":\"uint256\"}],\"internalType\":\"struct DocumentIssuer.OwnerDocumentInfo[]\",\"name\":\"\",\"type\":\"tuple[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"}]";
+    private const string LegacyOwnerDocumentHashesAbi = "[{\"inputs\":[{\"internalType\":\"address\",\"name\":\"documentOwner\",\"type\":\"address\"}],\"name\":\"getDocumentHashesByOwner\",\"outputs\":[{\"internalType\":\"bytes32[]\",\"name\":\"\",\"type\":\"bytes32[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"}]";
 
     private readonly Web3 _web3;
     private readonly string _contractAddress;
@@ -237,6 +246,48 @@ namespace backend.Services.Blockchain
         return await function.CallAsync<List<object>>(hashBytes32);
     }
 
+    public async Task<List<OwnerDocumentInfoDto>> GetDocumentsByOwnerAsync(string ownerAddress)
+    {
+        var detailedFunction = GetOwnerDocumentsFunction();
+        try
+        {
+            var result = await detailedFunction.CallDeserializingToObjectAsync<GetDocumentsByOwnerOutputDto>(ownerAddress);
+            return result?.Documents?
+                .Select(document => new OwnerDocumentInfoDto(
+                    Utils.BytesToHexString(document.Hash),
+                    document.Issuer ?? string.Empty,
+                    DecodeUnixTimestamp(document.IssuedAt)))
+                .ToList()
+                ?? new List<OwnerDocumentInfoDto>();
+        }
+        catch (Exception ex) when (ShouldTryLegacyOwnerDocuments(ex))
+        {
+        }
+
+        var hashesFunction = GetLegacyOwnerDocumentHashesFunction();
+
+        var rawHashes = await hashesFunction.CallAsync<List<byte[]>>(ownerAddress);
+        if (rawHashes == null || rawHashes.Count == 0)
+        {
+            return new List<OwnerDocumentInfoDto>();
+        }
+
+        var certificates = new List<OwnerDocumentInfoDto>(rawHashes.Count);
+        foreach (var rawHash in rawHashes)
+        {
+            var hash = Utils.BytesToHexString(rawHash);
+            var rawDocument = await GetDocumentAsync(hash);
+            var certificate = DecodeLegacyOwnerDocument(hash, rawDocument);
+
+            if (certificate != null)
+            {
+                certificates.Add(certificate);
+            }
+        }
+
+        return certificates;
+    }
+
     // =============================
     // ISSUERS
     // =============================
@@ -295,6 +346,116 @@ namespace backend.Services.Blockchain
         var function = contract.GetFunction("isIssuer");
 
         return await function.CallAsync<bool>(address);
+    }
+
+    private static string DecodeHash(object? value)
+    {
+        return value switch
+        {
+            byte[] bytes => Utils.BytesToHexString(bytes),
+            string stringValue => stringValue,
+            _ => string.Empty
+        };
+    }
+
+    private static OwnerDocumentInfoDto? DecodeOwnerDocument(params object[] tuple)
+    {
+        if (tuple.Length < 3)
+        {
+            return null;
+        }
+
+        var hash = DecodeHash(tuple[0]);
+        var issuer = tuple[1]?.ToString() ?? string.Empty;
+        var issuedAt = DecodeUnixTimestamp(tuple[2]);
+
+        return new OwnerDocumentInfoDto(hash, issuer, issuedAt);
+    }
+
+    private static OwnerDocumentInfoDto? DecodeLegacyOwnerDocument(string hash, List<object>? rawDocument)
+    {
+        if (rawDocument == null || rawDocument.Count < 3)
+        {
+            return null;
+        }
+
+        var issuer = rawDocument[0]?.ToString() ?? string.Empty;
+        var issuedAt = DecodeUnixTimestamp(rawDocument[2]);
+
+        return new OwnerDocumentInfoDto(hash, issuer, issuedAt);
+    }
+
+    private static Nethereum.Contracts.Function? TryGetFunction(Nethereum.Contracts.Contract contract, string functionName)
+    {
+        try
+        {
+            return contract.GetFunction(functionName);
+        }
+        catch (Exception ex) when (ex.Message.Contains("Function not found", StringComparison.OrdinalIgnoreCase))
+        {
+            return null;
+        }
+    }
+
+    private Nethereum.Contracts.Function GetOwnerDocumentsFunction()
+    {
+        var contract = _web3.Eth.GetContract(OwnerDocumentsAbi, _contractAddress);
+        return contract.GetFunction("getDocumentsByOwner");
+    }
+
+    private Nethereum.Contracts.Function GetLegacyOwnerDocumentHashesFunction()
+    {
+        var contract = _web3.Eth.GetContract(LegacyOwnerDocumentHashesAbi, _contractAddress);
+        return contract.GetFunction("getDocumentHashesByOwner");
+    }
+
+    [FunctionOutput]
+    private class GetDocumentsByOwnerOutputDto : IFunctionOutputDTO
+    {
+        [Parameter("tuple[]", "", 1)]
+        public List<OwnerDocumentOutputDto> Documents { get; set; } = new();
+    }
+
+    [FunctionOutput]
+    private class OwnerDocumentOutputDto : IFunctionOutputDTO
+    {
+        [Parameter("bytes32", "hash", 1)]
+        public byte[] Hash { get; set; } = Array.Empty<byte>();
+
+        [Parameter("address", "issuer", 2)]
+        public string Issuer { get; set; } = string.Empty;
+
+        [Parameter("uint256", "issuedAt", 3)]
+        public BigInteger IssuedAt { get; set; }
+    }
+
+    private static bool ShouldTryLegacyOwnerDocuments(Exception ex)
+    {
+        var message = ex.Message?.ToLowerInvariant() ?? string.Empty;
+
+        return message.Contains("function selector was not recognized")
+            || message.Contains("execution reverted")
+            || message.Contains("without a reason");
+    }
+
+    private static DateTimeOffset DecodeUnixTimestamp(object? value)
+    {
+        var rawValue = value switch
+        {
+            HexBigInteger hex => hex.Value,
+            BigInteger big => big,
+            long longValue => new BigInteger(longValue),
+            int intValue => new BigInteger(intValue),
+            string stringValue when long.TryParse(stringValue, out var parsed) => new BigInteger(parsed),
+            _ => BigInteger.Zero
+        };
+
+        if (rawValue < 0)
+        {
+            rawValue = BigInteger.Zero;
+        }
+
+        return DateTimeOffset.FromUnixTimeSeconds((long)rawValue);
     }
 	}
 }

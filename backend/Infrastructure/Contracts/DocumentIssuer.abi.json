@@ -257,12 +257,29 @@
         "type": "address"
       }
     ],
-    "name": "getDocumentHashesByOwner",
+    "name": "getDocumentsByOwner",
     "outputs": [
       {
-        "internalType": "bytes32[]",
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "hash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "address",
+            "name": "issuer",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "issuedAt",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct DocumentIssuer.OwnerDocumentInfo[]",
         "name": "",
-        "type": "bytes32[]"
+        "type": "tuple[]"
       }
     ],
     "stateMutability": "view",

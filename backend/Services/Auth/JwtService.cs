@@ -30,8 +30,12 @@ namespace backend.Services.Auth
 				new Claim(ClaimTypes.Role, userRole.ToString())
 			};
 
-			var jwtKey = _configuration["Jwt:Key"] ?? "super_secret_key";
-			var jwtIssuer = _configuration["Jwt:Issuer"] ?? "DIVI";
+			var jwtKey = Environment.GetEnvironmentVariable("JWT_KEY")
+				?? _configuration["Jwt:Key"]
+				?? "change_me_32_chars_minimum";
+			var jwtIssuer = Environment.GetEnvironmentVariable("JWT_ISSUER")
+				?? _configuration["Jwt:Issuer"]
+				?? "DIVI";
 			var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
 			var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 

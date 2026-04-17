@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using backend.Services.Documents;
 using backend.Services.DocumentVerification;
+using backend.Services.Blockchain;
 
 [ApiController]
 [Route("api/documents")]
@@ -8,15 +9,18 @@ public class DocumentController : ControllerBase
 {
     private readonly IDocumentService _documentService;
     private readonly IDocumentVerification _documentVerification;
+    private readonly IBlockchainService _blockchainService;
     private readonly ILogger<DocumentController> _logger;
 
     public DocumentController(
         IDocumentService documentService,
         IDocumentVerification documentVerification,
+        IBlockchainService blockchainService,
         ILogger<DocumentController> logger)
     {
         _documentService = documentService;
         _documentVerification = documentVerification;
+        _blockchainService = blockchainService;
         _logger = logger;
     }
 
@@ -122,5 +126,19 @@ public class DocumentController : ControllerBase
         _logger.LogInformation("VerifyDocument completed. Hash: {Hash}, IsAuthentic: {IsAuthentic}", result.Hash, result.IsAuthentic);
 
         return Ok(result);
+    }
+
+    [HttpGet("owner/{ownerAddress}")]
+    public async Task<IActionResult> GetOwnerCertificates(string ownerAddress)
+    {
+        _logger.LogInformation("GetOwnerCertificates request received. Owner: {Owner}", ownerAddress);
+
+        if (string.IsNullOrWhiteSpace(ownerAddress))
+        {
+            return BadRequest("ownerAddress is required");
+        }
+
+        var certificates = await _blockchainService.GetDocumentsByOwnerAsync(ownerAddress);
+        return Ok(certificates);
     }
 }

@@ -31,4 +31,15 @@ public static class Utils
             return bytes32;
         }
     }
+
+    public static string BytesToHexString(byte[]? bytes, bool includePrefix = true)
+    {
+        if (bytes == null || bytes.Length == 0)
+        {
+            return string.Empty;
+        }
+
+        var hex = BitConverter.ToString(bytes).Replace("-", string.Empty).ToLowerInvariant();
+        return includePrefix ? $"0x{hex}" : hex;
+    }
 }
