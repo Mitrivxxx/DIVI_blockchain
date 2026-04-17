@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using backend.DTOs;
+using Nethereum.Contracts;
 using Nethereum.ABI.FunctionEncoding.Attributes;
 using Nethereum.Web3;
 using Nethereum.Web3.Accounts;
@@ -238,6 +239,38 @@ namespace backend.Services.Blockchain
         return await function.CallAsync<bool>(hashBytes32);
     }
 
+    public async Task<BlockchainTransactionInfoDto?> GetDocumentBlockchainInfoAsync(string hash)
+    {
+        var documentIssuedEvent = new Event<DocumentIssuedEventDto>(_web3.Client, _contractAddress);
+        var filterInput = documentIssuedEvent.CreateFilterInput(BlockParameter.CreateEarliest(), BlockParameter.CreateLatest());
+        var changes = await documentIssuedEvent.GetAllChangesAsync(filterInput);
+
+        var normalizedHash = NormalizeHex(hash);
+        var matchingEvent = changes.LastOrDefault(change => NormalizeHex(Utils.BytesToHexString(change.Event.Hash)) == normalizedHash);
+        if (matchingEvent == null)
+        {
+            return null;
+        }
+
+        var blockNumber = matchingEvent.Log.BlockNumber?.Value ?? BigInteger.Zero;
+        var block = await _web3.Eth.Blocks.GetBlockWithTransactionsByNumber.SendRequestAsync(new BlockParameter(matchingEvent.Log.BlockNumber));
+        var timestamp = block?.Timestamp?.Value ?? BigInteger.Zero;
+
+        return new BlockchainTransactionInfoDto
+        {
+            TransactionHash = matchingEvent.Log.TransactionHash ?? string.Empty,
+            BlockNumber = (long)blockNumber,
+            BlockTimestamp = DateTimeOffset.FromUnixTimeSeconds((long)timestamp),
+            NetworkName = await GetNetworkNameAsync()
+        };
+    }
+
+    public async Task<string> GetNetworkNameAsync()
+    {
+        var chainId = await _web3.Eth.ChainId.SendRequestAsync();
+        return ResolveNetworkName(chainId?.Value ?? BigInteger.Zero);
+    }
+
     public async Task<List<object>> GetDocumentAsync(string hash)
     {
         var contract = _web3.Eth.GetContract(_abi, _contractAddress);
@@ -457,5 +490,61 @@ namespace backend.Services.Blockchain
 
         return DateTimeOffset.FromUnixTimeSeconds((long)rawValue);
     }
-	}
+
+    private static string NormalizeHex(string value)
+    {
+        return value.Trim().ToLowerInvariant();
+    }
+
+    private static string ResolveNetworkName(BigInteger chainId)
+    {
+        if (chainId == new BigInteger(1))
+        {
+            return "Ethereum Mainnet";
+        }
+
+        if (chainId == new BigInteger(5))
+        {
+            return "Goerli";
+        }
+
+        if (chainId == new BigInteger(11155111))
+        {
+            return "Sepolia";
+        }
+
+        if (chainId == new BigInteger(1337))
+        {
+            return "Localhost";
+        }
+
+        if (chainId == new BigInteger(31337))
+        {
+            return "Hardhat";
+        }
+
+        return $"Chain ID {chainId}";
+    }
+
+    [Event("DocumentIssued")]
+    private class DocumentIssuedEventDto : IEventDTO
+    {
+        [Parameter("bytes32", "hash", 1, true)]
+        public byte[] Hash { get; set; } = Array.Empty<byte>();
+
+        [Parameter("address", "issuer", 2, true)]
+        public string Issuer { get; set; } = string.Empty;
+
+        [Parameter("address", "documentOwner", 3, true)]
+        public string DocumentOwner { get; set; } = string.Empty;
+
+        [Parameter("uint8", "documentType", 4, false)]
+        public byte DocumentType { get; set; }
+
+        [Parameter("uint8", "status", 5, false)]
+        public byte Status { get; set; }
+
+        public Nethereum.RPC.Eth.DTOs.FilterLog Log { get; set; } = default!;
+    }
+}
 }

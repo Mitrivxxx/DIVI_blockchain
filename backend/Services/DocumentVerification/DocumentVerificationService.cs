@@ -52,6 +52,10 @@ namespace backend.Services.DocumentVerification
             _logger.LogDebug("VerifyDocumentAsync computed SHA-256 hash: {Hash}", hash);
 
             var existsInBlockchain = await _blockchainService.VerifyDocumentAsync(hash);
+            var networkName = await _blockchainService.GetNetworkNameAsync();
+            var blockchainInfo = existsInBlockchain
+                ? await _blockchainService.GetDocumentBlockchainInfoAsync(hash)
+                : null;
 
             _logger.LogDebug(
                 "VerifyDocumentAsync blockchain verification completed. Hash: {Hash}, ExistsInBlockchain: {ExistsInBlockchain}",
@@ -64,7 +68,11 @@ namespace backend.Services.DocumentVerification
                 IsAuthentic = existsInBlockchain,
                 Message = existsInBlockchain
                     ? "Dokument jest autentyczny (hash istnieje w blockchain)."
-                    : "Dokument nie jest autentyczny (hash nie istnieje w blockchain)."
+                    : "Dokument nie jest autentyczny (hash nie istnieje w blockchain).",
+                TransactionHash = blockchainInfo?.TransactionHash,
+                BlockNumber = blockchainInfo?.BlockNumber,
+                BlockTimestamp = blockchainInfo?.BlockTimestamp,
+                NetworkName = blockchainInfo?.NetworkName ?? networkName
             };
         }
         

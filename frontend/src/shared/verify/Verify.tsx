@@ -1,4 +1,5 @@
 import styles from './Verify.module.scss';
+import { VerifyBlockchainInfo } from './components/VerifyBlockchainInfo';
 import { VerifyFileInfo } from './components/VerifyFileInfo';
 import { VerifyDropzone } from './components/VerifyDropzone';
 import { VerifyResult } from './components/VerifyResult';
@@ -9,6 +10,7 @@ const Verify: React.FC = () => {
     file,
     selectedAt,
     showFileInfo,
+    verificationData,
     isDragging,
     status,
     isVerifying,
@@ -75,7 +77,17 @@ const Verify: React.FC = () => {
         </div>
       </form>
 
-      {showFileInfo && file && selectedAt && <VerifyFileInfo file={file} selectedAt={selectedAt} />}
+      {showFileInfo && file && selectedAt && (
+        <div className={styles.fileInfoGrid}>
+          <VerifyFileInfo file={file} selectedAt={selectedAt} />
+          <VerifyBlockchainInfo
+            transactionHash={verificationData?.transactionHash}
+            blockNumber={verificationData?.blockNumber}
+            blockTimestamp={verificationData?.blockTimestamp}
+            networkName={verificationData?.networkName}
+          />
+        </div>
+      )}
 
       {status && !verificationOutcome && <p className={styles.status}>{status}</p>}
     </div>

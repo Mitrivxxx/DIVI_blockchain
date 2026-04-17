@@ -37,6 +37,7 @@ export const useVerify = () => {
   const [status, setStatus] = useState('');
   const [isVerifying, setIsVerifying] = useState(false);
   const [verificationOutcome, setVerificationOutcome] = useState<VerificationOutcome | null>(null);
+  const [verificationData, setVerificationData] = useState<VerifyResult | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const handleFileSelect = (selectedFile: File | null) => {
@@ -49,6 +50,7 @@ export const useVerify = () => {
       setSelectedAt(null);
       setShowFileInfo(false);
       setVerificationOutcome(null);
+      setVerificationData(null);
       setStatus(PDF_ERROR_MESSAGE);
       return;
     }
@@ -57,6 +59,7 @@ export const useVerify = () => {
     setSelectedAt(new Date());
     setShowFileInfo(false);
     setVerificationOutcome(null);
+    setVerificationData(null);
     setStatus('');
   };
 
@@ -86,9 +89,11 @@ export const useVerify = () => {
     setIsVerifying(true);
     setStatus('Weryfikuję dokument w blockchain...');
     setVerificationOutcome(null);
+    setVerificationData(null);
 
     try {
       const response = await verifyDocument(file);
+      setVerificationData(response);
       setVerificationOutcome(response.isAuthentic
         ? {
             kind: 'verified',
@@ -102,6 +107,7 @@ export const useVerify = () => {
           });
       setStatus('');
     } catch (error) {
+      setVerificationData(null);
       setVerificationOutcome({
         kind: 'error',
         title: 'NIEZGODNY',
@@ -121,6 +127,7 @@ export const useVerify = () => {
     setStatus('');
     setIsVerifying(false);
     setVerificationOutcome(null);
+    setVerificationData(null);
 
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
@@ -135,6 +142,7 @@ export const useVerify = () => {
     status,
     isVerifying,
     verificationOutcome,
+    verificationData,
     fileInputRef,
     setIsDragging,
     handleFileSelect,

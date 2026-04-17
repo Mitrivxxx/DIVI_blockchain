@@ -9,6 +9,8 @@ namespace backend.Services.Blockchain
 		Task<string> IssueDocumentAsync(string hash, string cid, string owner, byte documentType);
 		Task<bool> VerifyDocumentAsync(string hash);
 		Task<List<object>> GetDocumentAsync(string hash);
+		Task<BlockchainTransactionInfoDto?> GetDocumentBlockchainInfoAsync(string hash);
+		Task<string> GetNetworkNameAsync();
 		Task<List<OwnerDocumentInfoDto>> GetDocumentsByOwnerAsync(string ownerAddress);
 		Task<string> AddIssuerAsync(string issuerAddress);
 		Task<string> ApproveIssuerAsync(string applicantAddress);

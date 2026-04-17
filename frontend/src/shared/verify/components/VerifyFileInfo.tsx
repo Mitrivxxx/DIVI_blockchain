@@ -28,7 +28,10 @@ const formatFileSize = (sizeInBytes: number): string => {
   return `${sizeInBytes} B`;
 };
 
-export const VerifyFileInfo = ({ file, selectedAt }: VerifyFileInfoProps) => (
+export const VerifyFileInfo = ({
+  file,
+  selectedAt,
+}: VerifyFileInfoProps) => (
   <section className={styles.fileMetaCard} aria-label="Informacje o pliku">
     <h2 className={styles.fileMetaTitle}>Informacje o pliku</h2>
 

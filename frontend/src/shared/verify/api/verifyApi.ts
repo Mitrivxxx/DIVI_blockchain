@@ -5,6 +5,10 @@ export type VerifyResult = {
   hash: string;
   isAuthentic: boolean;
   message: string;
+  transactionHash?: string | null;
+  blockNumber?: number | null;
+  blockTimestamp?: string | null;
+  networkName?: string | null;
 };
 
 export const verifyDocument = async (file: File): Promise<VerifyResult> => {
