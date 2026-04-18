@@ -1,6 +1,6 @@
 using System.Net.Http.Headers;
 using System.Text.Json;
-using backend.Infrastructure.Pinata;
+using backend.Infrastructure.Configuration;
 using Microsoft.Extensions.Options;
 
 namespace backend.Infrastructure

@@ -31,6 +31,7 @@ const Verify: React.FC = () => {
         <VerifyDropzone
           isDragging={isDragging}
           fileName={file?.name}
+          hasFile={Boolean(file)}
           fileInputRef={fileInputRef}
           onFileSelect={handleFileSelect}
           onOpen={openFileDialog}
@@ -41,7 +42,7 @@ const Verify: React.FC = () => {
           fileNameClassName={styles.fileName}
         />
 
-        <p className={styles.fileInfo}>Obsługiwane pliki: PDF, maks. 25 MB</p>
+        <p className={styles.fileInfo}>Obsługiwane pliki: PDF, maks. 5 MB</p>
 
         <div className={styles.formFooter} data-variant={verificationOutcome ? 'result' : 'action'}>
           {isVerifying ? (
@@ -70,7 +71,7 @@ const Verify: React.FC = () => {
               </button>
             </VerifyResult>
           ) : (
-            <button className={styles.verifyButton} type="submit">
+            <button className={styles.verifyButton} type="submit" disabled={!file || isVerifying}>
               Zweryfikuj dokument
             </button>
           )}

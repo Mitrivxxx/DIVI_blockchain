@@ -49,6 +49,11 @@ public static class ServiceCollectionExtensions
             .ValidateDataAnnotations()
             .ValidateOnStart();
 
+        services.AddOptions<BlockchainOptions>()
+            .Bind(configuration.GetSection("Blockchain"))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
         services.AddDbContext<AppDbContext>((serviceProvider, options) =>
         {
             var databaseOptions = serviceProvider.GetRequiredService<IOptions<DatabaseOptions>>().Value;

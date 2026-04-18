@@ -1,8 +1,10 @@
 import { type RefObject } from 'react';
+import styles from '../Verify.module.scss';
 
 type VerifyDropzoneProps = {
   isDragging: boolean;
   fileName?: string;
+  hasFile: boolean;
   fileInputRef: RefObject<HTMLInputElement | null>;
   onFileSelect: (selectedFile: File | null) => void;
   onOpen: () => void;
@@ -16,6 +18,7 @@ type VerifyDropzoneProps = {
 export const VerifyDropzone = ({
   isDragging,
   fileName,
+  hasFile,
   fileInputRef,
   onFileSelect,
   onOpen,
@@ -56,11 +59,23 @@ export const VerifyDropzone = ({
       }}
       aria-label="Przeciągnij i upuść plik PDF lub kliknij, aby wybrać"
       data-dragging={isDragging}
+      data-has-file={hasFile}
       className={dropzoneClassName}
     >
-      Przeciągnij i upuść plik lub kliknij, aby przesłać
-    </div>
+      <span
+        className={[
+          styles.verifyDropzoneStatus,
+          hasFile ? styles.verifyDropzoneStatusSelected : '',
+        ].filter(Boolean).join(' ')}
+      >
+        {hasFile ? 'Plik wybrany' : 'Brak wybranego pliku'}
+      </span>
 
-    {fileName && <p className={fileNameClassName}>Wybrany plik: {fileName}</p>}
+      <span className={styles.verifyDropzoneHeadline}>
+        Przeciągnij i upuść plik lub kliknij, aby przesłać
+      </span>
+
+      {fileName && <span className={fileNameClassName}>{fileName}</span>}
+    </div>
   </>
 );

@@ -2,10 +2,26 @@ import { type FormEvent, useRef, useState } from 'react';
 import { verifyDocument, type VerifyResult } from '../api/verifyApi';
 
 const PDF_ERROR_MESSAGE = 'Dozwolone są tylko pliki PDF';
+const FILE_TOO_LARGE_MESSAGE = 'Maksymalny rozmiar pliku to 5 MB';
+const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024;
 
 const isPdfFile = (selectedFile: File): boolean => (
   selectedFile.type === 'application/pdf' || selectedFile.name.toLowerCase().endsWith('.pdf')
 );
+
+const isFileWithinLimit = (selectedFile: File): boolean => selectedFile.size <= MAX_FILE_SIZE_BYTES;
+
+const validateSelectedFile = (selectedFile: File): string | null => {
+  if (!isPdfFile(selectedFile)) {
+    return PDF_ERROR_MESSAGE;
+  }
+
+  if (!isFileWithinLimit(selectedFile)) {
+    return FILE_TOO_LARGE_MESSAGE;
+  }
+
+  return null;
+};
 
 const getErrorMessage = (error: unknown): string => {
   if (typeof error === 'object' && error !== null) {
@@ -45,13 +61,15 @@ export const useVerify = () => {
       return;
     }
 
-    if (!isPdfFile(selectedFile)) {
+    const validationError = validateSelectedFile(selectedFile);
+
+    if (validationError) {
       setFile(null);
       setSelectedAt(null);
       setShowFileInfo(false);
       setVerificationOutcome(null);
       setVerificationData(null);
-      setStatus(PDF_ERROR_MESSAGE);
+      setStatus(validationError);
       return;
     }
 
@@ -80,8 +98,10 @@ export const useVerify = () => {
       return;
     }
 
-    if (!isPdfFile(file)) {
-      setStatus(PDF_ERROR_MESSAGE);
+    const validationError = validateSelectedFile(file);
+
+    if (validationError) {
+      setStatus(validationError);
       return;
     }
 
