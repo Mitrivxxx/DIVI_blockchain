@@ -1,9 +1,10 @@
-import styles from './Verify.module.scss';
 import { VerifyBlockchainInfo } from './components/VerifyBlockchainInfo';
 import { VerifyFileInfo } from './components/VerifyFileInfo';
 import { VerifyDropzone } from './components/VerifyDropzone';
 import { VerifyResult } from './components/VerifyResult';
+import { VerifyHeader } from './components/VerifyHeader';
 import { useVerify } from './hooks/useVerify';
+import styles from './Verify.module.scss';
 
 const Verify: React.FC = () => {
   const {
@@ -11,12 +12,10 @@ const Verify: React.FC = () => {
     selectedAt,
     showFileInfo,
     verificationData,
-    isDragging,
     status,
     isVerifying,
     verificationOutcome,
     fileInputRef,
-    setIsDragging,
     handleFileSelect,
     openFileDialog,
     handleDrop,
@@ -25,53 +24,59 @@ const Verify: React.FC = () => {
   } = useVerify();
 
   return (
-    <div className={styles.container}>
-      <h1 className={styles.title}>Weryfikacja dokumentu</h1>
+    <div className={styles.page}>
+      <VerifyHeader />
       <form className={styles.form} onSubmit={handleSubmit}>
         <VerifyDropzone
-          isDragging={isDragging}
           fileName={file?.name}
           hasFile={Boolean(file)}
           fileInputRef={fileInputRef}
           onFileSelect={handleFileSelect}
           onOpen={openFileDialog}
-          onDragStateChange={setIsDragging}
           onDropFile={handleDrop}
-          inputClassName={styles.fileInput}
-          dropzoneClassName={styles.dropzone}
-          fileNameClassName={styles.fileName}
         />
 
-        <p className={styles.fileInfo}>Obsługiwane pliki: PDF, maks. 5 MB</p>
-
-        <div className={styles.formFooter} data-variant={verificationOutcome ? 'result' : 'action'}>
+        <div>
           {isVerifying ? (
             <VerifyResult
               variant="verifying"
-              title="WERYFIKUJĘ"
-              description="Sprawdzam dokument w blockchain..."
-              className={styles.verificationBanner}
-              contentClassName={styles.verificationContent}
-              titleClassName={styles.verificationTitle}
-              descriptionClassName={styles.verificationDescription}
+              title="Weryfikuję"
+              description="Sprawdzam dokument w blockchain"
+              className={`${styles.statusCard} ${styles.cardVerifying}`}
+              leftClassName={styles.statusLeft}
+              iconClassName={styles.statusIcon}
+              spinnerClassName={styles.spinner}
+              textClassName={styles.statusText}
+              titleClassName={styles.statusTitle}
+              descriptionClassName={styles.statusDesc}
+              actionClassName={styles.statusAction}
             />
           ) : verificationOutcome ? (
             <VerifyResult
               variant={verificationOutcome.kind}
               title={verificationOutcome.title}
               description={verificationOutcome.description}
-              className={styles.verificationBanner}
-              contentClassName={styles.verificationContent}
-              titleClassName={styles.verificationTitle}
-              descriptionClassName={styles.verificationDescription}
-              actionsClassName={styles.verificationActions}
+              className={`${styles.statusCard} ${
+                verificationOutcome.kind === 'verified'
+                  ? styles.cardVerified
+                  : verificationOutcome.kind === 'missing'
+                    ? styles.cardNoResult
+                    : styles.cardError
+              }`}
+              leftClassName={styles.statusLeft}
+              iconClassName={styles.statusIcon}
+              spinnerClassName={styles.spinner}
+              textClassName={styles.statusText}
+              titleClassName={styles.statusTitle}
+              descriptionClassName={styles.statusDesc}
+              actionClassName={styles.statusAction}
             >
-              <button className={styles.resetButton} type="button" onClick={handleReset}>
+              <button className={styles.statusAction} type="button" onClick={handleReset}>
                 Zweryfikuj kolejny dokument
               </button>
             </VerifyResult>
           ) : (
-            <button className={styles.verifyButton} type="submit" disabled={!file || isVerifying}>
+            <button className={styles.btnVerify} type="submit" disabled={!file || isVerifying}>
               Zweryfikuj dokument
             </button>
           )}
@@ -79,7 +84,7 @@ const Verify: React.FC = () => {
       </form>
 
       {showFileInfo && file && selectedAt && (
-        <div className={styles.fileInfoGrid}>
+        <div>
           <VerifyFileInfo file={file} selectedAt={selectedAt} />
           <VerifyBlockchainInfo
             transactionHash={verificationData?.transactionHash}

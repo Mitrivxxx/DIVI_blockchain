@@ -49,7 +49,6 @@ export const useVerify = () => {
   const [file, setFile] = useState<File | null>(null);
   const [selectedAt, setSelectedAt] = useState<Date | null>(null);
   const [showFileInfo, setShowFileInfo] = useState(false);
-  const [isDragging, setIsDragging] = useState(false);
   const [status, setStatus] = useState('');
   const [isVerifying, setIsVerifying] = useState(false);
   const [verificationOutcome, setVerificationOutcome] = useState<VerificationOutcome | null>(null);
@@ -86,7 +85,6 @@ export const useVerify = () => {
   };
 
   const handleDrop = (droppedFile: File | null) => {
-    setIsDragging(false);
     handleFileSelect(droppedFile);
   };
 
@@ -143,7 +141,6 @@ export const useVerify = () => {
     setFile(null);
     setSelectedAt(null);
     setShowFileInfo(false);
-    setIsDragging(false);
     setStatus('');
     setIsVerifying(false);
     setVerificationOutcome(null);
@@ -158,13 +155,11 @@ export const useVerify = () => {
     file,
     selectedAt,
     showFileInfo,
-    isDragging,
     status,
     isVerifying,
     verificationOutcome,
     verificationData,
     fileInputRef,
-    setIsDragging,
     handleFileSelect,
     openFileDialog,
     handleDrop,

@@ -1,5 +1,3 @@
-import styles from '../Verify.module.scss';
-
 type VerifyFileInfoProps = {
   file: File;
   selectedAt: Date;
@@ -32,23 +30,23 @@ export const VerifyFileInfo = ({
   file,
   selectedAt,
 }: VerifyFileInfoProps) => (
-  <section className={styles.fileMetaCard} aria-label="Informacje o pliku">
-    <h2 className={styles.fileMetaTitle}>Informacje o pliku</h2>
+  <section aria-label="Informacje o pliku">
+    <h2>Informacje o pliku</h2>
 
-    <dl className={styles.fileMetaList}>
-      <div className={styles.fileMetaRow}>
-        <dt className={styles.fileMetaLabel}>Nazwa pliku</dt>
-        <dd className={styles.fileMetaValue}>{file.name}</dd>
+    <dl>
+      <div>
+        <dt>Nazwa pliku</dt>
+        <dd>{file.name}</dd>
       </div>
 
-      <div className={styles.fileMetaRow}>
-        <dt className={styles.fileMetaLabel}>Rozmiar</dt>
-        <dd className={styles.fileMetaValue}>{formatFileSize(file.size)}</dd>
+      <div>
+        <dt>Rozmiar</dt>
+        <dd>{formatFileSize(file.size)}</dd>
       </div>
 
-      <div className={styles.fileMetaRow}>
-        <dt className={styles.fileMetaLabel}>Data uploadu</dt>
-        <dd className={styles.fileMetaValue}>{dateFormatter.format(selectedAt)}</dd>
+      <div>
+        <dt>Data uploadu</dt>
+        <dd>{dateFormatter.format(selectedAt)}</dd>
       </div>
     </dl>
   </section>

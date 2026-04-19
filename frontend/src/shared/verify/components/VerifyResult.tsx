@@ -4,12 +4,15 @@ type VerifyResultProps = {
   variant: 'verified' | 'missing' | 'error' | 'verifying';
   title: string;
   description: string;
+  children?: ReactNode;
   className?: string;
-  contentClassName?: string;
+  leftClassName?: string;
+  iconClassName?: string;
+  spinnerClassName?: string;
+  textClassName?: string;
   titleClassName?: string;
   descriptionClassName?: string;
-  actionsClassName?: string;
-  children?: ReactNode;
+  actionClassName?: string;
 };
 
 const ICON_BY_VARIANT: Record<VerifyResultProps['variant'], string> = {
@@ -23,21 +26,26 @@ export const VerifyResult = ({
   variant,
   title,
   description,
+  children,
   className,
-  contentClassName,
+  leftClassName,
+  iconClassName,
+  spinnerClassName,
+  textClassName,
   titleClassName,
   descriptionClassName,
-  actionsClassName,
-  children,
+  actionClassName,
 }: VerifyResultProps) => (
-  <div className={className} data-variant={variant}>
-    <div className={contentClassName}>
-      <div className={titleClassName}>
-        <span aria-hidden="true">{ICON_BY_VARIANT[variant]}</span>
-        <span>{title}</span>
+  <div data-variant={variant} className={className}>
+    <div className={leftClassName}>
+      <div className={iconClassName}>
+        {variant === 'verifying' ? <span className={spinnerClassName} /> : ICON_BY_VARIANT[variant]}
       </div>
-      <p className={descriptionClassName}>{description}</p>
+      <div className={textClassName}>
+        <span className={titleClassName}>{title}</span>
+        <p className={descriptionClassName}>{description}</p>
+      </div>
     </div>
-    {children && <div className={actionsClassName}>{children}</div>}
+    {children && <div className={actionClassName}>{children}</div>}
   </div>
 );

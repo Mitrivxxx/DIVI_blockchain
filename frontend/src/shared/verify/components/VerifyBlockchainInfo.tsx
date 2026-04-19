@@ -1,5 +1,3 @@
-import styles from '../Verify.module.scss';
-
 type VerifyBlockchainInfoProps = {
   transactionHash?: string | null;
   blockNumber?: number | null;
@@ -47,45 +45,40 @@ export const VerifyBlockchainInfo = ({
   }
 
   return (
-    <section className={styles.fileMetaCard} aria-label="Informacje z blockchain">
-      <h2 className={styles.fileMetaTitle}>Informacje z blockchain</h2>
+    <section aria-label="Informacje z blockchain">
+      <h2>Informacje z blockchain</h2>
 
-      <dl className={styles.fileMetaList}>
+      <dl>
         {transactionHash && (
-          <div className={styles.fileMetaRow}>
-            <dt className={styles.fileMetaLabel}>Transaction hash</dt>
-            <dd className={styles.fileMetaValue}>{formatTransactionHash(transactionHash)}</dd>
+          <div>
+            <dt>Transaction hash</dt>
+            <dd>{formatTransactionHash(transactionHash)}</dd>
           </div>
         )}
 
         {blockNumber != null && (
-          <div className={styles.fileMetaRow}>
-            <dt className={styles.fileMetaLabel}>Block number</dt>
-            <dd className={styles.fileMetaValue}>{blockNumber}</dd>
+          <div>
+            <dt>Block number</dt>
+            <dd>{blockNumber}</dd>
           </div>
         )}
 
         {blockTimestamp && (
-          <div className={styles.fileMetaRow}>
-            <dt className={styles.fileMetaLabel}>Block timestamp</dt>
-            <dd className={styles.fileMetaValue}>{dateFormatter.format(new Date(blockTimestamp))}</dd>
+          <div>
+            <dt>Block timestamp</dt>
+            <dd>{dateFormatter.format(new Date(blockTimestamp))}</dd>
           </div>
         )}
 
         {networkName && (
-          <div className={styles.fileMetaRow}>
-            <dt className={styles.fileMetaLabel}>Sieć</dt>
-            <dd className={styles.fileMetaValue}>{networkName}</dd>
+          <div>
+            <dt>Sieć</dt>
+            <dd>{networkName}</dd>
           </div>
         )}
       </dl>
 
-      <a
-        className={styles.explorerButton}
-        href={getContractExplorerUrl(CONTRACT_ADDRESS)}
-        target="_blank"
-        rel="noreferrer"
-      >
+      <a href={getContractExplorerUrl(CONTRACT_ADDRESS)} target="_blank" rel="noreferrer">
         Pokaż w eksplorze
       </a>
     </section>
