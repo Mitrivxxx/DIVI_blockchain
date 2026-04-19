@@ -1,5 +1,6 @@
 
 import React from "react";
+import { Link } from "react-router-dom";
 import bell from "../../assets/icons/bell.svg";
 import user from "../../assets/icons/user.svg";
 import logo from "../../assets/icons/divi_icon_demo.png";
@@ -19,6 +20,8 @@ type HeaderProps = {
   shortAddress?: (addr: string) => string;
   connect?: () => void | Promise<void>;
   onLogout?: () => void;
+  authHref?: string;
+  authLabel?: string;
 };
 
 const Header: React.FC<HeaderProps> = ({
@@ -34,6 +37,8 @@ const Header: React.FC<HeaderProps> = ({
   shortAddress,
   connect,
   onLogout,
+  authHref = "/app/auth",
+  authLabel = "Logowanie",
 }) => {
   return (
     <div className="header">
@@ -43,6 +48,11 @@ const Header: React.FC<HeaderProps> = ({
       </div>
 
       <div className="header-icons">
+        {authHref && authMode !== "status" && (
+          <Link className="header-auth-link" to={authHref}>
+            {authLabel}
+          </Link>
+        )}
         {showBell && (
           <div className="header-bell-wrapper">
             <img

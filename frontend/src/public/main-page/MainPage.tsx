@@ -40,7 +40,7 @@ const PublicPage = () => {
 
   return (
     <div>
-      <Header showBell={false} authMode="connect" connect={handleConnect} />
+      <Header showBell={false} authMode="connect" connect={handleConnect} authHref="/app/auth" authLabel="Logowanie" />
 
       <div className="block">
         <Verify />

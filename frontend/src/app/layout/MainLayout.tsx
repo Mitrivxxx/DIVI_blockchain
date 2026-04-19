@@ -33,12 +33,12 @@ const MainLayout: React.FC = () => {
   const handleUserClick = () => navigateToTab("profile");
   const handleLogout = () => {
     logout();
-    navigate("/");
+    navigate("/app/auth");
   };
 
   useEffect(() => {
     if (!jwt) {
-      navigate("/", { replace: true });
+      navigate("/app/auth", { replace: true });
     }
   }, [jwt, navigate]);
 
