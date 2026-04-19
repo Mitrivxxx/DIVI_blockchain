@@ -3,7 +3,7 @@ import React from "react";
 import PendingIssuerApplications from "./components/PendingIssuerApplications";
 import { usePendingIssuerApplications } from "./hooks/usePendingIssuerApplications";
 import styles from "./Notify.module.scss";
-import { parseJwt } from '@/app/utils/jwt';
+import { parseJwt } from '@/service/utils/jwt';
 
 
 

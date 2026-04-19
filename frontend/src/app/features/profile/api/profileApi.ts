@@ -1,4 +1,4 @@
-import { API_URL } from "../../../types/api";
+import { API_URL } from "../../../../types/api";
 import type { EditableField, OwnerCertificate, ProfileData } from "../types";
 
 const getFieldEndpoint = (field: EditableField) => {

@@ -1,6 +1,6 @@
 import { Navigate, Route, Routes, BrowserRouter } from "react-router-dom";
-import { Web3AuthProvider } from "../app/context/Web3AuthContext";
-import MainLayout from "../pages/MainLayout";
+import { Web3AuthProvider } from "../service/Web3AuthContext";
+import MainLayout from "./layout/MainLayout";
 import PublicPage from "../public/main-page/MainPage";
 
 function App() {

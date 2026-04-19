@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
 import type { ReactNode } from "react";
 import { ethers } from "ethers";
-import { API_URL } from "../../types/api";
+import { API_URL } from "@/types/api";
 
 
 interface Web3AuthContextProps {

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import userIcon from "../../assets/icons/user.svg";
+import userIcon from "../../../assets/icons/user.svg";
 import ProfileTabContent from "./components/ProfileTabContent";
 import ProfileTabs from "./components/ProfileTabs";
 import { useProfile } from "./hooks/useProfile";

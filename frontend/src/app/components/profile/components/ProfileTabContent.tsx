@@ -1,8 +1,8 @@
 import React from "react";
 import type { EditableField } from "../types";
-import clockIcon from "../../../assets/icons/clock.svg";
-import emailIcon from "../../../assets/icons/email.svg";
-import ethIcon from "../../../assets/icons/eth.svg";
+import clockIcon from "../../../../assets/icons/clock.svg";
+import emailIcon from "../../../../assets/icons/email.svg";
+import ethIcon from "../../../../assets/icons/eth.svg";
 
 type ProfileTabContentProps = {
   avatar: string;

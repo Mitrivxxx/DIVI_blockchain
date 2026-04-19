@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { fetchPendingIssuerApplicationsWithJwt, updateIssuerApplicationStatusWithJwt } from "../api/notifyApi";
 import type { IssuerApplicationListDto } from "../api/notifyApi";
-import { useWeb3Auth } from "@/app/context/Web3AuthContext";
+import { useWeb3Auth } from "@/service/Web3AuthContext";
 
 
 export function usePendingIssuerApplications() {

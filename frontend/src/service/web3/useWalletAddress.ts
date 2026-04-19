@@ -1,4 +1,4 @@
-import { useWeb3Auth } from '../context/Web3AuthContext';
+import { useWeb3Auth } from '../Web3AuthContext';
 
 export function useWalletAddress(): [string | null] {
   const { address } = useWeb3Auth();

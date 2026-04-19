@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { submitIssuerRoleApplication } from '../api/issuerRoleApi';
-import { useWeb3Auth } from '@/app/context/Web3AuthContext';
+import { useWeb3Auth } from '@/service/Web3AuthContext';
 
 export function useIssuerRoleForm() {
   const { jwt } = useWeb3Auth();

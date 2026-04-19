@@ -1,19 +1,19 @@
 import React, { useEffect } from "react";
 import { Navigate, useNavigate, useParams } from "react-router-dom";
-import { defaultTabKey, getTabKeyByPath, getTabPath, type TabKey } from "../components/sidebar/tabs";
-import Sidebar from "../components/sidebar/Sidebar";
-import Dashboard from "../components/Dashboard";
+import { defaultTabKey, getTabKeyByPath, getTabPath, type TabKey } from "../features/sidebar/tabs";
+import Sidebar from "../features/sidebar/Sidebar";
+import Dashboard from "../features/Dashboard";
 import Upload from "../features/uploadFile/Upload";
-import MyDocuments from "../components/MyDocuments";
-import Verify from "../components/Verify";
-import Profile from "../components/profile/Profile";
-import Help from "../components/Help";
+import MyDocuments from "../features/MyDocuments";
+import Verify from "../features/Verify";
+import Profile from "../features/profile/Profile";
+import Help from "../features/Help";
 import IssuerRole from "../features/issuerRole/IssuerRole";
-import Notify from "../shared/header/notify/Notify";
-import Header from "../shared/header/Header";
-import { fetchUserRole } from "../components/sidebar/api/api";
-import { useUserRole } from "../components/sidebar/hooks/useUserRole";
-import { useWeb3Auth } from "../app/hooks/useWeb3Auth";
+import Notify from "../../shared/header/notify/Notify";
+import Header from "../../shared/header/Header";
+import { fetchUserRole } from "../features/sidebar/api/api";
+import { useUserRole } from "../features/sidebar/hooks/useUserRole";
+import { useWeb3Auth } from "../../service/web3/useWeb3Auth";
 import "./MainLayout.scss";
 
 const MainLayout: React.FC = () => {
@@ -88,9 +88,7 @@ const MainLayout: React.FC = () => {
         <nav className="mainlayout-nav">
           <Sidebar activeTab={activeTab} onTabSelect={navigateToTab} userRole={userRole} />
         </nav>
-        <main className="mainlayout-main">
-          {renderContent()}
-        </main>
+        <main className="mainlayout-main">{renderContent()}</main>
       </div>
     </div>
   );

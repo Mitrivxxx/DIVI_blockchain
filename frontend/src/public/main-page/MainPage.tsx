@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useWeb3Auth } from "../../app/hooks/useWeb3Auth";
+import { useWeb3Auth } from "../../service/web3/useWeb3Auth";
 import Header from "../../shared/header/Header";
 import Verify from "@/shared/verify/Verify";
 import "./MainPage.scss";
