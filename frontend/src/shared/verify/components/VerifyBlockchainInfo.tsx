@@ -1,8 +1,11 @@
+import styles from '../Verify.module.scss';
+
 type VerifyBlockchainInfoProps = {
   transactionHash?: string | null;
   blockNumber?: number | null;
   blockTimestamp?: string | null;
   networkName?: string | null;
+  className?: string;
 };
 
 const dateFormatter = new Intl.DateTimeFormat('pl-PL', {
@@ -39,47 +42,51 @@ export const VerifyBlockchainInfo = ({
   blockNumber,
   blockTimestamp,
   networkName,
+  className,
 }: VerifyBlockchainInfoProps) => {
   if (!transactionHash && blockNumber == null && !blockTimestamp && !networkName) {
     return null;
   }
 
   return (
-    <section aria-label="Informacje z blockchain">
-      <h2>Informacje z blockchain</h2>
+    <section className={[styles.infoCard, className].filter(Boolean).join(' ')} aria-label="Dane z blockchain">
+      <p className={styles.infoCardTitle}>Dane z blockchain</p>
 
-      <dl>
-        {transactionHash && (
-          <div>
-            <dt>Transaction hash</dt>
-            <dd>{formatTransactionHash(transactionHash)}</dd>
-          </div>
-        )}
+      {transactionHash && (
+        <div className={styles.infoRow}>
+          <span className={styles.infoLabel}>Hash transakcji</span>
+          <span className={`${styles.infoValue} ${styles.infoValueMono}`}>{formatTransactionHash(transactionHash)}</span>
+        </div>
+      )}
 
-        {blockNumber != null && (
-          <div>
-            <dt>Block number</dt>
-            <dd>{blockNumber}</dd>
-          </div>
-        )}
+      {blockNumber != null && (
+        <div className={styles.infoRow}>
+          <span className={styles.infoLabel}>Numer bloku</span>
+          <span className={`${styles.infoValue} ${styles.infoValueMono}`}>{blockNumber.toLocaleString('pl-PL')}</span>
+        </div>
+      )}
 
-        {blockTimestamp && (
-          <div>
-            <dt>Block timestamp</dt>
-            <dd>{dateFormatter.format(new Date(blockTimestamp))}</dd>
-          </div>
-        )}
+      {blockTimestamp && (
+        <div className={styles.infoRow}>
+          <span className={styles.infoLabel}>Znacznik czasu bloku</span>
+          <span className={styles.infoValue}>{dateFormatter.format(new Date(blockTimestamp))}</span>
+        </div>
+      )}
 
-        {networkName && (
-          <div>
-            <dt>Sieć</dt>
-            <dd>{networkName}</dd>
-          </div>
-        )}
-      </dl>
+      {networkName && (
+        <div className={styles.infoRow}>
+          <span className={styles.infoLabel}>Sieć</span>
+          <span className={styles.infoValue}>
+            <span className={styles.networkBadge}>
+              <span className={styles.networkDot} />
+              {networkName}
+            </span>
+          </span>
+        </div>
+      )}
 
-      <a href={getContractExplorerUrl(CONTRACT_ADDRESS)} target="_blank" rel="noreferrer">
-        Pokaż w eksplorze
+      <a className={styles.btnExplorer} href={getContractExplorerUrl(CONTRACT_ADDRESS)} target="_blank" rel="noreferrer">
+        ↗ Pokaż w eksploratorze
       </a>
     </section>
   );

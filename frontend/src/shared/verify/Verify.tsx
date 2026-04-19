@@ -10,7 +10,6 @@ const Verify: React.FC = () => {
   const {
     file,
     selectedAt,
-    showFileInfo,
     verificationData,
     status,
     isVerifying,
@@ -41,21 +40,18 @@ const Verify: React.FC = () => {
             <VerifyResult
               variant="verifying"
               title="Weryfikuję"
-              description="Sprawdzam dokument w blockchain"
               className={`${styles.statusCard} ${styles.cardVerifying}`}
               leftClassName={styles.statusLeft}
               iconClassName={styles.statusIcon}
               spinnerClassName={styles.spinner}
               textClassName={styles.statusText}
               titleClassName={styles.statusTitle}
-              descriptionClassName={styles.statusDesc}
               actionClassName={styles.statusAction}
             />
           ) : verificationOutcome ? (
             <VerifyResult
               variant={verificationOutcome.kind}
               title={verificationOutcome.title}
-              description={verificationOutcome.description}
               className={`${styles.statusCard} ${
                 verificationOutcome.kind === 'verified'
                   ? styles.cardVerified
@@ -68,10 +64,9 @@ const Verify: React.FC = () => {
               spinnerClassName={styles.spinner}
               textClassName={styles.statusText}
               titleClassName={styles.statusTitle}
-              descriptionClassName={styles.statusDesc}
               actionClassName={styles.statusAction}
             >
-              <button className={styles.statusAction} type="button" onClick={handleReset}>
+              <button className={styles.statusActionButton} type="button" onClick={handleReset}>
                 Zweryfikuj kolejny dokument
               </button>
             </VerifyResult>
@@ -83,9 +78,13 @@ const Verify: React.FC = () => {
         </div>
       </form>
 
-      {showFileInfo && file && selectedAt && (
-        <div>
-          <VerifyFileInfo file={file} selectedAt={selectedAt} />
+      {verificationData && file && selectedAt && (
+        <div className={styles.infoGrid}>
+          <VerifyFileInfo
+            file={file}
+            selectedAt={selectedAt}
+            integrityPercent={verificationOutcome?.kind === 'missing' ? 0 : 100}
+          />
           <VerifyBlockchainInfo
             transactionHash={verificationData?.transactionHash}
             blockNumber={verificationData?.blockNumber}

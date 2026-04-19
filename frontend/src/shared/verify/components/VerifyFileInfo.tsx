@@ -1,6 +1,10 @@
+import styles from '../Verify.module.scss';
+
 type VerifyFileInfoProps = {
   file: File;
   selectedAt: Date;
+  integrityPercent?: number;
+  className?: string;
 };
 
 const dateFormatter = new Intl.DateTimeFormat('pl-PL', {
@@ -29,25 +33,33 @@ const formatFileSize = (sizeInBytes: number): string => {
 export const VerifyFileInfo = ({
   file,
   selectedAt,
+  integrityPercent = 100,
+  className,
 }: VerifyFileInfoProps) => (
-  <section aria-label="Informacje o pliku">
-    <h2>Informacje o pliku</h2>
+  <section className={[styles.infoCard, className].filter(Boolean).join(' ')} aria-label="Informacje o pliku">
+    <p className={styles.infoCardTitle}>Informacje o pliku</p>
 
-    <dl>
-      <div>
-        <dt>Nazwa pliku</dt>
-        <dd>{file.name}</dd>
-      </div>
+    <div className={styles.infoRow}>
+      <span className={styles.infoLabel}>Nazwa</span>
+      <span className={`${styles.infoValue} ${styles.infoValueMono}`}>{file.name}</span>
+    </div>
 
-      <div>
-        <dt>Rozmiar</dt>
-        <dd>{formatFileSize(file.size)}</dd>
-      </div>
+    <div className={styles.infoRow}>
+      <span className={styles.infoLabel}>Rozmiar</span>
+      <span className={styles.infoValue}>{formatFileSize(file.size)}</span>
+    </div>
 
-      <div>
-        <dt>Data uploadu</dt>
-        <dd>{dateFormatter.format(selectedAt)}</dd>
-      </div>
-    </dl>
+    <div className={styles.infoRow}>
+      <span className={styles.infoLabel}>Data uploadu</span>
+      <span className={styles.infoValue}>{dateFormatter.format(selectedAt)}</span>
+    </div>
+
+    <div className={styles.infoDivider} />
+
+    <p className={styles.integrityLabel}>Integralność pliku</p>
+    <div className={styles.barTrack}>
+      <div className={styles.barFill} style={{ width: `${integrityPercent}%` }} />
+    </div>
+    <p className={styles.barCaption}>SHA-256 · {integrityPercent}% zgodny</p>
   </section>
 );

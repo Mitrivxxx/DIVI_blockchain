@@ -48,7 +48,6 @@ type VerificationOutcome = {
 export const useVerify = () => {
   const [file, setFile] = useState<File | null>(null);
   const [selectedAt, setSelectedAt] = useState<Date | null>(null);
-  const [showFileInfo, setShowFileInfo] = useState(false);
   const [status, setStatus] = useState('');
   const [isVerifying, setIsVerifying] = useState(false);
   const [verificationOutcome, setVerificationOutcome] = useState<VerificationOutcome | null>(null);
@@ -65,7 +64,6 @@ export const useVerify = () => {
     if (validationError) {
       setFile(null);
       setSelectedAt(null);
-      setShowFileInfo(false);
       setVerificationOutcome(null);
       setVerificationData(null);
       setStatus(validationError);
@@ -74,7 +72,6 @@ export const useVerify = () => {
 
     setFile(selectedFile);
     setSelectedAt(new Date());
-    setShowFileInfo(false);
     setVerificationOutcome(null);
     setVerificationData(null);
     setStatus('');
@@ -103,9 +100,8 @@ export const useVerify = () => {
       return;
     }
 
-    setShowFileInfo(true);
     setIsVerifying(true);
-    setStatus('Weryfikuję dokument w blockchain...');
+    setStatus('');
     setVerificationOutcome(null);
     setVerificationData(null);
 
@@ -140,7 +136,6 @@ export const useVerify = () => {
   const handleReset = () => {
     setFile(null);
     setSelectedAt(null);
-    setShowFileInfo(false);
     setStatus('');
     setIsVerifying(false);
     setVerificationOutcome(null);
@@ -154,7 +149,6 @@ export const useVerify = () => {
   return {
     file,
     selectedAt,
-    showFileInfo,
     status,
     isVerifying,
     verificationOutcome,
