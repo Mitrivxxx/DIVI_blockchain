@@ -3,7 +3,6 @@ using backend.Infrastructure;
 using backend.Data;
 using backend.Infrastructure.Configuration;
 using backend.Infrastructure.Database;
-using backend.Infrastructure.Pinata;
 using backend.Infrastructure.Swagger;
 using backend.Services.Auth;
 using backend.Services.BackgroundJobs;
