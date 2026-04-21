@@ -22,6 +22,7 @@ type HeaderProps = {
   onLogout?: () => void;
   authHref?: string;
   authLabel?: string;
+  authLinks?: Array<{ to: string; label: string }>;
 };
 
 const Header: React.FC<HeaderProps> = ({
@@ -37,9 +38,16 @@ const Header: React.FC<HeaderProps> = ({
   shortAddress,
   connect,
   onLogout,
-  authHref = "/app/auth",
+  authHref = "/auth",
   authLabel = "Logowanie",
+  authLinks,
 }) => {
+  const resolvedAuthLinks = authLinks?.length
+    ? authLinks
+    : authHref
+      ? [{ to: authHref, label: authLabel }]
+      : [];
+
   return (
     <div className="header">
       <div className="logo-container">
@@ -48,10 +56,14 @@ const Header: React.FC<HeaderProps> = ({
       </div>
 
       <div className="header-icons">
-        {authHref && authMode !== "status" && (
-          <Link className="header-auth-link" to={authHref}>
-            {authLabel}
-          </Link>
+        {authMode !== "status" && resolvedAuthLinks.length > 0 && (
+          <div className="header-auth-links">
+            {resolvedAuthLinks.map((link) => (
+              <Link key={`${link.to}-${link.label}`} className="header-auth-link" to={link.to}>
+                {link.label}
+              </Link>
+            ))}
+          </div>
         )}
         {showBell && (
           <div className="header-bell-wrapper">

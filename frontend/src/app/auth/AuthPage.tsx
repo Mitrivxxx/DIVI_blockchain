@@ -70,8 +70,8 @@ const AuthPage = () => {
             </div>
           </div>
 
-          <h1 className="card__title">Sign in to DIVI</h1>
-          <p className="card__subtitle">Welcome back! Please sign in to continue</p>
+          <h1 className="card__title">Zarejestruj się</h1>
+          <p className="card__subtitle">Utwórz konto i rozpocznij korzystanie z DIVI</p>
 
           <div className={`wallet-status ${address ? "" : "wallet-status--hidden"}`}>
             <span className="wallet-status__icon">✓</span>
@@ -107,14 +107,14 @@ const AuthPage = () => {
           <button
             className="btn btn--primary"
             type="button"
-            onClick={() => void handleAuth("signup")}
+            onClick={() => navigate("/register")}
             disabled={isBusy}
           >
-            {pendingAction === "signup" ? "TWORZENIE KONTA..." : "STWÓRZ KONTO"}
+            STWÓRZ KONTO
           </button>
 
           <p className="card__footer">
-            Masz już konto? <Link className="card__footer-link" to="/app/auth">Zaloguj się emailem</Link>
+            Masz już konto? <Link className="card__footer-link" to="/login">Zaloguj się</Link>
           </p>
 
           {error ? <p className="auth-error">{error}</p> : null}

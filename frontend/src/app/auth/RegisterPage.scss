@@ -1,0 +1,67 @@
+@import "./AuthPage.scss";
+
+.auth-login--register .card {
+  max-width: 540px;
+}
+
+.auth-login--register .register-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.auth-login--register .register-form__field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.auth-login--register .register-form__label {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #3f3f3f;
+}
+
+.auth-login--register .register-form__input {
+  width: 100%;
+  border: 1.5px solid #d8d8d8;
+  border-radius: 12px;
+  padding: 13px 14px;
+  font-family: "DM Sans", sans-serif;
+  font-size: 15px;
+  color: #111111;
+  background: #ffffff;
+  transition: border-color 0.16s ease, box-shadow 0.16s ease;
+}
+
+.auth-login--register .register-form__input:focus {
+  border-color: #111116;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(17, 17, 22, 0.09);
+}
+
+.auth-login--register .register-form__terms {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 2px;
+  font-size: 13.4px;
+  color: #7b7b7b;
+}
+
+.auth-login--register .register-form__checkbox {
+  width: 16px;
+  height: 16px;
+  margin-top: 1px;
+  accent-color: #111116;
+}
+
+.auth-login--register .btn--full {
+  width: 100%;
+}
+
+@media (max-width: 640px) {
+  .auth-login--register .card {
+    max-width: 100%;
+  }
+}
