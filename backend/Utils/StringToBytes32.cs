@@ -2,7 +2,7 @@ using System;
 using System.Linq;
 
 namespace backend.Utils;
-
+// warstwa abi to jest potrzebne !!
 public static class Bytes32Helper
 {
     public static byte[] StringToBytes32(string str, bool isHex = false)
