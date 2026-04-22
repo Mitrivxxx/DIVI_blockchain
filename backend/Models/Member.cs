@@ -11,9 +11,11 @@ namespace backend.Models
 
         public string? Name { get; set; }
 
-        [Required]
+        [MaxLength(255)]
+        public string? Password { get; set; }
+
         [MaxLength(42)]
-        public required string EthereumAddress { get; set; }
+        public string? EthereumAddress { get; set; }
 
         [Required]
         public int MemberRoleId { get; set; }

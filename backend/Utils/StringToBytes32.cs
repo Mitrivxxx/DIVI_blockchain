@@ -1,7 +1,9 @@
 using System;
 using System.Linq;
 
-public static class Utils
+namespace backend.Utils;
+
+public static class Bytes32Helper
 {
     public static byte[] StringToBytes32(string str, bool isHex = false)
     {

@@ -142,7 +142,7 @@ namespace backend.Services.GetProfile
             _logger.LogDebug("GetMemberByAddressAsync resolving address {EthereumAddress} (asNoTracking: {AsNoTracking})", normalizedAddress, asNoTracking);
             var query = _context.Members
                 .Include(m => m.Role)
-                .Where(m => m.EthereumAddress.ToLower() == normalizedAddress);
+                .Where(m => m.EthereumAddress != null && m.EthereumAddress.ToLower() == normalizedAddress);
 
             if (asNoTracking)
             {

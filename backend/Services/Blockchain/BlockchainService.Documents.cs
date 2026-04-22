@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using backend.DTOs;
+using backend.Utils;
 using Nethereum.Contracts;
 using Nethereum.RPC.Eth.DTOs;
 
@@ -14,7 +15,7 @@ public partial class BlockchainService
         byte documentType)
     {
         var function = GetIssueDocumentFunction();
-        var hashBytes32 = Utils.StringToBytes32(hash, true);
+        var hashBytes32 = Bytes32Helper.StringToBytes32(hash, true);
         var fromAddress = _web3.TransactionManager.Account.Address;
 
         // Dry-run by gas estimation to catch contract reverts before Pinata upload.
@@ -36,7 +37,7 @@ public partial class BlockchainService
         byte documentType)
     {
         var function = GetIssueDocumentFunction();
-        var hashBytes32 = Utils.StringToBytes32(hash, true);
+        var hashBytes32 = Bytes32Helper.StringToBytes32(hash, true);
         var fromAddress = _web3.TransactionManager.Account.Address;
 
         var gasEstimate = await function.EstimateGasAsync(
@@ -69,7 +70,7 @@ public partial class BlockchainService
     {
         var contract = _web3.Eth.GetContract(_abi, _contractAddress);
         var function = contract.GetFunction("verifyDocument");
-        var hashBytes32 = Utils.StringToBytes32(hash, true);
+        var hashBytes32 = Bytes32Helper.StringToBytes32(hash, true);
         return await function.CallAsync<bool>(hashBytes32);
     }
 
@@ -77,7 +78,7 @@ public partial class BlockchainService
     {
         var contract = _web3.Eth.GetContract(_abi, _contractAddress);
         var function = contract.GetFunction("getDocument");
-        var hashBytes32 = Utils.StringToBytes32(hash, true);
+        var hashBytes32 = Bytes32Helper.StringToBytes32(hash, true);
         return await function.CallAsync<List<object>>(hashBytes32);
     }
 
@@ -88,7 +89,7 @@ public partial class BlockchainService
         var changes = await documentIssuedEvent.GetAllChangesAsync(filterInput);
 
         var normalizedHash = NormalizeHex(hash);
-        var matchingEvent = changes.LastOrDefault(change => NormalizeHex(Utils.BytesToHexString(change.Event.Hash)) == normalizedHash);
+        var matchingEvent = changes.LastOrDefault(change => NormalizeHex(Bytes32Helper.BytesToHexString(change.Event.Hash)) == normalizedHash);
         if (matchingEvent == null)
         {
             return null;
@@ -119,7 +120,7 @@ public partial class BlockchainService
         var result = await detailedFunction.CallDeserializingToObjectAsync<GetDocumentsByOwnerOutputDto>(ownerAddress);
         return result?.Documents?
             .Select(document => new OwnerDocumentInfoDto(
-                Utils.BytesToHexString(document.Hash),
+                Bytes32Helper.BytesToHexString(document.Hash),
                 document.Issuer ?? string.Empty,
                 DecodeUnixTimestamp(document.IssuedAt)))
             .ToList()

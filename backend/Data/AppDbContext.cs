@@ -23,9 +23,9 @@ namespace backend.Data
                       .HasMaxLength(32);
 
                 entity.HasData(
-                    new MemberRole { Id = 1, Name = "Admin" },
-                    new MemberRole { Id = 2, Name = "Issuer" },
-                    new MemberRole { Id = 3, Name = "User" }
+                    new MemberRole { Id = 1, Name = "admin" },
+                    new MemberRole { Id = 2, Name = "issuer" },
+                    new MemberRole { Id = 3, Name = "user" }
                 );
             });
 
@@ -58,23 +58,29 @@ namespace backend.Data
             });
 
             modelBuilder.Entity<Member>(entity =>
-    {
-        entity.HasKey(e => e.Id);
-        entity.Property(e => e.CreatedAt)
-              .HasDefaultValueSql("CURRENT_TIMESTAMP");
-        entity.HasOne(e => e.Role)
-              .WithMany(e => e.Members)
-              .HasForeignKey(e => e.MemberRoleId)
-              .IsRequired();
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.CreatedAt)
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                entity.Property(e => e.Password)
+                    .HasMaxLength(255);
+                entity.Property(e => e.EthereumAddress)
+                    .HasMaxLength(42);
+                entity.Property(e => e.Email)
+                    .HasMaxLength(255);
+                entity.HasOne(e => e.Role)
+                    .WithMany(e => e.Members)
+                    .HasForeignKey(e => e.MemberRoleId)
+                    .IsRequired();
 
-        entity.HasData(new Member
-        {
-            Id = 2,
-            EthereumAddress = "0xeb2a27c7c6E72BC5022a49c4e044E72ab70E9bDb",
-            MemberRoleId = 1,
-            CreatedAt = new System.DateTime(2026, 3, 6, 0, 21, 35, 566, System.DateTimeKind.Utc).AddTicks(2560)
-        });
-    });
+                entity.HasData(new Member
+                {
+                  Id = 2,
+                  EthereumAddress = "0xeb2a27c7c6E72BC5022a49c4e044E72ab70E9bDb",
+                  MemberRoleId = 1,
+                  CreatedAt = new System.DateTime(2026, 3, 6, 0, 21, 35, 566, System.DateTimeKind.Utc).AddTicks(2560)
+                });
+            });
         }
     }
 

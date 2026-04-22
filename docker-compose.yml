@@ -6,7 +6,7 @@ services:
     container_name: divi-db
     restart: unless-stopped
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-IssuerDb}
+      POSTGRES_DB: ${POSTGRES_DB:-DIVI}
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
     ports:
@@ -31,7 +31,7 @@ services:
 
       DB_HOST: db
       DB_PORT: 5432
-      DB_NAME: ${POSTGRES_DB:-IssuerDb}
+      DB_NAME: ${POSTGRES_DB:-DIVI}
       DB_USER: ${POSTGRES_USER:-postgres}
       DB_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
 

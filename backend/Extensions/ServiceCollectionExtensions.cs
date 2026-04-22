@@ -34,6 +34,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IJwtService, JwtService>();
         services.AddScoped<IGetProfileService, GetProfileService>();
+        services.AddHostedService<DatabaseInitializerHostedService>();
         services.AddHostedService<NonceCleanupService>();
 
         return services;
@@ -78,7 +79,6 @@ public static class ServiceCollectionExtensions
         });
 
         services.Configure<PinataOptions>(configuration.GetSection("Pinata"));
-        services.AddHostedService<DatabaseInitializerHostedService>();
 
         services.AddAuthentication(options =>
         {

@@ -23,7 +23,7 @@ namespace backend.Services.Roles
 
 			var member = _db.Members
 				.Include(m => m.Role)
-				.FirstOrDefault(m => m.EthereumAddress.ToLower() == normalizedAddress);
+				.FirstOrDefault(m => m.EthereumAddress != null && m.EthereumAddress.ToLower() == normalizedAddress);
 
 			if (member is null)
 			{

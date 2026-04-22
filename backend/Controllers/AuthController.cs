@@ -4,6 +4,7 @@ using backend.Services.Auth;
 using backend.Data;
 using backend.DTOs;
 using backend.Models;
+using backend.Utils;
 
 namespace backend.Controllers
 {
@@ -42,6 +43,41 @@ namespace backend.Controllers
 
             return Ok(new { nonce });
         }
+
+        [HttpPost("register")]
+        public async Task<IActionResult> CreateAccount([FromBody] RegisterUserDto dto)
+        {
+            if (dto is null)
+                return BadRequest("Payload required");
+
+            if (string.IsNullOrWhiteSpace(dto.Email))
+                return BadRequest("Email required");
+
+            if (string.IsNullOrWhiteSpace(dto.Password))
+                return BadRequest("Password required");
+
+            var member = new Member
+            {
+                Email = dto.Email.Trim(),
+                Password = PasswordHasher.HashPassword(dto.Password),
+                EthereumAddress = null,
+                MemberRoleId = 3,
+                CreatedAt = DateTime.UtcNow,
+                Role = null!
+            };
+
+            _context.Members.Add(member);
+            await _context.SaveChangesAsync();
+
+            return StatusCode(201, new
+            {
+                member.Id,
+                member.Email,
+                member.MemberRoleId,
+                member.CreatedAt
+            });
+        }
+
         [HttpPost("verify")]
         public async Task<IActionResult> Verify([FromBody] VerifyDto dto)
         {
