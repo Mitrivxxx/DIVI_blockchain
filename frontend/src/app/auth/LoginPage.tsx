@@ -1,12 +1,87 @@
-import { Link } from "react-router-dom";
+import { FormEvent, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import logo from "../../assets/icons/divi_icon_demo.png";
 import metamaskIcon from "../../assets/icons/Metamask.svg";
 import googleIcon from "../../assets/icons/google.svg";
+import { API_URL } from "@/types/api";
 import "./LoginPage.scss";
 
+const EMAIL_LOGIN_STORAGE_KEY = "email-auth-session";
+
 const LoginPage = () => {
+  const navigate = useNavigate();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSocialSubmitting, setIsSocialSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setError(null);
+
+    if (!email.trim() || !password) {
+      setError("Podaj email i haslo.");
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const response = await fetch(`${API_URL}/Auth/login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: email.trim(),
+          password,
+        }),
+      });
+
+      const responseBody = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        const message =
+          typeof responseBody === "string"
+            ? responseBody
+            : responseBody?.title || responseBody?.detail || responseBody?.message || "Logowanie nie powiodlo sie.";
+        throw new Error(message);
+      }
+
+      localStorage.setItem(EMAIL_LOGIN_STORAGE_KEY, "1");
+      navigate("/app/dashboard", { replace: true });
+    } catch (loginError) {
+      setError(loginError instanceof Error ? loginError.message : "Logowanie nie powiodlo sie.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    setError(null);
+    setIsSocialSubmitting(true);
+
+    try {
+      setError("Logowanie przez Google nie jest jeszcze skonfigurowane.");
+    } finally {
+      setIsSocialSubmitting(false);
+    }
+  };
+
+  const handleMetaMaskLogin = async () => {
+    setError(null);
+    setIsSocialSubmitting(true);
+
+    try {
+      navigate("/auth");
+    } finally {
+      setIsSocialSubmitting(false);
+    }
+  };
+
   return (
-    <main className="auth-login">
+    <main className="auth-login auth-login--login">
       <div className="page">
         <section className="card" aria-label="Logowanie do DIVI">
           <div className="card__logo">
@@ -19,12 +94,12 @@ const LoginPage = () => {
           <p className="card__subtitle">Zaloguj się i kontynuuj korzystanie z DIVI</p>
 
           <div className="auth-buttons">
-            <button className="btn btn--outline" type="button">
+            <button className="btn btn--outline" type="button" onClick={() => void handleMetaMaskLogin()} disabled={isSubmitting || isSocialSubmitting}>
               <img src={metamaskIcon} className="btn__icon" alt="" aria-hidden="true" />
               MetaMask
             </button>
 
-            <button className="btn btn--outline" type="button">
+            <button className="btn btn--outline" type="button" onClick={() => void handleGoogleLogin()} disabled={isSubmitting || isSocialSubmitting}>
               <img src={googleIcon} className="btn__icon" alt="" aria-hidden="true" />
               Google
             </button>
@@ -36,13 +111,45 @@ const LoginPage = () => {
             <span className="divider__line" />
           </div>
 
-          <button className="btn btn--primary" type="button">
-            ZALOGUJ SIĘ ZA POMOCĄ KONTA
-          </button>
+          <form className="login-form" onSubmit={handleSubmit}>
+            <label className="login-form__field">
+              <span className="login-form__label">E-mail</span>
+              <input
+                className="login-form__input"
+                type="email"
+                autoComplete="email"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                placeholder="twoj@email.com"
+                disabled={isSubmitting || isSocialSubmitting}
+                required
+              />
+            </label>
+
+            <label className="login-form__field">
+              <span className="login-form__label">Haslo</span>
+              <input
+                className="login-form__input"
+                type="password"
+                autoComplete="current-password"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                placeholder="Wpisz haslo"
+                disabled={isSubmitting || isSocialSubmitting}
+                required
+              />
+            </label>
+
+            <button className="btn btn--primary" type="submit" disabled={isSubmitting || isSocialSubmitting}>
+              {isSubmitting ? "LOGOWANIE..." : "ZALOGUJ SIE"}
+            </button>
+          </form>
 
           <p className="card__footer">
             Nie masz konta? <Link className="card__footer-link" to="/register">Zarejestruj się</Link>
           </p>
+
+          {error ? <p className="auth-error">{error}</p> : null}
         </section>
       </div>
     </main>

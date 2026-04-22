@@ -16,6 +16,8 @@ import { useUserRole } from "../features/sidebar/hooks/useUserRole";
 import { useWeb3Auth } from "../../service/web3/useWeb3Auth";
 import "./MainLayout.scss";
 
+const EMAIL_LOGIN_STORAGE_KEY = "email-auth-session";
+
 const MainLayout: React.FC = () => {
   const navigate = useNavigate();
   const { tabPath } = useParams<{ tabPath?: string }>();
@@ -32,12 +34,14 @@ const MainLayout: React.FC = () => {
   const handleBellClick = () => navigateToTab("notify");
   const handleUserClick = () => navigateToTab("profile");
   const handleLogout = () => {
+    localStorage.removeItem(EMAIL_LOGIN_STORAGE_KEY);
     logout();
     navigate("/auth");
   };
 
   useEffect(() => {
-    if (!jwt) {
+    const isEmailSessionActive = localStorage.getItem(EMAIL_LOGIN_STORAGE_KEY) === "1";
+    if (!jwt && !isEmailSessionActive) {
       navigate("/auth", { replace: true });
     }
   }, [jwt, navigate]);

@@ -25,16 +25,83 @@ public static class PasswordHasher
         return $"argon2id$v=19$m={MemorySize},t={Iterations},p={DegreeOfParallelism}${Convert.ToBase64String(salt)}${Convert.ToBase64String(hash)}";
     }
 
-    private static byte[] DeriveHash(string password, byte[] salt)
+    public static bool VerifyPassword(string password, string storedHash)
+    {
+        if (string.IsNullOrWhiteSpace(password) || string.IsNullOrWhiteSpace(storedHash))
+        {
+            return false;
+        }
+
+        // Backward-compatible fallback for records created before hashing was introduced.
+        if (!storedHash.StartsWith("argon2id$", StringComparison.Ordinal))
+        {
+            return password == storedHash;
+        }
+
+        var parts = storedHash.Split('$');
+        if (parts.Length != 5)
+        {
+            return false;
+        }
+
+        var parameters = ParseParameters(parts[2]);
+        if (!parameters.TryGetValue("m", out var memorySize)
+            || !parameters.TryGetValue("t", out var iterations)
+            || !parameters.TryGetValue("p", out var degreeOfParallelism))
+        {
+            return false;
+        }
+
+        byte[] salt;
+        byte[] expectedHash;
+
+        try
+        {
+            salt = Convert.FromBase64String(parts[3]);
+            expectedHash = Convert.FromBase64String(parts[4]);
+        }
+        catch (FormatException)
+        {
+            return false;
+        }
+
+        var actualHash = DeriveHash(password, salt, expectedHash.Length, iterations, memorySize, degreeOfParallelism);
+        return CryptographicOperations.FixedTimeEquals(actualHash, expectedHash);
+    }
+
+    private static byte[] DeriveHash(
+        string password,
+        byte[] salt,
+        int hashSize = HashSize,
+        int iterations = Iterations,
+        int memorySize = MemorySize,
+        int degreeOfParallelism = DegreeOfParallelism)
     {
         using var argon2 = new Argon2id(Encoding.UTF8.GetBytes(password))
         {
             Salt = salt,
-            Iterations = Iterations,
-            MemorySize = MemorySize,
-            DegreeOfParallelism = DegreeOfParallelism
+            Iterations = iterations,
+            MemorySize = memorySize,
+            DegreeOfParallelism = degreeOfParallelism
         };
 
-        return argon2.GetBytes(HashSize);
+        return argon2.GetBytes(hashSize);
+    }
+
+    private static Dictionary<string, int> ParseParameters(string rawParameters)
+    {
+        var result = new Dictionary<string, int>(StringComparer.Ordinal);
+        var parts = rawParameters.Split(',', StringSplitOptions.RemoveEmptyEntries);
+
+        foreach (var part in parts)
+        {
+            var pair = part.Split('=', 2);
+            if (pair.Length == 2 && int.TryParse(pair[1], out var value))
+            {
+                result[pair[0]] = value;
+            }
+        }
+
+        return result;
     }
 }

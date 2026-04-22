@@ -5,6 +5,7 @@ using backend.Data;
 using backend.DTOs;
 using backend.Models;
 using backend.Utils;
+using Microsoft.EntityFrameworkCore;
 
 namespace backend.Controllers
 {
@@ -70,6 +71,43 @@ namespace backend.Controllers
             await _context.SaveChangesAsync();
 
             return StatusCode(201, new
+            {
+                member.Id,
+                member.Email,
+                member.MemberRoleId,
+                member.CreatedAt
+            });
+        }
+
+        [HttpPost("login")]
+        public async Task<IActionResult> Login([FromBody] LoginUserDto dto)
+        {
+            if (dto is null)
+                return BadRequest("Payload required");
+
+            if (string.IsNullOrWhiteSpace(dto.Email))
+                return BadRequest("Email required");
+
+            if (string.IsNullOrWhiteSpace(dto.Password))
+                return BadRequest("Password required");
+
+            var normalizedEmail = dto.Email.Trim().ToLowerInvariant();
+            var member = await _context.Members
+                .AsNoTracking()
+                .FirstOrDefaultAsync(m => m.Email != null && m.Email.ToLower() == normalizedEmail);
+
+            if (member is null || string.IsNullOrWhiteSpace(member.Password))
+            {
+                return Unauthorized("Nieprawidlowy email lub haslo.");
+            }
+
+            var isPasswordValid = PasswordHasher.VerifyPassword(dto.Password, member.Password);
+            if (!isPasswordValid)
+            {
+                return Unauthorized("Nieprawidlowy email lub haslo.");
+            }
+
+            return Ok(new
             {
                 member.Id,
                 member.Email,
