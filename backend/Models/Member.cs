@@ -1,13 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-public enum MemberRole
-{
-    Admin,
-    Issuer,
-    User
-}
-
 namespace backend.Models
 {
     public class Member
@@ -23,7 +16,10 @@ namespace backend.Models
         public required string EthereumAddress { get; set; }
 
         [Required]
-        public MemberRole Role { get; set; }
+        public int MemberRoleId { get; set; }
+
+        [Required]
+        public MemberRole Role { get; set; } = null!;
 
         [EmailAddress]
         public string? Email { get; set; }

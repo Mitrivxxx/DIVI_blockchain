@@ -33,7 +33,7 @@ namespace backend.Controllers
 
             var role = _userRoleService.GetUserRole(address);
             _logger.LogInformation("User role lookup resolved for address {EthereumAddress} with role {UserRole}", address, role);
-            var response = new DTOs.UserRoleResponseDto { Role = role.ToString() };
+            var response = new DTOs.UserRoleResponseDto { Role = role };
             return Ok(response);
         }
     }

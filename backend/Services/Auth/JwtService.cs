@@ -27,7 +27,7 @@ namespace backend.Services.Auth
 			var claims = new[]
 			{
 				new Claim(ClaimTypes.NameIdentifier, address),
-				new Claim(ClaimTypes.Role, userRole.ToString())
+				new Claim(ClaimTypes.Role, userRole)
 			};
 
 			var jwtKey = Environment.GetEnvironmentVariable("JWT_KEY")

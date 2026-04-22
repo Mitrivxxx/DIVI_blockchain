@@ -32,7 +32,7 @@ namespace backend.Services.GetProfile
             {
                 Name = member.Name,
                 EthereumAddress = member.EthereumAddress,
-                Role = member.Role.ToString(),
+                Role = member.Role.Name,
                 Email = member.Email,
                 Bio = member.Bio,
                 AvatarUrl = member.AvatarUrl,
@@ -140,7 +140,9 @@ namespace backend.Services.GetProfile
         {
             var normalizedAddress = ethereumAddress.ToLowerInvariant();
             _logger.LogDebug("GetMemberByAddressAsync resolving address {EthereumAddress} (asNoTracking: {AsNoTracking})", normalizedAddress, asNoTracking);
-            var query = _context.Members.Where(m => m.EthereumAddress.ToLower() == normalizedAddress);
+            var query = _context.Members
+                .Include(m => m.Role)
+                .Where(m => m.EthereumAddress.ToLower() == normalizedAddress);
 
             if (asNoTracking)
             {
