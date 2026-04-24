@@ -12,6 +12,7 @@ namespace backend.Data
         public DbSet<Nonce> Nonces { get; set; }
         public DbSet<Member> Members { get; set; }
         public DbSet<MemberRole> MemberRoles { get; set; }
+        public DbSet<BlacklistedToken> BlacklistedTokens { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

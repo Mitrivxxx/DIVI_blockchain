@@ -19,6 +19,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 
 namespace backend.Extensions;
 
@@ -103,6 +105,24 @@ public static class ServiceCollectionExtensions
                 ValidAudience = jwtIssuer,
                 IssuerSigningKey = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(jwtKey)),
                 ClockSkew = TimeSpan.Zero
+            };
+
+            options.Events = new JwtBearerEvents
+            {
+                OnMessageReceived = context =>
+                {
+                    context.Token = context.Request.Cookies["access_token"];
+                    return Task.CompletedTask;
+                },
+                OnTokenValidated = async context =>
+                {
+                    var dbContext = context.HttpContext.RequestServices.GetRequiredService<AppDbContext>();
+                    var jti = context.Principal?.FindFirst(JwtRegisteredClaimNames.Jti)?.Value;
+                    if (!string.IsNullOrEmpty(jti) && await dbContext.BlacklistedTokens.AnyAsync(b => b.Jti == jti))
+                    {
+                        context.Fail("Token is blacklisted");
+                    }
+                }
             };
         });
 
