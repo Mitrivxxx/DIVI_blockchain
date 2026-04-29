@@ -21,16 +21,9 @@ export const useProfile = ({ userRole, walletAddress, fallbackAvatar }: UseProfi
   const [certificatesError, setCertificatesError] = useState<string | null>(null);
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-
-    if (!token) {
-      setLoading(false);
-      return;
-    }
-
     const loadProfile = async () => {
       try {
-        const data = await fetchProfileApi(token);
+        const data = await fetchProfileApi("");
         setProfile(data);
       } catch {
         setProfile(null);
@@ -81,12 +74,9 @@ export const useProfile = ({ userRole, walletAddress, fallbackAvatar }: UseProfi
 
   const saveField = useCallback(
     async (field: EditableField) => {
-      const token = localStorage.getItem("token");
-      if (!token) return;
-
       try {
         setSaving(true);
-        const isSaved = await patchProfileFieldApi(token, field, editingValue);
+        const isSaved = await patchProfileFieldApi("", field, editingValue);
 
         if (!isSaved) {
           return;
@@ -109,12 +99,9 @@ export const useProfile = ({ userRole, walletAddress, fallbackAvatar }: UseProfi
 
   const deleteField = useCallback(
     async (field: EditableField) => {
-      const token = localStorage.getItem("token");
-      if (!token) return;
-
       try {
         setSaving(true);
-        const isDeleted = await deleteProfileFieldApi(token, field);
+        const isDeleted = await deleteProfileFieldApi("", field);
 
         if (!isDeleted) {
           return;

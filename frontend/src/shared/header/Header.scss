@@ -4,6 +4,7 @@
   gap: 12px;
   justify-content: flex-start;
 }
+
 .header {
   height: 70px;
   background: var(--app-bg);
@@ -139,13 +140,15 @@
   gap: 3px;
   justify-content: flex-start;
 }
+
 .logo {
   height: 70px;
   width: auto;
 }
+
 .logo-text {
-  font-family:cursive;
+  font-family: cursive;
   font-weight: bold;
   color: var(--app-amaranth);
   font-size: 30px;
-} 
+}

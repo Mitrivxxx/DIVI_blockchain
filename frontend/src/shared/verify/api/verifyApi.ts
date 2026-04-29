@@ -18,7 +18,10 @@ export const verifyDocument = async (file: File): Promise<VerifyResult> => {
   const response = await axios.post(
     `${API_URL}/api/documents/verify-document`,
     formData,
-    { headers: { 'Content-Type': 'multipart/form-data' } },
+    {
+      headers: { 'Content-Type': 'multipart/form-data' },
+      withCredentials: true
+    },
   );
 
   return response.data as VerifyResult;

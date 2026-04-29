@@ -12,14 +12,12 @@ export function usePendingIssuerApplications() {
   const { jwt } = useWeb3Auth();
 
   useEffect(() => {
-    const token = jwt ?? localStorage.getItem("token");
-    if (!token) {
-      setLoading(false);
+    if (loading === false && pending.length === 0 && !error) {
       return;
     }
 
     setLoading(true);
-    fetchPendingIssuerApplicationsWithJwt(token)
+    fetchPendingIssuerApplicationsWithJwt(jwt || "")
       .then(setPending)
       .catch(e => setError(e.message || "Błąd"))
       .finally(() => setLoading(false));

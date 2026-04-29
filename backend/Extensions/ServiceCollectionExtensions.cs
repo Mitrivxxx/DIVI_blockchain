@@ -69,7 +69,8 @@ public static class ServiceCollectionExtensions
                 {
                     policy.WithOrigins(corsOrigins)
                         .AllowAnyHeader()
-                        .AllowAnyMethod();
+                        .AllowAnyMethod()
+                        .AllowCredentials();
                 });
         });
 
@@ -95,6 +96,9 @@ public static class ServiceCollectionExtensions
             var jwtIssuer = configuration["Jwt:Issuer"]
                 ?? throw new InvalidOperationException("Missing Jwt:Issuer");
 
+            var jwtAudience = configuration["Jwt:Audience"]
+                ?? throw new InvalidOperationException("Missing Jwt:Audience");
+
             options.TokenValidationParameters = new TokenValidationParameters
             {
                 ValidateIssuer = true,
@@ -102,7 +106,7 @@ public static class ServiceCollectionExtensions
                 ValidateLifetime = true,
                 ValidateIssuerSigningKey = true,
                 ValidIssuer = jwtIssuer,
-                ValidAudience = jwtIssuer,
+                ValidAudience = jwtAudience,
                 IssuerSigningKey = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(jwtKey)),
                 ClockSkew = TimeSpan.Zero
             };

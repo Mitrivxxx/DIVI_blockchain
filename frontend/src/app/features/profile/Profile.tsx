@@ -136,6 +136,16 @@ const Profile: React.FC<ProfileProps> = ({ userRole, walletAddress }) => {
             </ul>
           ) : null}
         </section>
+      ) : activeTab === "transactions" ? (
+        <section className="profile-certificates-tab" aria-live="polite">
+          <header className="profile-certificates-header">
+            <h2 className="profile-certificates-title">Historia transakcji</h2>
+            {profileAddress ? <p className="profile-certificates-address">{profileAddress}</p> : null}
+          </header>
+          <div style={{ padding: '2rem', textAlign: 'center', color: 'rgba(255,255,255,0.6)' }}>
+            <p>Brak historii transakcji dla tego adresu.</p>
+          </div>
+        </section>
       ) : (
         <div className="profile-empty-tab" />
       )}

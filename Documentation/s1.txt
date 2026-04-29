@@ -1,0 +1,53 @@
+  Aktualna implementacja ✅                                                                                    
+                                                                                                               
+  - Backend ma [Authorize] attribute na /api/GetProfile                                                        
+  - JWT jest podpisywany i walidowany (issuer, audience, lifetime, signing key)                                
+  - Token zawiera Ethereum address w claim sub                                                                 
+  - Frontend sprawdza obecność tokenu przed dostępem do /app/profile                                           
+                                                                                                               
+  Problemy bezpieczeństwa ⚠️                                                                                    
+                                                                                                               
+  1. Token w localStorage (podatne na XSS)                                                                     
+   
+  // ❌ useProfile.ts:24                                                                                       
+  const token = localStorage.getItem("token");                                                                 
+  Problem: XSS atak może украść token
+  Rozwiązanie: Przechowuj token w HttpOnly cookie (niedostępnym dla JS)                                        
+                  
+  2. Brak refresh tokenu                                                                                       
+                  
+  // JwtService.cs:50                                                                                          
+  expires: DateTime.UtcNow.AddMinutes(15)
+  Problem: Token wygasa po 15 min - brak mechanizmu odświeżania                                                
+  Rozwiązanie: Dodaj refresh token endpoint                                                                    
+                                                                                                               
+  3. Brak role-based access control                                                                            
+                  
+  // Profile.tsx:9 - role jest przekazywany ale nie sprawdzany
+  const Profile: React.FC<ProfileProps> = ({ userRole, walletAddress }) => {                                   
+  Problem: Frontend nie ogranicza dostęp na podstawie roli                                                     
+  Rozwiązanie: Dodaj ProtectedRoute component sprawdzający role                                                
+                                                                                                               
+  4. Brak CSRF ochrony                                                                                         
+                                                                                                               
+  // profileApi.ts:34 - brak CSRF tokenu
+  const response = await fetch(`${API_URL}/api/GetProfile/${endpoint}`, {                                      
+    method: "PATCH",
+    headers: {                                                                                                 
+      "Content-Type": "application/json",                                                                      
+      Authorization: `Bearer ${token}`,
+                                                                                                               
+  5. Brak walidacji JWT na frontendzie                                                                         
+   
+  Frontend tylko sprawdza czy token istnieje, nie weryfikuje jego validności                                   
+                  
+  ---                                                                                                          
+  Rekomendacje (w kolejności priorytetu):
+                                         
+  1. WYSOKIE: Przenieś token z localStorage do HttpOnly cookie
+  2. WYSOKIE: Dodaj refresh token mechanism                                                                    
+  3. ŚREDNIE: Implementuj ProtectedRoute z walidacją roli                                                      
+  4. ŚREDNIE: Dodaj CSRF protection                                                                            
+  5. NISKIE: Dodaj JWT validation na frontendzie (decode token)                                                
+                  
+  Chciałbyś, żebym zaimplementował któreś z tych zmian?     

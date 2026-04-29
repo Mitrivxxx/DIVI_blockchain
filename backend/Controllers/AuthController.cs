@@ -110,7 +110,7 @@ namespace backend.Controllers
                 return Unauthorized("Nieprawidlowy email lub haslo.");
             }
 
-            var accessToken = _jwtService.GenerateAccessToken(member.Id.ToString(), member.Role.Name, out _);
+            var accessToken = _jwtService.GenerateAccessToken(member.Id.ToString(), member.Role?.Name ?? "User");
             var refreshToken = _jwtService.GenerateRefreshToken(member.Id.ToString());
 
             SetTokenCookies(accessToken, refreshToken);
@@ -141,7 +141,7 @@ namespace backend.Controllers
 
             if (member == null) return Unauthorized("User not found");
 
-            var newAccessToken = _jwtService.GenerateAccessToken(member.Id.ToString(), member.Role.Name, out _);
+            var newAccessToken = _jwtService.GenerateAccessToken(member.Id.ToString(), member.Role?.Name ?? "User");
             var newRefreshToken = _jwtService.GenerateRefreshToken(member.Id.ToString());
 
             SetTokenCookies(newAccessToken, newRefreshToken);
@@ -205,9 +205,13 @@ namespace backend.Controllers
             }
 
             await _authService.ConsumeNonce(dto.Address);
-            var token = _jwtService.GenerateToken(dto.Address);
+            var accessToken = _jwtService.GenerateToken(dto.Address);
+            var refreshToken = _jwtService.GenerateRefreshToken(dto.Address);
+
+            SetTokenCookies(accessToken, refreshToken);
+
             Console.WriteLine("[AuthController] Verify succeeded, token issued");
-            return Ok(new { token });
+            return Ok(new { token = accessToken });
         }
     }
 

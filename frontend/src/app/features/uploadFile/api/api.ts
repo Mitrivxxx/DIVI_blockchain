@@ -10,7 +10,10 @@ export const uploadDocument = async (file: File, documentType: string, owner: st
   const response = await axios.post(
     `${API_URL}/api/documents/upload-document`,
     formData,
-    { headers: { 'Content-Type': 'multipart/form-data' } }
+    {
+      headers: { 'Content-Type': 'multipart/form-data' },
+      withCredentials: true
+    }
   );
 
   return response.data;

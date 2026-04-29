@@ -15,9 +15,7 @@ const getFieldBody = (field: EditableField, value: string) => {
 
 export const fetchProfileApi = async (token: string): Promise<ProfileData | null> => {
   const response = await fetch(`${API_URL}/api/GetProfile`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
+    credentials: "include",
   });
 
   if (!response.ok) {
@@ -35,8 +33,8 @@ export const patchProfileFieldApi = async (token: string, field: EditableField, 
     method: "PATCH",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
     },
+    credentials: "include",
     body: JSON.stringify(body),
   });
 
@@ -48,9 +46,7 @@ export const deleteProfileFieldApi = async (token: string, field: EditableField)
 
   const response = await fetch(`${API_URL}/api/GetProfile/${endpoint}`, {
     method: "DELETE",
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
+    credentials: "include",
   });
 
   return response.ok;

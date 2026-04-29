@@ -25,9 +25,7 @@ type RawIssuerApplication = {
 
 export async function fetchPendingIssuerApplicationsWithJwt(jwt: string) {
   const res = await fetch(`${API_URL}/api/issuer`, {
-    headers: {
-      ...(jwt ? { Authorization: `Bearer ${jwt}` } : {}),
-    },
+    credentials: "include",
   });
   if (!res.ok) throw new Error("Błąd pobierania danych");
   const data = (await res.json()) as RawIssuerApplication[];
@@ -46,9 +44,7 @@ export async function fetchPendingIssuerApplicationsWithJwt(jwt: string) {
 export async function updateIssuerApplicationStatusWithJwt(id: number, status: 'Approved' | 'Rejected', jwt: string) {
   const res = await fetch(`${API_URL}/api/issuer/${id}/status?status=${status}`, {
     method: 'PATCH',
-    headers: {
-      ...(jwt ? { Authorization: `Bearer ${jwt}` } : {}),
-    },
+    credentials: "include",
   });
   if (!res.ok) {
     const message = await res.text();

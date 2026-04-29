@@ -17,8 +17,8 @@ export function submitIssuerRoleApplication(
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...(jwt ? { Authorization: `Bearer ${jwt}` } : {}),
         },
+        credentials: 'include',
         body: JSON.stringify(data)
       });
       if (res.ok) {
