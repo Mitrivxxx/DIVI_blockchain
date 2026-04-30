@@ -26,6 +26,8 @@ namespace backend.Models
         [EmailAddress]
         public string? Email { get; set; }
 
+        public string? GoogleSub { get; set; } = null!;
+
         public string? Bio { get; set; }
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

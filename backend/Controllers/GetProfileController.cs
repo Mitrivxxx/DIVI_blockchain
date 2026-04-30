@@ -27,22 +27,22 @@ namespace backend.Controllers
         [HttpGet]
         public async Task<IActionResult> GetCurrentUserProfile()
         {
-            var ethereumAddress = GetCurrentEthereumAddress();
-            _logger.LogInformation("Profile GET requested for address {EthereumAddress}", ethereumAddress ?? "<missing>");
-            if (string.IsNullOrWhiteSpace(ethereumAddress))
+            var memberId = GetCurrentMemberId();
+            _logger.LogInformation("Profile GET requested for memberId {MemberId}", memberId);
+            if (memberId == 0)
             {
-                _logger.LogInformation("Profile GET rejected due to missing Ethereum address claim");
-                return Unauthorized("Brak adresu Ethereum w tokenie.");
+                _logger.LogInformation("Profile GET rejected due to missing member ID claim");
+                return Unauthorized("Brak identyfikatora użytkownika w tokenie.");
             }
 
-            var profile = await _profileService.GetProfileByAddressAsync(ethereumAddress);
+            var profile = await _profileService.GetProfileByIdAsync(memberId);
             if (profile is null)
             {
-                _logger.LogInformation("Profile GET not found for address {EthereumAddress}", ethereumAddress);
+                _logger.LogInformation("Profile GET not found for memberId {MemberId}", memberId);
                 return NotFound("Nie znaleziono profilu dla zalogowanego użytkownika.");
             }
 
-            _logger.LogInformation("Profile GET succeeded for address {EthereumAddress}", ethereumAddress);
+            _logger.LogInformation("Profile GET succeeded for memberId {MemberId}", memberId);
             return Ok(profile);
         }
 
@@ -52,29 +52,29 @@ namespace backend.Controllers
         [HttpPatch("name")]
         public async Task<IActionResult> UpdateName([FromBody] UpdateProfileNameDto dto)
         {
-            var ethereumAddress = GetCurrentEthereumAddress();
-            _logger.LogInformation("Profile NAME update requested for address {EthereumAddress}", ethereumAddress ?? "<missing>");
-            if (string.IsNullOrWhiteSpace(ethereumAddress))
+            var memberId = GetCurrentMemberId();
+            _logger.LogInformation("Profile NAME update requested for memberId {MemberId}", memberId);
+            if (memberId == 0)
             {
-                _logger.LogInformation("Profile NAME update rejected due to missing Ethereum address claim");
-                return Unauthorized("Brak adresu Ethereum w tokenie.");
+                _logger.LogInformation("Profile NAME update rejected due to missing member ID claim");
+                return Unauthorized("Brak identyfikatora użytkownika w tokenie.");
             }
 
             var normalizedName = dto.Name?.Trim();
             if (string.IsNullOrWhiteSpace(normalizedName))
             {
-                _logger.LogInformation("Profile NAME update rejected due to empty payload for address {EthereumAddress}", ethereumAddress);
+                _logger.LogInformation("Profile NAME update rejected due to empty payload for memberId {MemberId}", memberId);
                 return BadRequest("Name jest wymagane.");
             }
 
-            var updated = await _profileService.UpdateNameAsync(ethereumAddress, normalizedName);
+            var updated = await _profileService.UpdateNameByIdAsync(memberId, normalizedName);
             if (!updated)
             {
-                _logger.LogInformation("Profile NAME update not found for address {EthereumAddress}", ethereumAddress);
+                _logger.LogInformation("Profile NAME update not found for memberId {MemberId}", memberId);
                 return NotFound("Nie znaleziono profilu dla zalogowanego użytkownika.");
             }
 
-            _logger.LogInformation("Profile NAME update succeeded for address {EthereumAddress}", ethereumAddress);
+            _logger.LogInformation("Profile NAME update succeeded for memberId {MemberId}", memberId);
             return NoContent();
         }
 
@@ -84,29 +84,29 @@ namespace backend.Controllers
         [HttpPatch("email")]
         public async Task<IActionResult> UpdateEmail([FromBody] UpdateProfileEmailDto dto)
         {
-            var ethereumAddress = GetCurrentEthereumAddress();
-            _logger.LogInformation("Profile EMAIL update requested for address {EthereumAddress}", ethereumAddress ?? "<missing>");
-            if (string.IsNullOrWhiteSpace(ethereumAddress))
+            var memberId = GetCurrentMemberId();
+            _logger.LogInformation("Profile EMAIL update requested for memberId {MemberId}", memberId);
+            if (memberId == 0)
             {
-                _logger.LogInformation("Profile EMAIL update rejected due to missing Ethereum address claim");
-                return Unauthorized("Brak adresu Ethereum w tokenie.");
+                _logger.LogInformation("Profile EMAIL update rejected due to missing member ID claim");
+                return Unauthorized("Brak identyfikatora użytkownika w tokenie.");
             }
 
             var normalizedEmail = dto.Email?.Trim();
             if (string.IsNullOrWhiteSpace(normalizedEmail))
             {
-                _logger.LogInformation("Profile EMAIL update rejected due to empty payload for address {EthereumAddress}", ethereumAddress);
+                _logger.LogInformation("Profile EMAIL update rejected due to empty payload for memberId {MemberId}", memberId);
                 return BadRequest("Email jest wymagany.");
             }
 
-            var updated = await _profileService.UpdateEmailAsync(ethereumAddress, normalizedEmail);
+            var updated = await _profileService.UpdateEmailByIdAsync(memberId, normalizedEmail);
             if (!updated)
             {
-                _logger.LogInformation("Profile EMAIL update not found for address {EthereumAddress}", ethereumAddress);
+                _logger.LogInformation("Profile EMAIL update not found for memberId {MemberId}", memberId);
                 return NotFound("Nie znaleziono profilu dla zalogowanego użytkownika.");
             }
 
-            _logger.LogInformation("Profile EMAIL update succeeded for address {EthereumAddress}", ethereumAddress);
+            _logger.LogInformation("Profile EMAIL update succeeded for memberId {MemberId}", memberId);
             return NoContent();
         }
 
@@ -116,29 +116,29 @@ namespace backend.Controllers
         [HttpPatch("bio")]
         public async Task<IActionResult> UpdateBio([FromBody] UpdateProfileBioDto dto)
         {
-            var ethereumAddress = GetCurrentEthereumAddress();
-            _logger.LogInformation("Profile BIO update requested for address {EthereumAddress}", ethereumAddress ?? "<missing>");
-            if (string.IsNullOrWhiteSpace(ethereumAddress))
+            var memberId = GetCurrentMemberId();
+            _logger.LogInformation("Profile BIO update requested for memberId {MemberId}", memberId);
+            if (memberId == 0)
             {
-                _logger.LogInformation("Profile BIO update rejected due to missing Ethereum address claim");
-                return Unauthorized("Brak adresu Ethereum w tokenie.");
+                _logger.LogInformation("Profile BIO update rejected due to missing member ID claim");
+                return Unauthorized("Brak identyfikatora użytkownika w tokenie.");
             }
 
             var normalizedBio = dto.Bio?.Trim();
             if (string.IsNullOrWhiteSpace(normalizedBio))
             {
-                _logger.LogInformation("Profile BIO update rejected due to empty payload for address {EthereumAddress}", ethereumAddress);
+                _logger.LogInformation("Profile BIO update rejected due to empty payload for memberId {MemberId}", memberId);
                 return BadRequest("Bio jest wymagane.");
             }
 
-            var updated = await _profileService.UpdateBioAsync(ethereumAddress, normalizedBio);
+            var updated = await _profileService.UpdateBioByIdAsync(memberId, normalizedBio);
             if (!updated)
             {
-                _logger.LogInformation("Profile BIO update not found for address {EthereumAddress}", ethereumAddress);
+                _logger.LogInformation("Profile BIO update not found for memberId {MemberId}", memberId);
                 return NotFound("Nie znaleziono profilu dla zalogowanego użytkownika.");
             }
 
-            _logger.LogInformation("Profile BIO update succeeded for address {EthereumAddress}", ethereumAddress);
+            _logger.LogInformation("Profile BIO update succeeded for memberId {MemberId}", memberId);
             return NoContent();
         }
 
@@ -148,22 +148,22 @@ namespace backend.Controllers
         [HttpDelete("name")]
         public async Task<IActionResult> DeleteName()
         {
-            var ethereumAddress = GetCurrentEthereumAddress();
-            _logger.LogInformation("Profile NAME delete requested for address {EthereumAddress}", ethereumAddress ?? "<missing>");
-            if (string.IsNullOrWhiteSpace(ethereumAddress))
+            var memberId = GetCurrentMemberId();
+            _logger.LogInformation("Profile NAME delete requested for memberId {MemberId}", memberId);
+            if (memberId == 0)
             {
-                _logger.LogInformation("Profile NAME delete rejected due to missing Ethereum address claim");
-                return Unauthorized("Brak adresu Ethereum w tokenie.");
+                _logger.LogInformation("Profile NAME delete rejected due to missing member ID claim");
+                return Unauthorized("Brak identyfikatora użytkownika w tokenie.");
             }
 
-            var deleted = await _profileService.DeleteNameAsync(ethereumAddress);
+            var deleted = await _profileService.DeleteNameByIdAsync(memberId);
             if (!deleted)
             {
-                _logger.LogInformation("Profile NAME delete not found for address {EthereumAddress}", ethereumAddress);
+                _logger.LogInformation("Profile NAME delete not found for memberId {MemberId}", memberId);
                 return NotFound("Nie znaleziono profilu dla zalogowanego użytkownika.");
             }
 
-            _logger.LogInformation("Profile NAME delete succeeded for address {EthereumAddress}", ethereumAddress);
+            _logger.LogInformation("Profile NAME delete succeeded for memberId {MemberId}", memberId);
             return NoContent();
         }
 
@@ -173,22 +173,22 @@ namespace backend.Controllers
         [HttpDelete("email")]
         public async Task<IActionResult> DeleteEmail()
         {
-            var ethereumAddress = GetCurrentEthereumAddress();
-            _logger.LogInformation("Profile EMAIL delete requested for address {EthereumAddress}", ethereumAddress ?? "<missing>");
-            if (string.IsNullOrWhiteSpace(ethereumAddress))
+            var memberId = GetCurrentMemberId();
+            _logger.LogInformation("Profile EMAIL delete requested for memberId {MemberId}", memberId);
+            if (memberId == 0)
             {
-                _logger.LogInformation("Profile EMAIL delete rejected due to missing Ethereum address claim");
-                return Unauthorized("Brak adresu Ethereum w tokenie.");
+                _logger.LogInformation("Profile EMAIL delete rejected due to missing member ID claim");
+                return Unauthorized("Brak identyfikatora użytkownika w tokenie.");
             }
 
-            var deleted = await _profileService.DeleteEmailAsync(ethereumAddress);
+            var deleted = await _profileService.DeleteEmailByIdAsync(memberId);
             if (!deleted)
             {
-                _logger.LogInformation("Profile EMAIL delete not found for address {EthereumAddress}", ethereumAddress);
+                _logger.LogInformation("Profile EMAIL delete not found for memberId {MemberId}", memberId);
                 return NotFound("Nie znaleziono profilu dla zalogowanego użytkownika.");
             }
 
-            _logger.LogInformation("Profile EMAIL delete succeeded for address {EthereumAddress}", ethereumAddress);
+            _logger.LogInformation("Profile EMAIL delete succeeded for memberId {MemberId}", memberId);
             return NoContent();
         }
 
@@ -198,30 +198,37 @@ namespace backend.Controllers
         [HttpDelete("bio")]
         public async Task<IActionResult> DeleteBio()
         {
-            var ethereumAddress = GetCurrentEthereumAddress();
-            _logger.LogInformation("Profile BIO delete requested for address {EthereumAddress}", ethereumAddress ?? "<missing>");
-            if (string.IsNullOrWhiteSpace(ethereumAddress))
+            var memberId = GetCurrentMemberId();
+            _logger.LogInformation("Profile BIO delete requested for memberId {MemberId}", memberId);
+            if (memberId == 0)
             {
-                _logger.LogInformation("Profile BIO delete rejected due to missing Ethereum address claim");
-                return Unauthorized("Brak adresu Ethereum w tokenie.");
+                _logger.LogInformation("Profile BIO delete rejected due to missing member ID claim");
+                return Unauthorized("Brak identyfikatora użytkownika w tokenie.");
             }
 
-            var deleted = await _profileService.DeleteBioAsync(ethereumAddress);
+            var deleted = await _profileService.DeleteBioByIdAsync(memberId);
             if (!deleted)
             {
-                _logger.LogInformation("Profile BIO delete not found for address {EthereumAddress}", ethereumAddress);
+                _logger.LogInformation("Profile BIO delete not found for memberId {MemberId}", memberId);
                 return NotFound("Nie znaleziono profilu dla zalogowanego użytkownika.");
             }
 
-            _logger.LogInformation("Profile BIO delete succeeded for address {EthereumAddress}", ethereumAddress);
+            _logger.LogInformation("Profile BIO delete succeeded for memberId {MemberId}", memberId);
             return NoContent();
         }
 
-        private string? GetCurrentEthereumAddress()
+        private int GetCurrentMemberId()
         {
-            return User.FindFirstValue(ClaimTypes.NameIdentifier)
+            var memberId = User.FindFirstValue(ClaimTypes.NameIdentifier)
                 ?? User.FindFirstValue("nameid")
                 ?? User.FindFirstValue("sub");
+
+            if (int.TryParse(memberId, out var id))
+            {
+                return id;
+            }
+
+            return 0;
         }
     }
 }

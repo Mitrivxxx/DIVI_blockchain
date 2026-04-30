@@ -204,9 +204,21 @@ namespace backend.Controllers
                 return Unauthorized();
             }
 
+            // Lookup member by Ethereum address
+            var member = await _context.Members
+                .AsNoTracking()
+                .Include(m => m.Role)
+                .FirstOrDefaultAsync(m => m.EthereumAddress != null && m.EthereumAddress.ToLower() == dto.Address.ToLower());
+
+            if (member == null)
+            {
+                Console.WriteLine("[AuthController] Verify failed: member not found for address");
+                return Unauthorized("Member not found for this address");
+            }
+
             await _authService.ConsumeNonce(dto.Address);
-            var accessToken = _jwtService.GenerateToken(dto.Address);
-            var refreshToken = _jwtService.GenerateRefreshToken(dto.Address);
+            var accessToken = _jwtService.GenerateAccessToken(member.Id.ToString(), member.Role?.Name ?? "User");
+            var refreshToken = _jwtService.GenerateRefreshToken(member.Id.ToString());
 
             SetTokenCookies(accessToken, refreshToken);
 

@@ -73,6 +73,7 @@ namespace backend.Data
                     .WithMany(e => e.Members)
                     .HasForeignKey(e => e.MemberRoleId)
                     .IsRequired();
+                entity.HasIndex(u=> u.GoogleSub).IsUnique();
 
                 entity.HasData(new Member
                 {

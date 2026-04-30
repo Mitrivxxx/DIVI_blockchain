@@ -90,14 +90,17 @@ public static class ServiceCollectionExtensions
         })
         .AddJwtBearer(options =>
         {
-            var jwtKey = configuration["Jwt:Key"]
-                ?? throw new InvalidOperationException("Missing Jwt:Key");
+            var jwtKey = Environment.GetEnvironmentVariable("JWT_KEY")
+                ?? configuration["Jwt:Key"]
+                ?? throw new InvalidOperationException("Missing JWT_KEY environment variable or Jwt:Key config");
 
-            var jwtIssuer = configuration["Jwt:Issuer"]
-                ?? throw new InvalidOperationException("Missing Jwt:Issuer");
+            var jwtIssuer = Environment.GetEnvironmentVariable("JWT_ISSUER")
+                ?? configuration["Jwt:Issuer"]
+                ?? throw new InvalidOperationException("Missing JWT_ISSUER environment variable or Jwt:Issuer config");
 
-            var jwtAudience = configuration["Jwt:Audience"]
-                ?? throw new InvalidOperationException("Missing Jwt:Audience");
+            var jwtAudience = Environment.GetEnvironmentVariable("JWT_AUDIENCE")
+                ?? configuration["Jwt:Audience"]
+                ?? throw new InvalidOperationException("Missing JWT_AUDIENCE environment variable or Jwt:Audience config");
 
             options.TokenValidationParameters = new TokenValidationParameters
             {
@@ -115,7 +118,17 @@ public static class ServiceCollectionExtensions
             {
                 OnMessageReceived = context =>
                 {
-                    context.Token = context.Request.Cookies["access_token"];
+                    // Try Authorization header first
+                    var authHeader = context.Request.Headers["Authorization"].FirstOrDefault();
+                    if (!string.IsNullOrEmpty(authHeader) && authHeader.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+                    {
+                        context.Token = authHeader.Substring("Bearer ".Length).Trim();
+                    }
+                    // Fall back to cookies
+                    else if (context.Request.Cookies.TryGetValue("access_token", out var token))
+                    {
+                        context.Token = token;
+                    }
                     return Task.CompletedTask;
                 },
                 OnTokenValidated = async context =>
