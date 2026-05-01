@@ -1,0 +1,94 @@
+@use './variables' as *;
+
+.copy-field {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: $bg-subtle;
+  border: 1px solid $border;
+  border-radius: $radius-md;
+  padding: 8px 12px;
+  transition: all $transition;
+
+  &:hover {
+    border-color: $purple-mid;
+    background: #fff;
+  }
+
+  &-value {
+    flex: 1;
+    font-family: $font-mono;
+    font-size: 12px;
+    color: $text-main;
+    word-break: break-all;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    padding: 2px 0;
+  }
+
+  &-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: $radius-sm;
+    background: transparent;
+    border: none;
+    color: $text-muted;
+    cursor: pointer;
+    transition: all $transition;
+    flex-shrink: 0;
+
+    &:hover {
+      background: $purple-light;
+      color: $purple;
+    }
+
+    &.is-copied {
+      background: $green-light;
+      color: $green;
+    }
+
+    svg {
+      width: 16px;
+      height: 16px;
+    }
+  }
+
+  &-tooltip {
+    position: absolute;
+    bottom: 100%;
+    right: 0;
+    margin-bottom: 8px;
+    background: $purple-dark;
+    color: #fff;
+    font-family: $font-sans;
+    font-size: 10px;
+    font-weight: 500;
+    padding: 4px 10px;
+    border-radius: $radius-sm;
+    pointer-events: none;
+    opacity: 0;
+    transform: translateY(4px);
+    transition: all $transition;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+
+    &.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    &::after {
+      content: '';
+      position: absolute;
+      top: 100%;
+      right: 12px;
+      border-left: 5px solid transparent;
+      border-right: 5px solid transparent;
+      border-top: 5px solid $purple-dark;
+    }
+  }
+}

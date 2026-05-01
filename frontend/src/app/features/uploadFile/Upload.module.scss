@@ -1,46 +1,44 @@
-/* Styles for Upload component (modular) */
-.container {
-  max-width: 500px;
-  margin: 2rem auto;
-  padding: 2rem;
-  background: #fff;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+@use '../../style/variables' as *;
+
+.wrap {
+  min-height: 100vh;
+  padding: 2rem 1.5rem;
+
+  max-width: 600px;
+  margin: 0 auto;
 }
-.title {
-  font-size: 1.5rem;
-  margin-bottom: 1rem;
-}
-.formGroup {
-  margin-bottom: 1rem;
-}
-.label {
-  display: block;
+.top-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: $purple-light;
+  color: $purple-dark;
+  font-size: 11px;
   font-weight: 500;
-  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+  padding: 5px 12px;
+  border-radius: 20px;
+  margin-bottom: 1.25rem;
+
+  .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: $purple;
+  }
 }
-.input {
-  width: 100%;
-  padding: 0.5rem;
-  border: 1px solid #ccc;
-  border-radius: 4px;
+
+.divider {
+  height: 1px;
+  background: $border;
+  margin: 1.5rem 0;
 }
-.button {
-  padding: 0.6rem 1.2rem;
-  background: #007bff;
-  color: #fff;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 1rem;
-}
-.button:hover {
-  background: #0056b3;
-}
-.status {
-  margin-top: 1rem;
-  color: #333;
-}
-.resultTitle {
-  margin-top: 1.5rem;
+
+.result-title {
+  font-size: 11px;
+  font-weight: 500;
+  color: $text-muted;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 1rem;
 }

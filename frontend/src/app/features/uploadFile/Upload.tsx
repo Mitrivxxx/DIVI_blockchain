@@ -5,11 +5,10 @@ import { useOwner } from './hooks/useOwner';
 import { useStatus } from './hooks/useStatus';
 import { useHashResult } from './hooks/useHashResult';
 import styles from './Upload.module.scss';
-import { FileInput } from './components/FileInput';
-import { TextInput } from './components/TextInput';
-import { Status } from './components/Status';
-import { HashResult } from './components/HashResult';
+
 import { uploadDocument } from './api/api';
+import FilePicker from '../../components/FilePicker';
+import CopyField from '../../components/ui/CopyField';
 
 const documentTypeOptions = [
   { value: 'Education', label: 'Education' },
@@ -21,95 +20,149 @@ const documentTypeOptions = [
 
 const ethereumAddressRegex = /^0x[a-fA-F0-9]{40}$/;
 
-
 const Upload = () => {
   const { file, setFile } = useFile();
   const { documentType, setDocumentType } = useDocumentType();
   const { owner, setOwner } = useOwner();
-  const { status, setStatus } = useStatus();
+  const { status, setStatus, type, setType } = useStatus();
   const { hashResult, setHashResult } = useHashResult();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
     if (!file) {
-      setStatus('Wybierz plik przed wysłaniem');
-      return;
+      setType('error');
+      return setStatus('Wybierz plik');
     }
     if (!documentType) {
-      setStatus('Podaj typ dokumentu');
-      return;
+      setType('error');
+      return setStatus('Podaj typ dokumentu');
     }
     if (!owner) {
-      setStatus('Podaj właściciela dokumentu');
-      return;
+      setType('error');
+      return setStatus('Podaj właściciela');
     }
+
     if (!ethereumAddressRegex.test(owner.trim())) {
-      setStatus('Podaj poprawny adres Ethereum właściciela (format 0x...).');
-      return;
+      setType('error');
+      return setStatus('Niepoprawny adres ETH');
     }
 
     try {
-      setStatus('Wysyłanie pliku na backend (Pinata + blockchain)...');
-      // Wysyłamy plik na backend, backend obsługuje Pinata i blockchain
+      setType('info');
+      setStatus('Wysyłanie...');
+
       const { hash, cid, message } = await uploadDocument(file, documentType, owner);
+
       setHashResult({ hash, cid });
 
       if (!cid) {
-        setStatus(message || 'Taki dokument już istnieje w blockchain, nie możesz go wrzucić jeszcze raz.');
-        return;
+        setType('error');
+        return setStatus(message || 'Dokument już istnieje');
       }
 
-      setStatus(message || 'Dokument został zapisany w Pinata i blockchain.');
+      setType('success');
+      setStatus(message || 'Zapisano poprawnie');
     } catch (err: any) {
       console.error(err);
-      setStatus(err.message || 'Błąd podczas wysyłania dokumentu');
+      setType('error');
+      setStatus(err.message || 'Błąd krytyczny');
     }
   };
 
   return (
-    <div className={styles.container}>
-      <h1 className={styles.title}>Dodaj dokument z blockchain</h1>
+    <div className={styles.wrap}>
+      
+      <div className={styles['top-badge']}>
+        <div className={styles.dot}></div>
+        Blockchain Upload
+      </div>
+
+      <h1>Dodaj dokument</h1>
+
       <form onSubmit={handleSubmit}>
-        <FileInput
-          value={file}
-          onChange={setFile}
-          label="Wybierz plik PDF:"
-          className={styles.formGroup}
-          labelClassName={styles.label}
-          inputClassName={styles.input}
+        
+        <FilePicker 
+          file={file} 
+          setFile={setFile} 
+          label="Plik dokumentu" 
+          accept=".pdf"
         />
-        <TextInput
-          value={owner}
-          onChange={setOwner}
-          label="Adres właściciela dokumentu (Ethereum):"
-          required
-          className={styles.formGroup}
-          labelClassName={styles.label}
-          inputClassName={styles.input}
-        />
-        <div className={styles.formGroup}>
-          <label className={styles.label} htmlFor="documentType">Typ dokumentu:</label>
-          <select
-            id="documentType"
-            className={styles.input}
-            value={documentType}
-            onChange={(e) => setDocumentType(e.target.value)}
-            required
-          >
-            <option value="" disabled>
-              Wybierz typ dokumentu
-            </option>
-            {documentTypeOptions.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
+
+        <div className="field">
+          <label>Adres ETH</label>
+          <input
+            type="text"
+            value={owner}
+            onChange={(e) => setOwner(e.target.value)}
+            placeholder="0x..."
+          />
         </div>
-        <button className={styles.button} type="submit">Wyślij dokument</button>
+
+        <div className="field">
+          <label>Typ dokumentu</label>
+
+          <div className="select-wrap">
+            <select
+              value={documentType}
+              onChange={(e) => setDocumentType(e.target.value)}
+            >
+              <option value="">Wybierz</option>
+              {documentTypeOptions.map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        <button className="btn" type="submit">
+          Wyślij dokument
+        </button>
       </form>
-      <Status status={status} className={styles.status} />
-      <HashResult hashResult={hashResult} titleClassName={styles.resultTitle} />
+
+      {status && (
+        <div className={`validation-box ${type === 'error' ? 'is-error' : type === 'success' ? 'is-success' : ''}`}>
+          <div className="validation-box-icon">
+            {type === 'error' ? (
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="12"></line>
+                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+              </svg>
+            ) : type === 'success' ? (
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+            ) : (
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="16" x2="12" y2="12"></line>
+                <line x1="12" y1="8" x2="12.01" y2="8"></line>
+              </svg>
+            )}
+          </div>
+          <div className="validation-box-content">
+            <span className="validation-box-title">
+              {type === 'error' ? 'Wystąpił błąd' : type === 'success' ? 'Sukces' : 'Informacja'}
+            </span>
+            <span className="validation-box-message">{status}</span>
+          </div>
+        </div>
+      )}
+
+      {hashResult && (
+        <>
+          <div className={styles.divider}></div>
+
+          <div className={styles['result-title']}>Wynik</div>
+
+          <CopyField label="HASH" value={hashResult.hash} />
+          <CopyField label="CID" value={hashResult.cid} />
+        </>
+      )}
+
     </div>
   );
 };
