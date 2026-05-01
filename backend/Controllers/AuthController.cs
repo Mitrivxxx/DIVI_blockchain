@@ -8,6 +8,8 @@ using backend.Utils;
 using Microsoft.EntityFrameworkCore;
 using System.IdentityModel.Tokens.Jwt;
 using Microsoft.AspNetCore.Authorization;
+using backend.Services.GoogleUser;
+using backend.Infrastructure.Google;
 
 namespace backend.Controllers
 {
@@ -18,12 +20,16 @@ namespace backend.Controllers
         private readonly IAuthService _authService;
         private readonly IJwtService _jwtService;
         private readonly AppDbContext _context;
+        private readonly GoogleAuthService _googleAuth;
+        private readonly UserService _userService;
 
-        public AuthController(IAuthService authService, IJwtService jwtService, AppDbContext context)
+        public AuthController(IAuthService authService, IJwtService jwtService, AppDbContext context, GoogleAuthService googleAuth, UserService userService)
         {
             _authService = authService;
             _jwtService = jwtService;
             _context = context;
+            _googleAuth = googleAuth;
+            _userService = userService;
         }
 
         [HttpPost("nonce")]
@@ -131,7 +137,7 @@ namespace backend.Controllers
             if (string.IsNullOrEmpty(refreshToken)) return Unauthorized("No refresh token");
 
             var userIdStr = _jwtService.ValidateRefreshToken(refreshToken);
-            if (userIdStr == null || !int.TryParse(userIdStr, out var userId)) 
+            if (userIdStr == null || !int.TryParse(userIdStr, out var userId))
                 return Unauthorized("Invalid refresh token");
 
             var member = await _context.Members
@@ -225,11 +231,35 @@ namespace backend.Controllers
             Console.WriteLine("[AuthController] Verify succeeded, token issued");
             return Ok(new { token = accessToken });
         }
+
+        [HttpPost("google")]
+        public async Task<IActionResult> GoogleLogin([FromBody] GoogleAuthRequest request)
+        {
+            var payload = await _googleAuth.VerifyAsync(request.IdToken);
+            var user = await _userService.GetOrCreateGoogleUser(payload);
+
+            var accessToken = _jwtService.GenerateAccessToken(user.Id.ToString(), user.Role?.Name ?? "User");
+            var refreshToken = _jwtService.GenerateRefreshToken(user.Id.ToString());
+
+            SetTokenCookies(accessToken, refreshToken);
+
+            return Ok(new
+            {
+                user.Id,
+                user.Email,
+                user.FirstName,
+                user.LastName,
+                user.MemberRoleId,
+                user.CreatedAt
+            });
+        }
+
+
     }
 
     public class VerifyDto
     {
-        public string Address { get; set; }= string.Empty;
+        public string Address { get; set; } = string.Empty;
         public string Nonce { get; set; } = string.Empty;
         public string Signature { get; set; } = string.Empty;
     }

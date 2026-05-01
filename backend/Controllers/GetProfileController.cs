@@ -60,14 +60,15 @@ namespace backend.Controllers
                 return Unauthorized("Brak identyfikatora użytkownika w tokenie.");
             }
 
-            var normalizedName = dto.Name?.Trim();
-            if (string.IsNullOrWhiteSpace(normalizedName))
+            var normalizedFirstName = dto.FirstName?.Trim();
+            var normalizedLastName = dto.LastName?.Trim();
+            if (string.IsNullOrWhiteSpace(normalizedFirstName) || string.IsNullOrWhiteSpace(normalizedLastName))
             {
                 _logger.LogInformation("Profile NAME update rejected due to empty payload for memberId {MemberId}", memberId);
-                return BadRequest("Name jest wymagane.");
+                return BadRequest("FirstName i LastName są wymagane.");
             }
 
-            var updated = await _profileService.UpdateNameByIdAsync(memberId, normalizedName);
+            var updated = await _profileService.UpdateNameByIdAsync(memberId, normalizedFirstName, normalizedLastName);
             if (!updated)
             {
                 _logger.LogInformation("Profile NAME update not found for memberId {MemberId}", memberId);

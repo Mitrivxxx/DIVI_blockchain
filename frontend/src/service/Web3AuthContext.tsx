@@ -13,9 +13,9 @@ interface Web3AuthContextProps {
   signer: ethers.JsonRpcSigner | null;
   address: string | null;
   jwt: string | null;
-  connect: () => Promise<void>;
+  connect: () => Promise<{ provider: ethers.BrowserProvider; signer: ethers.JsonRpcSigner; address: string }>;
   setJwt: (token: string) => void;
-  signAndVerifyNonce: () => Promise<void>;
+  signAndVerifyNonce: (signer?: ethers.JsonRpcSigner, address?: string) => Promise<void>;
   logout: () => void;
 }
 
@@ -41,11 +41,17 @@ export const Web3AuthProvider = ({ children }: { children: ReactNode }) => {
     setProvider(provider);
     setSigner(signer);
     setAddress(address);
+
+    return { provider, signer, address };
   }, []);
 
-  const signAndVerifyNonce = useCallback(async () => {
-    if (!signer || !address) throw new Error("Brak połączenia z portfelem");
-    const token = await web3SignAndVerifyNonce(signer, address);
+  const signAndVerifyNonce = useCallback(async (providedSigner?: ethers.JsonRpcSigner, providedAddress?: string) => {
+    const activeSigner = providedSigner ?? signer;
+    const activeAddress = providedAddress ?? address;
+
+    if (!activeSigner || !activeAddress) throw new Error("Brak połączenia z portfelem");
+
+    const token = await web3SignAndVerifyNonce(activeSigner, activeAddress);
     setJwt(token);
   }, [signer, address, setJwt]);
 

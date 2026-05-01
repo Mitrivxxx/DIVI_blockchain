@@ -1,5 +1,5 @@
-import { useState, type FormEvent } from "react";
-import { Link } from "react-router-dom";
+import { useState, useEffect, type FormEvent } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { useWeb3Auth } from "../../service/web3/useWeb3Auth";
 import { API_URL } from "../../types/api";
 import logo from "../../assets/icons/divi_icon_demo.png";
@@ -8,6 +8,7 @@ import googleIcon from "../../assets/icons/google.svg";
 import "./RegisterPage.scss";
 
 const RegisterPage = () => {
+  const navigate = useNavigate();
   const { address, connect } = useWeb3Auth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -16,7 +17,7 @@ const RegisterPage = () => {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const shortenedAddress = address ? `${address.slice(0, 6)}...${address.slice(-4)}` : "";
+    const shortenedAddress = address ? `${address.slice(0, 6)}...${address.slice(-4)}` : "";
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -53,9 +54,27 @@ const RegisterPage = () => {
         throw new Error(message);
       }
 
-      setEmail("");
-      setPassword("");
-      setSuccessMessage("Konto zostało utworzone.");
+      // Konto utworzone - zaloguj się automatycznie
+      localStorage.setItem("email-auth-session", "1");
+
+      const loginResponse = await fetch(`${API_URL}/Auth/login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({
+          email: email.trim(),
+          password,
+        }),
+      });
+
+      if (!loginResponse.ok) {
+        throw new Error("Logowanie nie powiodło się.");
+      }
+
+      // Zalogowany - przejdź do dashboarda
+      navigate("/app/dashboard", { replace: true });
     } catch (registerError) {
       setError(registerError instanceof Error ? registerError.message : "Nie udało się utworzyć konta.");
     } finally {
@@ -78,9 +97,76 @@ const RegisterPage = () => {
     }
   };
 
-  const handleGoogleRegister = () => {
+  const handleGoogleResponse = async (response: any) => {
     setError(null);
-    setSuccessMessage("Rejestracja przez Google nie jest jeszcze skonfigurowana.");
+    setIsSubmitting(true);
+
+    try {
+      const res = await fetch(`${API_URL}/Auth/google`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({
+          idToken: response.credential,
+        }),
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.message || "Rejestracja przez Google nie powiodła się.");
+      }
+
+      // Success - user is logged in (cookies set by backend)
+      localStorage.setItem("email-auth-session", "1");
+      navigate("/app/dashboard", { replace: true });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Błąd podczas logowania przez Google.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  useEffect(() => {
+    const initGoogle = () => {
+      if (!(window as any).google) return;
+
+      (window as any).google.accounts.id.initialize({
+        client_id: "827137465970-kc668qkj4j9ck05ufeqsgi67eb67ak08.apps.googleusercontent.com",
+        callback: handleGoogleResponse,
+      });
+
+      const parent = document.getElementById("google-button-hidden");
+      if (parent) {
+        (window as any).google.accounts.id.renderButton(parent, {
+          theme: "outline",
+          size: "large",
+          width: parent.offsetWidth || 200,
+        });
+      }
+    };
+
+    // Try immediately
+    initGoogle();
+
+    // Or wait for script to load
+    const interval = setInterval(() => {
+      if ((window as any).google) {
+        initGoogle();
+        clearInterval(interval);
+      }
+    }, 500);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleGoogleRegister = () => {
+    if (!(window as any).google) {
+      setError("Usługa Google nie została jeszcze załadowana.");
+      return;
+    }
+    (window as any).google.accounts.id.prompt();
   };
 
   return (
@@ -150,10 +236,13 @@ const RegisterPage = () => {
               {isConnecting ? "Łączenie..." : address ? "MetaMask połączony" : "MetaMask"}
             </button>
 
-            <button className="btn btn--outline" type="button" onClick={handleGoogleRegister} disabled={isSubmitting}>
-              <img src={googleIcon} className="btn__icon" alt="" aria-hidden="true" />
-              Zarejestruj z Google
-            </button>
+            <div className="google-btn-wrapper">
+              <button className="btn btn--outline" type="button" disabled={isSubmitting}>
+                <img src={googleIcon} className="btn__icon" alt="" aria-hidden="true" />
+                Zarejestruj z Google
+              </button>
+              <div id="google-button-hidden" className="google-button-overlay"></div>
+            </div>
           </div>
 
           <p className="card__footer">

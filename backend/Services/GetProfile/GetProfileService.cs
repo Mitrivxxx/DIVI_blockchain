@@ -30,7 +30,8 @@ namespace backend.Services.GetProfile
 
             return new MemberProfileDto
             {
-                Name = member.Name,
+                FirstName = member.FirstName,
+                LastName = member.LastName,
                 EthereumAddress = member.EthereumAddress,
                 Role = member.Role.Name,
                 Email = member.Email,
@@ -54,7 +55,8 @@ namespace backend.Services.GetProfile
 
             return new MemberProfileDto
             {
-                Name = member.Name,
+                FirstName = member.FirstName,
+                LastName = member.LastName,
                 EthereumAddress = member.EthereumAddress,
                 Role = member.Role.Name,
                 Email = member.Email,
@@ -64,7 +66,7 @@ namespace backend.Services.GetProfile
             };
         }
 
-        public async Task<bool> UpdateNameAsync(string ethereumAddress, string name)
+        public async Task<bool> UpdateNameAsync(string ethereumAddress, string firstName, string lastName)
         {
             _logger.LogDebug("UpdateNameAsync called for address {EthereumAddress}", ethereumAddress);
             var member = await GetMemberByAddressAsync(ethereumAddress, asNoTracking: false);
@@ -74,7 +76,8 @@ namespace backend.Services.GetProfile
                 return false;
             }
 
-            member.Name = name.Trim();
+            member.FirstName = firstName.Trim();
+            member.LastName = lastName.Trim();
             await _context.SaveChangesAsync();
             _logger.LogDebug("UpdateNameAsync succeeded for address {EthereumAddress}", ethereumAddress);
             return true;
@@ -122,7 +125,8 @@ namespace backend.Services.GetProfile
                 return false;
             }
 
-            member.Name = null;
+            member.FirstName = null;
+            member.LastName = null;
             await _context.SaveChangesAsync();
             _logger.LogDebug("DeleteNameAsync succeeded for address {EthereumAddress}", ethereumAddress);
             return true;
@@ -160,7 +164,7 @@ namespace backend.Services.GetProfile
             return true;
         }
 
-        public async Task<bool> UpdateNameByIdAsync(int memberId, string name)
+        public async Task<bool> UpdateNameByIdAsync(int memberId, string firstName, string lastName)
         {
             _logger.LogDebug("UpdateNameByIdAsync called for memberId {MemberId}", memberId);
             var member = await GetMemberByIdAsync(memberId, asNoTracking: false);
@@ -170,7 +174,8 @@ namespace backend.Services.GetProfile
                 return false;
             }
 
-            member.Name = name.Trim();
+            member.FirstName = firstName.Trim();
+            member.LastName = lastName.Trim();
             await _context.SaveChangesAsync();
             _logger.LogDebug("UpdateNameByIdAsync succeeded for memberId {MemberId}", memberId);
             return true;
@@ -218,7 +223,8 @@ namespace backend.Services.GetProfile
                 return false;
             }
 
-            member.Name = null;
+            member.FirstName = null;
+            member.LastName = null;
             await _context.SaveChangesAsync();
             _logger.LogDebug("DeleteNameByIdAsync succeeded for memberId {MemberId}", memberId);
             return true;

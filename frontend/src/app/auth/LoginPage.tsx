@@ -1,10 +1,12 @@
-import { FormEvent, useState } from "react";
+import { useState } from "react";
+import type { FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import logo from "../../assets/icons/divi_icon_demo.png";
 import metamaskIcon from "../../assets/icons/Metamask.svg";
 import googleIcon from "../../assets/icons/google.svg";
 import { API_URL } from "@/types/api";
 import "./LoginPage.scss";
+import { useWeb3Auth } from "../../service/web3/useWeb3Auth";
 
 const EMAIL_LOGIN_STORAGE_KEY = "email-auth-session";
 
@@ -15,6 +17,10 @@ const LoginPage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSocialSubmitting, setIsSocialSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [isConnecting, setIsConnecting] = useState(false);
+  const { address, connect, signAndVerifyNonce } = useWeb3Auth();
+
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -72,12 +78,18 @@ const LoginPage = () => {
 
   const handleMetaMaskLogin = async () => {
     setError(null);
-    setIsSocialSubmitting(true);
+    setSuccessMessage(null);
+    setIsConnecting(true);
 
     try {
-      navigate("/auth");
+      const { signer, address: connectedAddress } = await connect();
+      await signAndVerifyNonce(signer, connectedAddress);
+      localStorage.setItem(EMAIL_LOGIN_STORAGE_KEY, "1");
+      navigate("/app/dashboard", { replace: true });
+    } catch (connectError) {
+      setError(connectError instanceof Error ? connectError.message : "Nie udało się połączyć z MetaMask.");
     } finally {
-      setIsSocialSubmitting(false);
+      setIsConnecting(false);
     }
   };
 
@@ -95,9 +107,14 @@ const LoginPage = () => {
           <p className="card__subtitle">Zaloguj się i kontynuuj korzystanie z DIVI</p>
 
           <div className="auth-buttons">
-            <button className="btn btn--outline" type="button" onClick={() => void handleMetaMaskLogin()} disabled={isSubmitting || isSocialSubmitting}>
+            <button
+              className={`btn btn--outline ${address ? "btn--connected" : ""}`}
+              type="button"
+              onClick={() => void handleMetaMaskLogin()}
+              disabled={isConnecting || isSubmitting}
+            >
               <img src={metamaskIcon} className="btn__icon" alt="" aria-hidden="true" />
-              MetaMask
+              {isConnecting ? "Łączenie..." : address ? "MetaMask połączony" : "MetaMask"}
             </button>
 
             <button className="btn btn--outline" type="button" onClick={() => void handleGoogleLogin()} disabled={isSubmitting || isSocialSubmitting}>

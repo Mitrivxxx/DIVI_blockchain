@@ -36,6 +36,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IJwtService, JwtService>();
         services.AddScoped<IGetProfileService, GetProfileService>();
+        services.AddScoped<backend.Services.GoogleUser.UserService>();
         services.AddHostedService<DatabaseInitializerHostedService>();
         services.AddHostedService<NonceCleanupService>();
 
@@ -144,6 +145,7 @@ public static class ServiceCollectionExtensions
         });
 
         services.AddHttpClient<PinataClient>();
+        services.AddScoped<backend.Infrastructure.Google.GoogleAuthService>();
 
         return services;
     }

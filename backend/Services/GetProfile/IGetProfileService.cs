@@ -6,8 +6,8 @@ namespace backend.Services.GetProfile
     {
         Task<MemberProfileDto?> GetProfileByAddressAsync(string ethereumAddress);
         Task<MemberProfileDto?> GetProfileByIdAsync(int memberId);
-        Task<bool> UpdateNameAsync(string ethereumAddress, string name);
-        Task<bool> UpdateNameByIdAsync(int memberId, string name);
+        Task<bool> UpdateNameAsync(string ethereumAddress, string firstName, string lastName);
+        Task<bool> UpdateNameByIdAsync(int memberId, string firstName, string lastName);
         Task<bool> UpdateEmailAsync(string ethereumAddress, string email);
         Task<bool> UpdateEmailByIdAsync(int memberId, string email);
         Task<bool> UpdateBioAsync(string ethereumAddress, string bio);

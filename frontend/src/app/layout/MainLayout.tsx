@@ -36,13 +36,13 @@ const MainLayout: React.FC = () => {
   const handleLogout = () => {
     localStorage.removeItem(EMAIL_LOGIN_STORAGE_KEY);
     logout();
-    navigate("/auth");
+    navigate("/");
   };
 
   useEffect(() => {
     const isEmailSessionActive = localStorage.getItem(EMAIL_LOGIN_STORAGE_KEY) === "1";
     if (!jwt && !isEmailSessionActive) {
-      navigate("/auth", { replace: true });
+      navigate("/", { replace: true });
     }
   }, [jwt, navigate]);
 

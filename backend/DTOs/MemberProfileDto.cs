@@ -2,7 +2,8 @@ namespace backend.DTOs
 {
     public class MemberProfileDto
     {
-        public string? Name { get; set; }
+        public string? FirstName { get; set; }
+        public string? LastName { get; set; }
         public string EthereumAddress { get; set; } = string.Empty;
         public string Role { get; set; } = string.Empty;
         public string? Email { get; set; }
