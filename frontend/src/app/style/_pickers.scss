@@ -1,4 +1,6 @@
+@use "sass:color";
 @use './variables' as *;
+
 
 // ─────────────────────────────────────────
 // Label nad polem
@@ -104,7 +106,8 @@
 
   .file-picker:hover & {
     border-color: $purple-mid;
-    background: mix($purple-light, $bg-subtle, 30%);
+    background: color.mix($purple-light, $bg-subtle, 30%);
+
 
     .file-picker__dropzone-btn {
       background: $purple;
@@ -115,7 +118,8 @@
   .file-picker.is-dragging & {
     border-color: $purple;
     border-style: solid;
-    background: mix($purple-light, #fff, 50%);
+    background: color.mix($purple-light, #fff, 50%);
+
   }
 }
 

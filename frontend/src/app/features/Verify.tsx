@@ -1,1 +1,2 @@
-export { default } from '@/shared/verify/Verify';
+export { default } from './Verify/Verify';
+

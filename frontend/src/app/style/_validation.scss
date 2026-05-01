@@ -1,4 +1,6 @@
+@use "sass:color";
 @use './variables' as *;
+
 
 // ─────────────────────────────────────────
 // Validation Box Component
@@ -67,7 +69,8 @@
   // Stan: SUCCESS
   &.is-success {
     background: $green-light;
-    border: 1px solid mix($green, #fff, 30%);
+    border: 1px solid color.mix($green, #fff, 30%);
+
 
     .validation-box-icon {
       box-shadow: 0 2px 8px rgba($green, 0.15);
@@ -106,7 +109,8 @@
 
   &.is-success {
     input, select {
-      border-color: mix($green, #fff, 30%);
+      border-color: color.mix($green, #fff, 30%);
+
       background: $green-light;
     }
   }
