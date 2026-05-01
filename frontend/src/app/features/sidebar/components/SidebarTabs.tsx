@@ -13,14 +13,18 @@ import type { Tab } from '../tabs';
 
 // Konfiguracja widocznych tabów dla ról
 const tabsWithoutIssuerRole = tabs.filter(tab => tab.key !== 'issuerRole').map(tab => tab.key);
+const memberTabs = tabs.map(tab => tab.key); // Member widzi wszystko (w tym issuerRole)
 const adminTabs = tabs
   .filter(tab => tab.key !== 'issuerRole' && tab.key !== 'myDocuments')
   .map(tab => tab.key);
 
 const visibleTabsByRole: Record<string, TabKey[]> = {
-  issuer: tabsWithoutIssuerRole,
-  admin: adminTabs,
-  // Niezalogowany (null/undefined): traktujemy jak issuer
+  'issuer': tabsWithoutIssuerRole,
+  '2': tabsWithoutIssuerRole, // 2 to zazwyczaj Issuer w bazie
+  'admin': adminTabs,
+  '1': adminTabs, // 1 to zazwyczaj Admin w bazie
+  'member': memberTabs,
+  '3': memberTabs, // 3 to zazwyczaj Member w bazie
 };
 
 const publicTabs: TabKey[] = ['verify'];
@@ -32,8 +36,12 @@ function getVisibleTabs(userRole: string | null | undefined, tabs: Tab[]): Tab[]
 
   const normalizedRole = userRole?.trim().toLowerCase();
 
-  if (!normalizedRole || normalizedRole === 'issuer') {
-    const allowed = ensurePublicTabs(visibleTabsByRole['issuer'] ?? tabs.map(tab => tab.key));
+  // Jeśli brak roli (niezalogowany) -> pokazujemy taby dla 'member' (możliwość wnioskowania) 
+  // LUB ograniczamy tylko do publicznych, zależnie od polityki.
+  // Załóżmy, że role 3 (member) powinna widzieć issuerRole.
+  
+  if (!normalizedRole) {
+    const allowed = ensurePublicTabs(visibleTabsByRole['member'] || memberTabs);
     return tabs.filter(tab => allowed.includes(tab.key));
   }
 
@@ -43,11 +51,12 @@ function getVisibleTabs(userRole: string | null | undefined, tabs: Tab[]): Tab[]
     return tabs.filter(tab => allowed.includes(tab.key));
   }
 
+
+  // Fallback: pokaż wszystko co publiczne + resztę jeśli rola jest nieznana
   const allTabs = ensurePublicTabs(tabs.map(tab => tab.key));
   return tabs.filter(tab => allTabs.includes(tab.key));
-
-  // Jeśli chcesz dodać inne role, dodaj do visibleTabsByRole
 }
+
 
 
 const SidebarTabs: React.FC<SidebarTabsProps> = ({ activeTab, onTabSelect, userRole }) => {

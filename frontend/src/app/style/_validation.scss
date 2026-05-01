@@ -108,10 +108,17 @@
   }
 
   &.is-success {
-    input, select {
+    input, select, textarea {
       border-color: color.mix($green, #fff, 30%);
-
       background: $green-light;
     }
   }
+}
+
+.error-message {
+  font-family: $font-sans;
+  font-size: 11px;
+  color: $red;
+  margin-top: 4px;
+  animation: validation-slide-in 0.2s ease-out;
 }

@@ -28,7 +28,12 @@
 
 // ===== INPUTS =====
 input[type="text"],
+input[type="email"],
+input:not([type]),
+textarea,
 select {
+
+
   width: 100%;
   border: 1px solid $border;
   border-radius: 12px;
