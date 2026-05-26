@@ -1,0 +1,45 @@
+@use '../../style/variables' as *;
+
+.wrap {
+  min-height: 100vh;
+  padding: 2rem 1.5rem;
+
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.top-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: $purple-light;
+  color: $purple-dark;
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  padding: 5px 12px;
+  border-radius: 20px;
+  margin-bottom: 1.25rem;
+
+  .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: $purple;
+  }
+}
+
+.divider {
+  height: 1px;
+  background: $border;
+  margin: 1.5rem 0;
+}
+
+.result-title {
+  font-size: 11px;
+  font-weight: 500;
+  color: $text-muted;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 1rem;
+}

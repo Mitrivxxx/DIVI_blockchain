@@ -1,0 +1,223 @@
+@use "sass:color";
+@use './variables' as *;
+
+
+// ─────────────────────────────────────────
+// Label nad polem
+// ─────────────────────────────────────────
+
+.field-label {
+  display: block;
+  font-family: $font-sans;
+  font-size: 12px;
+  font-weight: 500;
+  color: $text-muted;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+// ─────────────────────────────────────────
+// Wrapper — ukrywa natywny <input type="file">
+// ─────────────────────────────────────────
+
+.file-picker {
+  position: relative;
+  cursor: pointer;
+
+  input[type="file"] {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+    z-index: 2;
+  }
+}
+
+// ─────────────────────────────────────────
+// Stan: PUSTY (brak pliku)
+// ─────────────────────────────────────────
+
+.file-picker__dropzone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  border: 1.5px dashed $border;
+  border-radius: $radius-md;
+  padding: 28px 20px;
+  background: $bg-subtle;
+
+  transition:
+    border-color $transition,
+    background $transition;
+
+  &-icon {
+    width: 40px;
+    height: 40px;
+    background: $purple-light;
+    border-radius: $radius-sm;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+
+    svg {
+      width: 20px;
+      height: 20px;
+      stroke: $purple;
+    }
+  }
+
+  &-title {
+    font-family: $font-sans;
+    font-size: 13px;
+    font-weight: 500;
+    color: $text-main;
+    text-align: center;
+  }
+
+  &-hint {
+    font-family: $font-sans;
+    font-size: 11px;
+    color: $text-muted;
+    text-align: center;
+  }
+
+  &-btn {
+    margin-top: 4px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 6px 14px;
+    background: $purple-light;
+    color: $purple;
+    font-family: $font-sans;
+    font-size: 12px;
+    font-weight: 500;
+    border-radius: $radius-pill;
+    pointer-events: none;
+    transition: background $transition, color $transition;
+  }
+
+  .file-picker:hover & {
+    border-color: $purple-mid;
+    background: color.mix($purple-light, $bg-subtle, 30%);
+
+
+    .file-picker__dropzone-btn {
+      background: $purple;
+      color: #fff;
+    }
+  }
+
+  .file-picker.is-dragging & {
+    border-color: $purple;
+    border-style: solid;
+    background: color.mix($purple-light, #fff, 50%);
+
+  }
+}
+
+// ─────────────────────────────────────────
+// Stan: WYBRANY plik
+// ─────────────────────────────────────────
+
+.file-picker__selected {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  border: 1px solid $border;
+  border-radius: $radius-md;
+  padding: 10px 14px;
+  background: $bg-subtle;
+
+  transition: border-color $transition;
+
+  &-icon {
+    width: 32px;
+    height: 32px;
+    background: $purple-light;
+    border-radius: $radius-sm;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+
+    svg {
+      width: 16px;
+      height: 16px;
+      stroke: $purple;
+    }
+  }
+
+  &-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    flex: 1;
+    min-width: 0;
+  }
+
+  &-name {
+    font-family: $font-mono;
+    font-size: 13px;
+    color: $text-main;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &-size {
+    font-family: $font-sans;
+    font-size: 11px;
+    color: $text-muted;
+  }
+
+  &-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 10px;
+    background: $green-light;
+    color: $green-dark;
+    font-family: $font-sans;
+    font-size: 11px;
+    font-weight: 500;
+    border-radius: $radius-pill;
+    flex-shrink: 0;
+
+    &::before {
+      content: '';
+      display: inline-block;
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: $green;
+    }
+  }
+
+  &-change {
+    font-family: $font-sans;
+    font-size: 11px;
+    font-weight: 500;
+    color: $text-link;
+    flex-shrink: 0;
+    cursor: pointer;
+    transition: color $transition;
+    pointer-events: none;
+
+    &:hover {
+      color: $purple-dark;
+    }
+  }
+
+  .file-picker:hover & {
+    border-color: $purple-mid;
+  }
+}

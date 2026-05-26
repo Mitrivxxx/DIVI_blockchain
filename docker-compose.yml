@@ -6,7 +6,7 @@ services:
     container_name: divi-db
     restart: unless-stopped
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-IssuerDb}
+      POSTGRES_DB: ${POSTGRES_DB:-DIVI}
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
     ports:
@@ -31,16 +31,16 @@ services:
 
       DB_HOST: db
       DB_PORT: 5432
-      DB_NAME: ${POSTGRES_DB:-IssuerDb}
+      DB_NAME: ${POSTGRES_DB:-DIVI}
       DB_USER: ${POSTGRES_USER:-postgres}
       DB_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
 
       Jwt__Key: ${JWT_KEY:-change_me_in_env}
       Jwt__Issuer: ${JWT_ISSUER:-DIVI}
 
-      Blockchain__RpcUrl: ${BLOCKCHAIN_RPC_URL:-https://sepolia.infura.io/v3/replace_me}
-      Blockchain__ContractAddress: ${BLOCKCHAIN_CONTRACT_ADDRESS:-0x0000000000000000000000000000000000000000}
-      SEPOLIA_PRIVATE_KEY: ${SEPOLIA_PRIVATE_KEY:-}
+      Blockchain__RpcUrl: ${Blockchain__RpcUrl:-https://sepolia.infura.io/v3/replace_me}
+      Blockchain__ContractAddress: ${Blockchain__ContractAddress:-0x0000000000000000000000000000000000000000}
+      Blockchain__PrivateKey: ${Blockchain__PrivateKey:-}
 
       PINATA_JWT: ${PINATA_JWT:-}
 

@@ -1,0 +1,124 @@
+@use "sass:color";
+@use './variables' as *;
+
+
+// ─────────────────────────────────────────
+// Validation Box Component
+// ─────────────────────────────────────────
+
+.validation-box {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-radius: $radius-md;
+  padding: 12px 16px;
+  margin-top: 1.5rem;
+  transition: all $transition;
+  animation: validation-slide-in 0.25s ease-out;
+
+  &-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: $radius-sm;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    background: #fff;
+
+    svg {
+      width: 20px;
+      height: 20px;
+    }
+  }
+
+  &-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+  }
+
+  &-title {
+    font-family: $font-sans;
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  &-message {
+    font-family: $font-sans;
+    font-size: 11px;
+    opacity: 0.85;
+  }
+
+  // Stan: ERROR
+  &.is-error {
+    background: $red-light;
+    border: 1px solid $red-mid;
+
+    .validation-box-icon {
+      box-shadow: 0 2px 8px rgba($red, 0.15);
+      svg { stroke: $red; }
+    }
+
+    .validation-box-title { color: $red-dark; }
+    .validation-box-message { color: $red; }
+  }
+
+  // Stan: SUCCESS
+  &.is-success {
+    background: $green-light;
+    border: 1px solid color.mix($green, #fff, 30%);
+
+
+    .validation-box-icon {
+      box-shadow: 0 2px 8px rgba($green, 0.15);
+      svg { stroke: $green; }
+    }
+
+    .validation-box-title { color: $green-dark; }
+    .validation-box-message { color: $green; }
+  }
+}
+
+@keyframes validation-slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// ─────────────────────────────────────────
+// Form Field States
+// ─────────────────────────────────────────
+
+.field {
+  &.is-error {
+    label { color: $red; }
+    input, select {
+      border-color: $red-mid;
+      background: $red-light;
+      &:focus { border-color: $red; }
+    }
+  }
+
+  &.is-success {
+    input, select, textarea {
+      border-color: color.mix($green, #fff, 30%);
+      background: $green-light;
+    }
+  }
+}
+
+.error-message {
+  font-family: $font-sans;
+  font-size: 11px;
+  color: $red;
+  margin-top: 4px;
+  animation: validation-slide-in 0.2s ease-out;
+}

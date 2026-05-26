@@ -22,7 +22,7 @@ async function main() {
  
 
   await contract.waitForDeployment();
-  console.log("Deployed at:", contract.target); // ethers 6 używa .target zamiast getAddress()
+  console.log("Deployed at:", contract.target); 
 }
 
 main().catch(console.error);

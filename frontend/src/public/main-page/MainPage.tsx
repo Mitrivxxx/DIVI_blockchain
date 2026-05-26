@@ -1,0 +1,64 @@
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useWeb3Auth } from "../../service/web3/useWeb3Auth";
+import Header from "../../shared/header/Header";
+import Verify from "@/shared/verify/Verify";
+import "./MainPage.scss";
+
+const PublicPage = () => {
+  const navigate = useNavigate();
+  const { address, jwt, connect, signAndVerifyNonce } = useWeb3Auth();
+  const [pendingAuthorization, setPendingAuthorization] = useState(false);
+
+  useEffect(() => {
+    if (jwt) {
+      navigate("/app/dashboard", { replace: true });
+    }
+  }, [jwt, navigate]);
+
+  const handleConnect = async () => {
+    await connect();
+    setPendingAuthorization(true);
+  };
+
+  useEffect(() => {
+    if (!pendingAuthorization || !address) {
+      return;
+    }
+
+    const authorize = async () => {
+      try {
+        await signAndVerifyNonce();
+        navigate("/app/dashboard");
+      } finally {
+        setPendingAuthorization(false);
+      }
+    };
+
+    authorize();
+  }, [pendingAuthorization, address, signAndVerifyNonce, navigate]);
+
+  return (
+    <div>
+      <Header
+        showBell={false}
+        authMode="connect"
+        connect={handleConnect}
+        authLinks={[
+          { to: "/auth", label: "Zarejestruj się" },
+          { to: "/login", label: "Zaloguj się" },
+        ]}
+      />
+
+      <div className="block">
+        <Verify />
+      </div>
+      <div className="block">
+        <h1>public</h1>
+      </div>
+      
+    </div>
+  );
+};
+
+export default PublicPage;

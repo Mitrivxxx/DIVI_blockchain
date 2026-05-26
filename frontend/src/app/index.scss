@@ -1,3 +1,5 @@
+@use "../styles/colors";
+
 html, body {
   margin: 0;
   padding: 0;
@@ -7,18 +9,44 @@ html, body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   width: 100vw;
-  height: 100vh;
-  min-height: 100vh;
   min-width: 100vw;
+  min-height: 100vh;
+  background-color: var(--app-bg);
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+body[data-mount="root"] #root {
+  display: block;
+}
+
+body[data-mount="app"] #app {
+  display: flex;
+}
+
+body[data-mount="root"] {
+  overflow-y: auto;
+}
+
+body[data-mount="app"] {
   overflow: hidden;
 }
 
-#root, #app {
+#root {
+  display: none;
+  width: 100vw;
+  min-height: 100vh;
+  min-width: 100vw;
+  background-color: var(--app-bg);
+}
+
+#app {
+  display: none;
   width: 100vw;
   height: 100vh;
   min-height: 100vh;
   min-width: 100vw;
   overflow: hidden;
-  display: flex;
   flex-direction: column;
+  background-color: var(--app-bg);
 }

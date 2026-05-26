@@ -1,7 +1,9 @@
 using System;
 using System.Linq;
 
-public static class Utils
+namespace backend.Utils;
+// warstwa abi to jest potrzebne !!
+public static class Bytes32Helper
 {
     public static byte[] StringToBytes32(string str, bool isHex = false)
     {
@@ -30,5 +32,16 @@ public static class Utils
             Array.Copy(bytes, bytes32, bytes.Length);
             return bytes32;
         }
+    }
+
+    public static string BytesToHexString(byte[]? bytes, bool includePrefix = true)
+    {
+        if (bytes == null || bytes.Length == 0)
+        {
+            return string.Empty;
+        }
+
+        var hex = BitConverter.ToString(bytes).Replace("-", string.Empty).ToLowerInvariant();
+        return includePrefix ? $"0x{hex}" : hex;
     }
 }

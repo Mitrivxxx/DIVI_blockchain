@@ -1,0 +1,90 @@
+@use "./AuthPage.scss";
+
+.auth-login--register .card {
+  max-width: 540px;
+}
+
+.auth-login--register .wallet-status {
+  margin-bottom: 16px;
+}
+
+.auth-login--register .register-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.auth-login--register .register-form__field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.auth-login--register .register-form__label {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #3f3f3f;
+}
+
+.auth-login--register .register-form__input {
+  width: 100%;
+  border: 1.5px solid #d8d8d8;
+  border-radius: 12px;
+  padding: 13px 14px;
+  font-family: "DM Sans", sans-serif;
+  font-size: 15px;
+  color: #111111;
+  background: #ffffff;
+  transition: border-color 0.16s ease, box-shadow 0.16s ease;
+}
+
+.auth-login--register .register-form__input:focus {
+  border-color: #111116;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(17, 17, 22, 0.09);
+}
+
+.auth-login--register .register-form .btn--primary {
+  margin-top: 6px;
+}
+
+.auth-login--register .auth-buttons--register {
+  margin-bottom: 0;
+}
+
+.auth-login--register .auth-success {
+  margin: 1rem 0 0;
+  text-align: center;
+  font-size: 13px;
+  color: #0a7a52;
+}
+
+.google-btn-wrapper {
+  position: relative;
+  flex: 1;
+  display: flex;
+}
+
+.google-button-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.01; /* Minimal visibility to ensure it's rendered and clickable */
+  overflow: hidden;
+  z-index: 10;
+  cursor: pointer;
+
+  iframe {
+    width: 100% !important;
+    height: 100% !important;
+    margin: 0 !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .auth-login--register .card {
+    max-width: 100%;
+  }
+}

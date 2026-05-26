@@ -29,8 +29,8 @@ run_as_build_user "cd '$PROJECT_DIR/backend' && dotnet publish -c Release -o '$B
 rm -rf /opt/divi/backend
 mkdir -p /opt/divi/backend
 cp -r "$BACKEND_PUBLISH_DIR/"* /opt/divi/backend/
-if [[ -f "$PROJECT_DIR/backend/.env" ]]; then
-  cp "$PROJECT_DIR/backend/.env" /opt/divi/backend/.env
+if [[ -f "$PROJECT_DIR/.env" ]]; then
+  cp "$PROJECT_DIR/.env" /opt/divi/backend/.env
 fi
 chown -R www-data:www-data /opt/divi/backend
 

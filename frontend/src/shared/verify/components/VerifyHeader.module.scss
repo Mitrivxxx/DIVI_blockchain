@@ -1,0 +1,78 @@
+.header {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: nowrap;
+}
+
+.iconWrap {
+  width: 60px;
+  height: 60px;
+  border-radius: 14px;
+  border: 1px solid #c8dc9d;
+  background: #f4f9ea;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #496f12;
+  flex: 0 0 auto;
+}
+
+.icon {
+  width: 28px;
+  height: 28px;
+  display: block;
+}
+
+.textWrap {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.title {
+  margin: 0;
+  font-size: clamp(1.36rem, 2.7vw, 2.4rem);
+  line-height: 1.04;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  color: #1a1a18;
+}
+
+.subtitle {
+  margin: 4px 0 0;
+  color: #888780;
+  font-size: clamp(0.64rem, 1.1vw, 0.84rem);
+  line-height: 1.2;
+  letter-spacing: 0.16em;
+}
+
+@media (max-width: 640px) {
+  .header {
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+
+  .iconWrap {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+  }
+
+  .icon {
+    width: 22px;
+    height: 22px;
+  }
+
+  .title {
+    font-size: clamp(1.24rem, 7.2vw, 1.84rem);
+  }
+
+  .subtitle {
+    margin-top: 2px;
+    font-size: 0.56rem;
+    letter-spacing: 0.12em;
+  }
+}

@@ -4,6 +4,7 @@ using backend.Models;
 using backend.Services.Issuers;
 using backend.Services.Blockchain;
 using Microsoft.EntityFrameworkCore;
+using Serilog;
 
 namespace backend.Services.Issuers
 {
@@ -43,6 +44,7 @@ namespace backend.Services.Issuers
                 .Where(x => x.Status == IssuerApplicationStatus.Pending)
                 .Select(x => new IssuerApplicationListDto
                 {
+                    Id = x.Id,
                     InstitutionName = x.InstitutionName,
                     EthereumAddress = x.EthereumAddress,
                     Status = x.Status
@@ -77,7 +79,7 @@ namespace backend.Services.Issuers
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"[IssuerApplicationService] Blockchain error: {ex.Message}");
+                    Log.Error("[IssuerApplicationService] Blockchain error: {Message}", ex.Message);
                     return false;
                 }
             }

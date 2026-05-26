@@ -22,7 +22,7 @@ namespace backend.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("backend.Models.Admin", b =>
+            modelBuilder.Entity("backend.Models.BlacklistedToken", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -30,14 +30,16 @@ namespace backend.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("EthereumAddress")
+                    b.Property<DateTime>("ExpiryDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Jti")
                         .IsRequired()
-                        .HasMaxLength(42)
-                        .HasColumnType("character varying(42)");
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
-                    b.ToTable("Admin");
+                    b.ToTable("BlacklistedTokens");
                 });
 
             modelBuilder.Entity("backend.Models.IssuerApplication", b =>
@@ -80,6 +82,100 @@ namespace backend.Migrations
                     b.ToTable("IssuerApplications");
                 });
 
+            modelBuilder.Entity("backend.Models.Member", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("AvatarUrl")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Bio")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<string>("Email")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("EthereumAddress")
+                        .HasMaxLength(42)
+                        .HasColumnType("character varying(42)");
+
+                    b.Property<string>("FirstName")
+                        .HasColumnType("text");
+
+                    b.Property<string>("GoogleSub")
+                        .HasColumnType("text");
+
+                    b.Property<string>("LastName")
+                        .HasColumnType("text");
+
+                    b.Property<int>("MemberRoleId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Password")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GoogleSub")
+                        .IsUnique();
+
+                    b.HasIndex("MemberRoleId");
+
+                    b.ToTable("Members");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 2,
+                            CreatedAt = new DateTime(2026, 3, 6, 0, 21, 35, 566, DateTimeKind.Utc).AddTicks(2560),
+                            EthereumAddress = "0xeb2a27c7c6E72BC5022a49c4e044E72ab70E9bDb",
+                            MemberRoleId = 1
+                        });
+                });
+
+            modelBuilder.Entity("backend.Models.MemberRole", b =>
+                {
+                    b.Property<int>("Id")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("MemberRoles");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Name = "admin"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Name = "issuer"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            Name = "user"
+                        });
+                });
+
             modelBuilder.Entity("backend.Models.Nonce", b =>
                 {
                     b.Property<int>("Id")
@@ -107,6 +203,22 @@ namespace backend.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Nonces");
+                });
+
+            modelBuilder.Entity("backend.Models.Member", b =>
+                {
+                    b.HasOne("backend.Models.MemberRole", "Role")
+                        .WithMany("Members")
+                        .HasForeignKey("MemberRoleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Role");
+                });
+
+            modelBuilder.Entity("backend.Models.MemberRole", b =>
+                {
+                    b.Navigation("Members");
                 });
 #pragma warning restore 612, 618
         }

@@ -1,0 +1,35 @@
+.mainlayout-root {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--app-bg);
+}
+
+/* BODY (NAV + MAIN) */
+.mainlayout-body {
+  flex: 1;
+  display: flex;
+  min-height: 650px;
+  margin: 6px clamp(4px, 1vw, 10px);
+  background: var(--app-amaranth-light);
+  border-radius: 30px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
+/* NAV */
+.mainlayout-nav {
+  width: 250px;
+  flex-shrink: 0;
+  background: transparent;
+  border-right: 1px solid rgba(0, 0, 0, 0.15);
+}
+
+/* MAIN */
+.mainlayout-main {
+  flex: 1;
+  min-width: 0;
+  padding: 32px clamp(24px, 8vw, 80px);
+  overflow-y: auto;
+}
