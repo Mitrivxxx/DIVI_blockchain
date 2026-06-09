@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import logo from "../../assets/icons/divi_icon_demo.png";
@@ -8,6 +8,7 @@ import { API_URL } from "@/types/api";
 import "./LoginPage.scss";
 import { useWeb3Auth } from "../../service/web3/useWeb3Auth";
 
+const GOOGLE_CLIENT_ID = "827137465970-kc668qkj4j9ck05ufeqsgi67eb67ak08.apps.googleusercontent.com";
 const EMAIL_LOGIN_STORAGE_KEY = "email-auth-session";
 
 const LoginPage = () => {
@@ -68,16 +69,67 @@ const LoginPage = () => {
     }
   };
 
-  const handleGoogleLogin = async () => {
+  const handleGoogleResponse = async (response: any) => {
     setError(null);
     setIsSocialSubmitting(true);
 
     try {
-      setError("Logowanie przez Google nie jest jeszcze skonfigurowane.");
+      const res = await fetch(`${API_URL}/Auth/google`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ idToken: response.credential }),
+      });
+
+      const body = await res.json().catch(() => null);
+
+      if (!res.ok) {
+        throw new Error(body?.message || "Logowanie przez Google nie powiodło się.");
+      }
+
+      if (body?.token) {
+        setJwt(body.token);
+      }
+
+      localStorage.setItem(EMAIL_LOGIN_STORAGE_KEY, "1");
+      navigate("/app/dashboard", { replace: true });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Błąd podczas logowania przez Google.");
     } finally {
       setIsSocialSubmitting(false);
     }
   };
+
+  useEffect(() => {
+    const initGoogle = () => {
+      if (!(window as any).google) return;
+
+      (window as any).google.accounts.id.initialize({
+        client_id: GOOGLE_CLIENT_ID,
+        callback: handleGoogleResponse,
+      });
+
+      const parent = document.getElementById("google-login-button-hidden");
+      if (parent) {
+        (window as any).google.accounts.id.renderButton(parent, {
+          theme: "outline",
+          size: "large",
+          width: parent.offsetWidth || 200,
+        });
+      }
+    };
+
+    initGoogle();
+
+    const interval = setInterval(() => {
+      if ((window as any).google) {
+        initGoogle();
+        clearInterval(interval);
+      }
+    }, 500);
+
+    return () => clearInterval(interval);
+  }, []);
 
   const handleMetaMaskLogin = async () => {
     setError(null);
@@ -120,10 +172,13 @@ const LoginPage = () => {
               {isConnecting ? "Łączenie..." : address ? "MetaMask połączony" : "MetaMask"}
             </button>
 
-            <button className="btn btn--outline" type="button" onClick={() => void handleGoogleLogin()} disabled={isSubmitting || isSocialSubmitting}>
-              <img src={googleIcon} className="btn__icon" alt="" aria-hidden="true" />
-              Google
-            </button>
+            <div className="google-btn-wrapper">
+              <button className="btn btn--outline" type="button" disabled={isSubmitting || isSocialSubmitting}>
+                <img src={googleIcon} className="btn__icon" alt="" aria-hidden="true" />
+                Google
+              </button>
+              <div id="google-login-button-hidden" className="google-button-overlay"></div>
+            </div>
           </div>
 
           <div className="divider">
