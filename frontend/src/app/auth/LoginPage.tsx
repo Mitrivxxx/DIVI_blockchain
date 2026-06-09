@@ -19,7 +19,7 @@ const LoginPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [isConnecting, setIsConnecting] = useState(false);
-  const { address, connect, signAndVerifyNonce } = useWeb3Auth();
+  const { address, connect, signAndVerifyNonce, setJwt } = useWeb3Auth();
 
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -56,6 +56,9 @@ const LoginPage = () => {
         throw new Error(message);
       }
 
+      if (responseBody?.token) {
+        setJwt(responseBody.token);
+      }
       localStorage.setItem(EMAIL_LOGIN_STORAGE_KEY, "1");
       navigate("/app/dashboard", { replace: true });
     } catch (loginError) {

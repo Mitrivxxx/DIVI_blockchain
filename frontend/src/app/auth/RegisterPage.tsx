@@ -9,7 +9,7 @@ import "./RegisterPage.scss";
 
 const RegisterPage = () => {
   const navigate = useNavigate();
-  const { address, connect } = useWeb3Auth();
+  const { address, connect, setJwt } = useWeb3Auth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -73,7 +73,11 @@ const RegisterPage = () => {
         throw new Error("Logowanie nie powiodło się.");
       }
 
-      // Zalogowany - przejdź do dashboarda
+      const loginBody = await loginResponse.json().catch(() => null);
+      if (loginBody?.token) {
+        setJwt(loginBody.token);
+      }
+
       navigate("/app/dashboard", { replace: true });
     } catch (registerError) {
       setError(registerError instanceof Error ? registerError.message : "Nie udało się utworzyć konta.");
@@ -113,12 +117,16 @@ const RegisterPage = () => {
         }),
       });
 
+      const googleBody = await res.json().catch(() => null);
+
       if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.message || "Rejestracja przez Google nie powiodła się.");
+        throw new Error(googleBody?.message || "Rejestracja przez Google nie powiodła się.");
       }
 
-      // Success - user is logged in (cookies set by backend)
+      if (googleBody?.token) {
+        setJwt(googleBody.token);
+      }
+
       localStorage.setItem("email-auth-session", "1");
       navigate("/app/dashboard", { replace: true });
     } catch (err) {

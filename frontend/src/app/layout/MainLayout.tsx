@@ -59,7 +59,7 @@ const MainLayout: React.FC = () => {
       case "dashboard":
         return <Dashboard />;
       case "notify":
-        return <Notify />;
+        return <Notify userRole={userRole} />;
       case "issuerRole":
         return <IssuerRole />;
       case "upload":

@@ -2,9 +2,9 @@ import React, { createContext, useContext, useState, useCallback, useEffect } fr
 import type { ReactNode } from "react";
 import { ethers } from "ethers";
 import {
-  parseJwtPayload,
   getJwtExpiryMs,
   getAddressFromJwt,
+  getRoleFromJwt,
 } from "./utils/jwt";
 import { connectToWallet, signAndVerifyNonce as web3SignAndVerifyNonce } from "./web3/web3Utils";
 
@@ -13,6 +13,7 @@ interface Web3AuthContextProps {
   signer: ethers.JsonRpcSigner | null;
   address: string | null;
   jwt: string | null;
+  role: string | null;
   connect: () => Promise<{ provider: ethers.BrowserProvider; signer: ethers.JsonRpcSigner; address: string }>;
   setJwt: (token: string) => void;
   signAndVerifyNonce: (signer?: ethers.JsonRpcSigner, address?: string) => Promise<void>;
@@ -26,6 +27,7 @@ export const Web3AuthProvider = ({ children }: { children: ReactNode }) => {
   const [signer, setSigner] = useState<ethers.JsonRpcSigner | null>(null);
   const [address, setAddress] = useState<string | null>(null);
   const [jwt, setJwtState] = useState<string | null>(null);
+  const [role, setRole] = useState<string | null>(null);
 
   const setJwt = useCallback((token: string) => {
     setJwtState(token);
@@ -34,6 +36,8 @@ export const Web3AuthProvider = ({ children }: { children: ReactNode }) => {
     if (tokenAddress) {
       setAddress(tokenAddress);
     }
+
+    setRole(getRoleFromJwt(token));
   }, []);
 
   const connect = useCallback(async () => {
@@ -57,6 +61,7 @@ export const Web3AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const logout = useCallback(async () => {
     setJwtState(null);
+    setRole(null);
     setAddress(null);
     setSigner(null);
     setProvider(null);
@@ -93,7 +98,7 @@ export const Web3AuthProvider = ({ children }: { children: ReactNode }) => {
   }, [jwt, logout]);
 
   return (
-    <Web3AuthContext.Provider value={{ provider, signer, address, jwt, connect, setJwt, signAndVerifyNonce, logout }}>
+    <Web3AuthContext.Provider value={{ provider, signer, address, jwt, role, connect, setJwt, signAndVerifyNonce, logout }}>
       {children}
     </Web3AuthContext.Provider>
   );

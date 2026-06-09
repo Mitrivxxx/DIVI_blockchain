@@ -1,3 +1,5 @@
+const ROLE_CLAIM = "http://schemas.microsoft.com/ws/2008/06/identity/claims/role";
+
 export function parseJwtPayload(token: string): Record<string, unknown> | null {
   try {
     const payload = token.split(".")[1];
@@ -24,17 +26,12 @@ export function getJwtExpiryMs(token: string): number | null {
 
 export function getAddressFromJwt(token: string): string | null {
   const payload = parseJwtPayload(token);
-  const claim = payload?.["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"];
-  return typeof claim === "string" ? claim : null;
+  const sub = payload?.sub;
+  return typeof sub === "string" ? sub : null;
 }
 
-export function parseJwt(token: string | null) {
-  if (!token) return null;
-  const parts = token.split('.');
-  const base64Payload = parts[1];
-  if (!base64Payload) return null;
-  const payload = atob(base64Payload.replace(/-/g, '+').replace(/_/g, '/'));
-  const result = JSON.parse(payload);
-  console.log('parseJwt result:', result);
-  return result;
+export function getRoleFromJwt(token: string): string | null {
+  const payload = parseJwtPayload(token);
+  const role = payload?.[ROLE_CLAIM];
+  return typeof role === "string" ? role : null;
 }
