@@ -32,6 +32,7 @@ namespace backend.Controllers
             _userService = userService;
         }
 
+        [AllowAnonymous]
         [HttpPost("nonce")]
         public async Task<IActionResult> GenerateNonce([FromBody] NonceDto dto)
         {
@@ -199,33 +200,56 @@ namespace backend.Controllers
             Response.Cookies.Append("refresh_token", refreshToken, cookieOptions);
         }
 
+        [AllowAnonymous]
         [HttpPost("verify")]
         public async Task<IActionResult> Verify([FromBody] VerifyDto dto)
         {
-            Console.WriteLine($"[AuthController] POST /auth/verify - address: {dto!.Address}");
-            var message = dto.Nonce;
+            Console.WriteLine($"[AuthController] POST /auth/verify - address: {dto!.Address}, nonce: {dto.Nonce}, signature: {dto.Signature?.Substring(0, Math.Min(20, dto.Signature?.Length ?? 0))}...");
+
+            var storedNonce = await _context.Nonces
+                .Where(n => n.Address == dto.Address.ToLower() && n.IsUsed && n.ExpiresAt > DateTime.UtcNow)
+                .OrderByDescending(n => n.ExpiresAt)
+                .FirstOrDefaultAsync();
+
+            if (storedNonce == null)
+            {
+                Console.WriteLine("[AuthController] Verify failed: no valid nonce found in DB for this address");
+                return Unauthorized("Nonce not found or expired");
+            }
+
+            var message = storedNonce.Value;
             var signer = new EthereumMessageSigner();
             var recoveredAddress = signer.EncodeUTF8AndEcRecover(message, dto.Signature);
+
+            Console.WriteLine($"[AuthController] Recovered address: {recoveredAddress}, expected: {dto.Address}");
 
             if (recoveredAddress.ToLower() != dto.Address.ToLower())
             {
                 Console.WriteLine("[AuthController] Verify failed: address mismatch");
-                return Unauthorized();
+                return Unauthorized("Signature verification failed");
             }
 
-            // Lookup member by Ethereum address
+            storedNonce.IsUsed = false;
+            await _context.SaveChangesAsync();
+
             var member = await _context.Members
-                .AsNoTracking()
                 .Include(m => m.Role)
                 .FirstOrDefaultAsync(m => m.EthereumAddress != null && m.EthereumAddress.ToLower() == dto.Address.ToLower());
 
             if (member == null)
             {
-                Console.WriteLine("[AuthController] Verify failed: member not found for address");
-                return Unauthorized("Member not found for this address");
+                member = new Member
+                {
+                    EthereumAddress = dto.Address.ToLower(),
+                    MemberRoleId = 3,
+                    CreatedAt = DateTime.UtcNow,
+                    Role = null!
+                };
+                _context.Members.Add(member);
+                await _context.SaveChangesAsync();
+                await _context.Entry(member).Reference(m => m.Role).LoadAsync();
+                Console.WriteLine($"[AuthController] New member created for address: {dto.Address}");
             }
-
-            await _authService.ConsumeNonce(dto.Address);
             var accessToken = _jwtService.GenerateAccessToken(member.Id.ToString(), member.Role?.Name ?? "user");
             var refreshToken = _jwtService.GenerateRefreshToken(member.Id.ToString());
 
