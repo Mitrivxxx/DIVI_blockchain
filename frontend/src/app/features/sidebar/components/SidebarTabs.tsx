@@ -23,8 +23,9 @@ const visibleTabsByRole: Record<string, TabKey[]> = {
   '2': tabsWithoutIssuerRole, // 2 to zazwyczaj Issuer w bazie
   'admin': adminTabs,
   '1': adminTabs, // 1 to zazwyczaj Admin w bazie
+  'user': memberTabs,
   'member': memberTabs,
-  '3': memberTabs, // 3 to zazwyczaj Member w bazie
+  '3': memberTabs, // 3 to zazwyczaj User w bazie
 };
 
 const publicTabs: TabKey[] = ['verify'];

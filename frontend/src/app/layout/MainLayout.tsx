@@ -22,7 +22,8 @@ const MainLayout: React.FC = () => {
   const navigate = useNavigate();
   const { tabPath } = useParams<{ tabPath?: string }>();
   const { address, jwt, logout } = useWeb3Auth();
-  const [userRole] = useUserRole(address, fetchUserRole);
+  const isEmailSessionActive = localStorage.getItem(EMAIL_LOGIN_STORAGE_KEY) === "1";
+  const [userRole] = useUserRole(!!jwt || isEmailSessionActive, fetchUserRole);
   const activeTab = getTabKeyByPath(tabPath);
 
   const shortAddress = (addr: string) => addr.slice(0, 6) + "..." + addr.slice(-4);
@@ -40,11 +41,10 @@ const MainLayout: React.FC = () => {
   };
 
   useEffect(() => {
-    const isEmailSessionActive = localStorage.getItem(EMAIL_LOGIN_STORAGE_KEY) === "1";
     if (!jwt && !isEmailSessionActive) {
       navigate("/", { replace: true });
     }
-  }, [jwt, navigate]);
+  }, [jwt, isEmailSessionActive, navigate]);
 
   if (!tabPath) {
     return <Navigate to={`/app/${getTabPath(defaultTabKey)}`} replace />;

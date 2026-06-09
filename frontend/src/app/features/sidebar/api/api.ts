@@ -1,6 +1,6 @@
-export async function fetchUserRole(address: string): Promise<string | null> {
+export async function fetchUserRole(): Promise<string | null> {
   try {
-    const res = await fetch(`/api/user-role?address=${address}`, {
+    const res = await fetch(`/api/user-role`, {
       credentials: 'include'
     });
     if (res.ok) {
