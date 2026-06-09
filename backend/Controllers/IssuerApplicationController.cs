@@ -18,7 +18,7 @@ namespace backend.Controllers
         /// Creates a new issuer application (applicationissuer -> notify).
         /// </summary>
         [HttpPost]
-        [Microsoft.AspNetCore.Authorization.Authorize(Roles = "User")]
+        [Microsoft.AspNetCore.Authorization.Authorize(Roles = "user")]
         public async Task<IActionResult> Create([FromBody] CreateIssuerApplicationDto dto)
         {
             Console.WriteLine($"[IssuerApplicationController] POST /api/issuer - Received: {dto?.InstitutionName}, {dto!.EthereumAddress}");
@@ -31,7 +31,7 @@ namespace backend.Controllers
         /// Gets only pending applications for admin to review.
         /// </summary>
         [HttpGet]
-        [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin")]
+        [Microsoft.AspNetCore.Authorization.Authorize(Roles = "admin")]
         public async Task<ActionResult<IEnumerable<IssuerApplicationListDto>>> GetOnlyPending()
         {
             Console.WriteLine("[IssuerApplicationController] GET /api/issuer - OnlyPending called");
@@ -44,7 +44,7 @@ namespace backend.Controllers
         /// Updates application status (notify).
         /// </summary>
         [HttpPatch("{id}/status")]
-        [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin")]
+        [Microsoft.AspNetCore.Authorization.Authorize(Roles = "admin")]
         public async Task<IActionResult> UpdateStatus(int id, [FromQuery] string status)
         {
             Console.WriteLine($"[IssuerApplicationController] PATCH /api/issuer/{{id}}/status - id: {id}, status: {status}");

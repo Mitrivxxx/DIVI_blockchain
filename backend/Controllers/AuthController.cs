@@ -116,7 +116,7 @@ namespace backend.Controllers
                 return Unauthorized("Nieprawidlowy email lub haslo.");
             }
 
-            var accessToken = _jwtService.GenerateAccessToken(member.Id.ToString(), member.Role?.Name ?? "User");
+            var accessToken = _jwtService.GenerateAccessToken(member.Id.ToString(), member.Role?.Name ?? "user");
             var refreshToken = _jwtService.GenerateRefreshToken(member.Id.ToString());
 
             SetTokenCookies(accessToken, refreshToken);
@@ -147,7 +147,7 @@ namespace backend.Controllers
 
             if (member == null) return Unauthorized("User not found");
 
-            var newAccessToken = _jwtService.GenerateAccessToken(member.Id.ToString(), member.Role?.Name ?? "User");
+            var newAccessToken = _jwtService.GenerateAccessToken(member.Id.ToString(), member.Role?.Name ?? "user");
             var newRefreshToken = _jwtService.GenerateRefreshToken(member.Id.ToString());
 
             SetTokenCookies(newAccessToken, newRefreshToken);
@@ -177,20 +177,23 @@ namespace backend.Controllers
                 await _context.SaveChangesAsync();
             }
 
-            Response.Cookies.Delete("access_token");
-            Response.Cookies.Delete("refresh_token");
+            var cookieOptions = CreateAuthCookieOptions();
+            Response.Cookies.Delete("access_token", cookieOptions);
+            Response.Cookies.Delete("refresh_token", cookieOptions);
 
             return Ok(new { message = "Logged out" });
         }
 
+        private CookieOptions CreateAuthCookieOptions() => new()
+        {
+            HttpOnly = true,
+            Secure = Request.IsHttps,
+            SameSite = SameSiteMode.Strict
+        };
+
         private void SetTokenCookies(string accessToken, string refreshToken)
         {
-            var cookieOptions = new CookieOptions
-            {
-                HttpOnly = true,
-                Secure = true, // Set to false if not using HTTPS locally
-                SameSite = SameSiteMode.Strict
-            };
+            var cookieOptions = CreateAuthCookieOptions();
 
             Response.Cookies.Append("access_token", accessToken, cookieOptions);
             Response.Cookies.Append("refresh_token", refreshToken, cookieOptions);
@@ -223,7 +226,7 @@ namespace backend.Controllers
             }
 
             await _authService.ConsumeNonce(dto.Address);
-            var accessToken = _jwtService.GenerateAccessToken(member.Id.ToString(), member.Role?.Name ?? "User");
+            var accessToken = _jwtService.GenerateAccessToken(member.Id.ToString(), member.Role?.Name ?? "user");
             var refreshToken = _jwtService.GenerateRefreshToken(member.Id.ToString());
 
             SetTokenCookies(accessToken, refreshToken);
@@ -238,7 +241,7 @@ namespace backend.Controllers
             var payload = await _googleAuth.VerifyAsync(request.IdToken);
             var user = await _userService.GetOrCreateGoogleUser(payload);
 
-            var accessToken = _jwtService.GenerateAccessToken(user.Id.ToString(), user.Role?.Name ?? "User");
+            var accessToken = _jwtService.GenerateAccessToken(user.Id.ToString(), user.Role?.Name ?? "user");
             var refreshToken = _jwtService.GenerateRefreshToken(user.Id.ToString());
 
             SetTokenCookies(accessToken, refreshToken);

@@ -2,6 +2,6 @@ namespace backend.DTOs
 {
     public class UserRoleResponseDto
     {
-        public string Role { get; set; } = "User";
+        public string Role { get; set; } = "user";
     }
 }

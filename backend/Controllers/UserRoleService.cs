@@ -1,38 +1,30 @@
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using backend.Services.Roles;
 using Microsoft.Extensions.Logging;
 
 namespace backend.Controllers
 {
     [ApiController]
     [Route("api/user-role")]
+    [Authorize]
     public class UserRoleController : ControllerBase
     {
-        private readonly IUserRoleService _userRoleService;
         private readonly ILogger<UserRoleController> _logger;
 
-        public UserRoleController(IUserRoleService userRoleService, ILogger<UserRoleController> logger)
+        public UserRoleController(ILogger<UserRoleController> logger)
         {
-            _userRoleService = userRoleService;
             _logger = logger;
         }
 
-      /// <summary>
-        /// Returns the user role for a given Ethereum address.
+        /// <summary>
+        /// Returns the role of the currently authenticated user.
         /// </summary>
         [HttpGet]
-        public IActionResult GetUserRole([FromQuery] string address)
+        public IActionResult GetUserRole()
         {
-            _logger.LogInformation("User role lookup requested for address {EthereumAddress}", address);
-
-            if (string.IsNullOrEmpty(address))
-            {
-                _logger.LogInformation("User role lookup rejected due to empty address");
-                return BadRequest(new DTOs.UserRoleResponseDto());
-            }
-
-            var role = _userRoleService.GetUserRole(address);
-            _logger.LogInformation("User role lookup resolved for address {EthereumAddress} with role {UserRole}", address, role);
+            var role = User.FindFirstValue(ClaimTypes.Role) ?? "user";
+            _logger.LogInformation("User role lookup resolved for authenticated user with role {UserRole}", role);
             var response = new DTOs.UserRoleResponseDto { Role = role };
             return Ok(response);
         }

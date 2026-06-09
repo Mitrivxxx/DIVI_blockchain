@@ -27,25 +27,13 @@ namespace backend.Services.Roles
 
 			if (member is null)
 			{
-				_logger.LogDebug("No member found for address {EthereumAddress}; defaulting to role User", normalizedAddress);
-				return "User";
+				_logger.LogDebug("No member found for address {EthereumAddress}; defaulting to role user", normalizedAddress);
+				return "user";
 			}
 
-			var roleName = member.Role?.Name ?? "User";
-			_logger.LogDebug("Member found for address {EthereumAddress} with DB role {MemberRole}", normalizedAddress, roleName);
-
-			switch (roleName)
-			{
-				case "Admin":
-					_logger.LogDebug("Mapped address {EthereumAddress} to app role Admin", normalizedAddress);
-					return "Admin";
-				case "Issuer":
-					_logger.LogDebug("Mapped address {EthereumAddress} to app role Issuer", normalizedAddress);
-					return "Issuer";
-				default:
-					_logger.LogDebug("Mapped address {EthereumAddress} to default app role User", normalizedAddress);
-					return "User";
-			}
+			var roleName = (member.Role?.Name ?? "user").ToLowerInvariant();
+			_logger.LogDebug("Member found for address {EthereumAddress} with role {MemberRole}", normalizedAddress, roleName);
+			return roleName;
 		}
 	}
 }

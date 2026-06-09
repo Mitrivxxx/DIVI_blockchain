@@ -27,10 +27,11 @@ namespace backend.Services.Auth
         // ACCESS TOKEN (krótki)
         public string GenerateAccessToken(string userId, string role)
         {
+            var normalizedRole = string.IsNullOrWhiteSpace(role) ? "user" : role.ToLowerInvariant();
             var claims = new List<Claim>
             {
                 new Claim(JwtRegisteredClaimNames.Sub, userId),
-                new Claim(ClaimTypes.Role, role),
+                new Claim(ClaimTypes.Role, normalizedRole),
                 new Claim("type", "access"),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
             };
