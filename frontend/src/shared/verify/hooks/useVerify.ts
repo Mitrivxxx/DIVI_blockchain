@@ -40,9 +40,36 @@ const getErrorMessage = (error: unknown): string => {
 };
 
 type VerificationOutcome = {
-  kind: 'verified' | 'missing' | 'error';
+  kind: 'verified' | 'revoked' | 'missing' | 'error';
   title: string;
   description: string;
+};
+
+const outcomeFromResponse = (response: VerifyResult): VerificationOutcome => {
+  if (response.isRevoked || response.status === 2) {
+    return {
+      kind: 'revoked',
+      title: 'UNIEWAŻNIONY',
+      description:
+        response.message ||
+        'Dokument był zarejestrowany w blockchainie, ale został unieważniony.',
+    };
+  }
+
+  if (response.isAuthentic) {
+    return {
+      kind: 'verified',
+      title: 'ZWERYFIKOWANY',
+      description: response.message || 'Dokument jest autentyczny i nie został zmodyfikowany.',
+    };
+  }
+
+  return {
+    kind: 'missing',
+    title: 'BRAK W BLOCKCHAIN',
+    description:
+      response.message || 'Nie mamy dowodu, że ten dokument został kiedykolwiek zarejestrowany.',
+  };
 };
 
 export const useVerify = () => {
@@ -108,17 +135,7 @@ export const useVerify = () => {
     try {
       const response = await verifyDocument(file);
       setVerificationData(response);
-      setVerificationOutcome(response.isAuthentic
-        ? {
-            kind: 'verified',
-            title: 'ZWERYFIKOWANY',
-            description: 'Dokument jest autentyczny i nie został zmodyfikowany.',
-          }
-        : {
-            kind: 'missing',
-            title: 'BRAK W BLOCKCHAIN',
-            description: 'Nie mamy dowodu, że ten dokument został kiedykolwiek zarejestrowany.',
-          });
+      setVerificationOutcome(outcomeFromResponse(response));
       setStatus('');
     } catch (error) {
       setVerificationData(null);

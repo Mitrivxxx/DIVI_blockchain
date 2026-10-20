@@ -27,6 +27,23 @@ type ProfileTabContentProps = {
   onCopyAddress: () => Promise<void> | void;
 };
 
+const formatRole = (roleValue: string | null | undefined): string | null => {
+  if (!roleValue) return null;
+  const normalized = roleValue.trim().toLowerCase();
+  const labels: Record<string, string> = {
+    owner: "Właściciel",
+    "4": "Właściciel",
+    admin: "Administrator",
+    "1": "Administrator",
+    issuer: "Wystawca",
+    "2": "Wystawca",
+    user: "Użytkownik",
+    member: "Użytkownik",
+    "3": "Użytkownik",
+  };
+  return labels[normalized] ?? roleValue;
+};
+
 const ProfileTabContent: React.FC<ProfileTabContentProps> = ({
   avatar,
   role,
@@ -49,6 +66,8 @@ const ProfileTabContent: React.FC<ProfileTabContentProps> = ({
   onDeleteField,
   onCopyAddress,
 }) => {
+  const roleLabel = formatRole(role);
+
   return (
     <>
       <header className="profile-header">
@@ -99,7 +118,7 @@ const ProfileTabContent: React.FC<ProfileTabContentProps> = ({
               Dodaj nazwę
             </button>
           )}
-          {role && <span className="profile-role-pill">{role}</span>}
+          {roleLabel ? <span className="profile-role-pill">{roleLabel}</span> : null}
         </div>
       </header>
 

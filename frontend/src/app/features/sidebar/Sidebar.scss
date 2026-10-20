@@ -1,35 +1,124 @@
+$sidebar-text: #64748b;
+$sidebar-text-active: #334155;
+$sidebar-hover-bg: #f8fafc;
+$sidebar-active-bg: #f1f5f9;
+$sidebar-border: #e2e8f0;
+
 .sidebar-root {
-  width: 220px;
-  background: white;
-  padding: 20px;
-  height: 100vh;
+  width: 100%;
+  background: #fff;
+  padding: 28px 20px 24px;
+  height: 100%;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   box-sizing: border-box;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
 }
 
-.sidebar-title {
-  font-size: 1.5rem;
-  margin-bottom: 1rem;
+.sidebar-top {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.sidebar-section {
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-section-title {
+  margin: 0 0 10px;
+  padding: 0 10px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: $sidebar-text;
 }
 
 .sidebar-list {
   list-style: none;
+  margin: 0;
   padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
 .sidebar-item {
-  padding: 12px 16px;
-  margin: 6px 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 12px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: $sidebar-text;
+  font-size: 0.92rem;
+  font-weight: 500;
+  line-height: 1.25;
   cursor: pointer;
-  border-radius: 6px;
-  background: white;
-  color: #333;
-  transition: background 0.2s, color 0.2s;
+  text-align: left;
+  transition: background 0.15s ease, color 0.15s ease;
+
+  &:hover {
+    background: $sidebar-hover-bg;
+    color: $sidebar-text-active;
+  }
+
+  &.active {
+    background: $sidebar-active-bg;
+    color: $sidebar-text-active;
+    font-weight: 600;
+  }
 }
 
-.sidebar-item.active {
-  background: #007bff;
-  color: #fff;
+.sidebar-item-icon {
+  flex-shrink: 0;
+  color: currentColor;
+}
+
+.sidebar-item-label {
+  min-width: 0;
+}
+
+.sidebar-user-footer {
+  flex-shrink: 0;
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid $sidebar-border;
+}
+
+.sidebar-item--user {
+  align-items: flex-start;
+}
+
+.sidebar-user-info {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sidebar-user-address {
+  font-size: 0.92rem;
+  font-weight: 500;
+  color: inherit;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sidebar-user-role {
+  font-size: 0.78rem;
+  font-weight: 400;
+  color: #94a3b8;
 }

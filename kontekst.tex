@@ -1,0 +1,639 @@
+\documentclass[12pt,a4paper,twoside]{report}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[polish]{babel}
+\usepackage{times}
+\usepackage{indentfirst}
+\usepackage{setspace}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\usepackage{graphicx}
+\usepackage{caption}
+\usepackage{float}
+\usepackage{url}
+
+% Ustawienia odstępów
+\onehalfspacing
+\setlength{\parindent}{0.75cm}
+\setlength{\parskip}{0pt}
+
+% Formatowanie nagłówków rozdziałów
+\titleformat{\chapter}[display]
+  {\normalfont\fontsize{16}{18}\bfseries}{\chaptertitlename\ \thechapter}{12pt}{}
+\titlespacing*{\chapter}{0pt}{-20pt}{12pt}
+
+\titleformat{\section}
+  {\normalfont\fontsize{14}{16}\bfseries}{\thesection}{6pt}{}
+\titlespacing*{\section}{0pt}{12pt}{6pt}
+
+\titleformat{\subsection}
+  {\normalfont\fontsize{12}{14}\bfseries}{\thesubsection}{6pt}{}
+\titlespacing*{\subsection}{0pt}{6pt}{6pt}
+
+% Głębokość numerowania
+\setcounter{secnumdepth}{3}
+\setcounter{tocdepth}{2}
+
+% Definicje dla spisów
+\usepackage{tocloft}
+\renewcommand{\cftchapfont}{\normalfont}
+\renewcommand{\cftchappagefont}{\normalfont}
+
+% Styl strony - początkowo numeracja wyśrodkowana na dole
+\fancypagestyle{plain}{
+    \fancyhf{}
+    \fancyfoot[C]{\thepage}
+    \renewcommand{\headrulewidth}{0pt}
+}
+% Styl dla stron z treścią rozdziałów - numeracja w prawym dolnym rogu
+\fancypagestyle{main}{
+    \fancyhf{}
+    \fancyfoot[R]{\thepage}
+    \renewcommand{\headrulewidth}{0pt}
+}
+
+% Przełączanie stylów
+\makeatletter
+\let\ps@plain\ps@main
+\makeatother
+
+\begin{document}
+
+% Strona tytułowa (bez numeracji)
+\begin{titlepage}
+    \centering
+    \vspace*{2cm}
+    {\fontsize{18}{22}\selectfont \textbf{AKADEMIA NAUK STOSOWANYCH W NOWYM SĄCZU}\par}
+    \vspace{1cm}
+    {\fontsize{18}{22}\selectfont \textbf{WYDZIAŁ NAUK INŻYNIERYJNYCH}\par}
+    \vspace{2cm}
+    {\fontsize{16}{20}\selectfont \textbf{PRACA DYPLOMOWA}\par}
+    \vspace{1.5cm}
+    {\fontsize{16}{20}\selectfont \textbf{Zdecentralizowany system obiegu dokumentów z wykorzystaniem blockchain i IPFS}\par}
+    \vspace{2cm}
+    \begin{flushright}
+        {\fontsize{14}{18}\selectfont Autor: Mateusz Smaga\par}
+        \vspace{0.3cm}
+        {\fontsize{12}{15}\selectfont Kierunek: Informatyka Stosowana\par}
+        \vspace{0.3cm}
+        {\fontsize{12}{15}\selectfont Nr albumu: 33441\par}
+    \end{flushright}
+    \vspace{2cm}
+    {\fontsize{12}{15}\selectfont Promotor: dr Grzegorz Litawa\par}
+    \vspace{1cm}
+    {\fontsize{12}{15}\selectfont NOWY SĄCZ 2026\par}
+\end{titlepage}
+
+% Spis treści (numeracja wyśrodkowana)
+\pagestyle{plain}
+\tableofcontents
+\clearpage
+
+% Przełączamy styl na main (prawy dolny róg) od pierwszej strony rozdziału
+\pagestyle{main}
+
+% Rozdział 1
+
+% ==================== ROZDZIAŁ 1: PODSTAWY TEORETYCZNE (ROZSZERZONY) ====================
+\chapter{Podstawy teoretyczne systemu}
+
+\section{Istota i architektura technologii Blockchain}
+
+Technologia blockchain, klasyfikowana jako odmiana technologii rozproszonego rejestru
+(ang.~\textit{Distributed Ledger Technology}), stanowi fundamentalną zmianę w sposobie
+przechowywania i wymiany danych cyfrowych. W odróżnieniu od tradycyjnych, scentralizowanych
+baz danych zarządzanych przez pojedynczy podmiot, blockchain funkcjonuje jako sieć
+równorzędnych uczestników (węzłów), z których każdy przechowuje pełną lub częściową kopię
+historii wszystkich transakcji.
+
+Struktura danych opiera się na sekwencyjnym łączeniu bloków. Każdy blok, oprócz zestawu
+transakcji, zawiera w swoim nagłówku znacznik czasu (ang.~\textit{timestamp}) oraz
+kryptograficzny skrót poprzedniego bloku. Wykorzystanie jednokierunkowej funkcji skrótu
+sprawia, że jakakolwiek próba modyfikacji danych w bloku historycznym spowoduje zmianę jego
+skrótu, a w konsekwencji zerwanie łańcucha referencji we wszystkich kolejnych blokach. Taka
+konstrukcja zapewnia matematycznie gwarantowaną niezmienność (ang.~\textit{immutability})
+zapisanych danych -- raz zatwierdzona informacja staje się trwałym elementem rejestru,
+którego nie można usunąć ani sfałszować bez wykrycia przez pozostałych uczestników sieci.
+
+Technologia ta została po raz pierwszy zaimplementowana w praktyce przez anonimowego twórcę
+posługującego się pseudonimem Satoshi Nakamoto w kontekście kryptowaluty
+Bitcoin~\cite{nakamoto2008bitcoin}. Od tego czasu koncepcja ta ewoluowała, wykraczając
+daleko poza zastosowania czysto finansowe. W kontekście niniejszej pracy blockchain
+traktowany jest nie jako system płatniczy, lecz jako zdecentralizowana infrastruktura
+zaufania -- publiczny rejestr zdolny do przechowywania dowodów istnienia i integralności
+dokumentów cyfrowych.
+
+Podstawowe cechy charakterystyczne tej technologii obejmują:
+\begin{itemize}
+    \item \textbf{Decentralizację i odporność na awarie:} Brak centralnego serwera eliminuje
+          pojedynczy punkt awarii (ang.~\textit{Single Point of Failure}). Nawet w przypadku
+          wyłączenia znacznej części węzłów sieci dane pozostają dostępne i bezpieczne
+          u pozostałych uczestników.
+    \item \textbf{Niezmienność i integralność danych:} Dzięki kryptograficznemu powiązaniu
+          bloków modyfikacja danych historycznych wymagałaby ponownego wykonania pracy
+          obliczeniowej dla wszystkich kolejnych bloków, co jest praktycznie niewykonalne.
+    \item \textbf{Transparentność i audytowalność:} W publicznych sieciach blockchain każdy
+          może niezależnie zweryfikować poprawność całego łańcucha oraz autentyczność
+          pojedynczego wpisu, korzystając z publicznie dostępnych eksploratorów bloków.
+    \item \textbf{Odporność na cenzurę:} Transakcja spełniająca reguły protokołu zostanie
+          włączona do bloku niezależnie od woli jakiegokolwiek zewnętrznego podmiotu
+          czy instytucji.
+\end{itemize}
+
+% -----------------------------------------------------------------------
+\section{Mechanizmy konsensusu w sieciach rozproszonych}
+
+W środowisku rozproszonym, gdzie nie istnieje centralny arbiter decydujący o prawdziwości
+danych, kluczowym wyzwaniem jest osiągnięcie porozumienia co do jednej, spójnej wersji
+historii transakcji. Problem ten, znany w informatyce jako \textbf{problem bizantyjskich
+generałów}, w sieciach blockchain rozwiązywany jest za pomocą mechanizmów konsensusu.
+Są to zestawy reguł ekonomicznych i kryptograficznych, które umożliwiają węzłom sieci
+wspólne zatwierdzanie nowych bloków danych bez konieczności wzajemnego zaufania.
+
+\subsection{Proof of Work (PoW) -- Dowód pracy}
+
+Mechanizm Proof of Work, wprowadzony przez Bitcoina, był pierwszą praktyczną implementacją
+konsensusu w otwartej sieci peer-to-peer. Jego działanie opiera się na rywalizacji
+obliczeniowej: uczestnicy sieci (górnicy) rozwiązują kosztowne obliczeniowo zadanie
+kryptograficzne polegające na znalezieniu takiej wartości liczbowej (\textit{nonce}),
+która po dołączeniu do nagłówka bloku da w wyniku skrót mniejszy od zadanego progu
+trudności. Proces ten wymaga wielokrotnego próbkowania i zużycia znacznych ilości energii
+elektrycznej.
+
+Główną zaletą PoW jest udowodnione empirycznie wysokie bezpieczeństwo. Koszt ewentualnego
+ataku jest wprost proporcjonalny do ceny sprzętu i energii potrzebnej do prześcignięcia
+uczciwych uczestników sieci. Wadą jest niska wydajność transakcyjna oraz negatywny wpływ
+środowiskowy związany z konsumpcją energii.
+
+\subsection{Proof of Stake (PoS) -- Dowód stawki}
+
+Proof of Stake stanowi odpowiedź na problemy skalowalności i energochłonności PoW.
+W modelu PoS prawo do tworzenia nowych bloków nie zależy od mocy obliczeniowej, lecz od
+ilości monet zdeponowanych przez uczestnika w sieci (tzw.~\textit{stake}). Im więcej monet
+użytkownik zablokuje jako zabezpieczenie, tym większe prawdopodobieństwo, że zostanie
+wybrany do zatwierdzenia kolejnego bloku i otrzyma związaną z tym nagrodę.
+
+Mechanizm ten wprowadza ekonomiczną gwarancję uczciwości. W przypadku próby oszustwa
+zdeponowany stake może zostać częściowo lub całkowicie skonfiskowany przez protokół
+(tzw.~\textit{slashing}). Atak na sieć staje się przez to nieopłacalny finansowo,
+ponieważ agresor ryzykuje utratę własnego kapitału.
+
+% -----------------------------------------------------------------------
+\section{Kryptograficzne podstawy bezpieczeństwa}
+
+Bezpieczeństwo systemów opartych na blockchain wynika nie tylko z mechanizmu konsensusu,
+ale także z zastosowania zaawansowanych narzędzi kryptograficznych. Dwie kluczowe klasy
+algorytmów zapewniają integralność danych i autoryzację działań: funkcje skrótu oraz
+kryptografia asymetryczna.
+
+\subsection{Kryptograficzne funkcje skrótu}
+
+Funkcja skrótu \( H \) jest deterministycznym algorytmem matematycznym, który dla
+dowolnych danych wejściowych \( m \) generuje unikalny, krótki ciąg wyjściowy
+\( h = H(m) \) o stałej długości, zwany skrótem lub hashem. W kontekście blockchain
+kluczowe są trzy właściwości kryptograficznych funkcji skrótu:
+
+\begin{itemize}
+    \item \textbf{Jednokierunkowość:} Na podstawie wartości skrótu \( h \) niemożliwe
+          jest obliczeniowe odtworzenie oryginalnych danych wejściowych \( m \).
+    \item \textbf{Odporność na kolizje:} Praktycznie niemożliwe jest znalezienie dwóch
+          różnych wiadomości \( m_1 \) i \( m_2 \), dla których \( H(m_1) = H(m_2) \).
+          Algorytm SHA-256 generuje skrót o długości 256 bitów, co daje przestrzeń
+          \( 2^{256} \) możliwych wartości -- prawdopodobieństwo przypadkowej kolizji
+          jest zaniedbywalnie małe.
+    \item \textbf{Efekt lawinowy:} Nawet minimalna modyfikacja danych wejściowych
+          skutkuje drastyczną, nieprzewidywalną zmianą całego skrótu wyjściowego.
+          Właściwość ta umożliwia natychmiastowe wykrycie próby fałszerstwa.
+\end{itemize}
+
+W architekturze opisywanego systemu skrót SHA-256 pełni rolę cyfrowego odcisku palca
+dokumentu. To właśnie ten odcisk, a nie sam plik, zostaje zapisany w transakcji
+blockchain.
+
+\subsection{Kryptografia asymetryczna i podpisy cyfrowe (ECDSA)}
+
+Tożsamość uczestników i autoryzacja działań w sieciach blockchain opierają się na
+kryptografii klucza publicznego (asymetrycznej). Wykorzystywany jest standard ECDSA
+(ang.~\textit{Elliptic Curve Digital Signature Algorithm}) oparty na krzywej eliptycznej
+\textit{secp256k1}.
+
+Każdy uczestnik sieci dysponuje parą matematycznie powiązanych kluczy:
+\begin{itemize}
+    \item \textbf{Klucz prywatny} (\(k\)): Losowo wygenerowana liczba, która musi być
+          bezwzględnie chroniona. Stanowi dowód tożsamości i własności środków.
+    \item \textbf{Klucz publiczny} (\(K\)): Generowany na podstawie klucza prywatnego
+          przez operację na krzywej eliptycznej (\(K = k \cdot G\)). Może być swobodnie
+          udostępniany.
+    \item \textbf{Adres portfela:} Powstaje przez dwukrotne haszowanie klucza publicznego
+          (SHA-256, następnie RIPEMD-160), co skraca jego długość i dodaje warstwę
+          bezpieczeństwa.
+\end{itemize}
+
+Podpis cyfrowy tworzony jest kluczem prywatnym dla konkretnej wiadomości (np.~transakcji).
+Każdy węzeł może zweryfikować autentyczność podpisu kluczem publicznym, nie poznając
+przy tym klucza prywatnego. Mechanizm ten pozwala na jednoznaczne przypisanie
+odpowiedzialności za daną transakcję do konkretnego adresu.
+
+% -----------------------------------------------------------------------
+\section{Architektura sieci Peer-to-Peer}
+
+Publiczne sieci blockchain funkcjonują w oparciu o architekturę równorzędnych połączeń
+(ang.~\textit{peer-to-peer}, P2P). Nie istnieje tu hierarchia klient-serwer w tradycyjnym
+rozumieniu -- każdy węzeł łączy się z kilkoma innymi węzłami, tworząc gęstą, odporną na
+uszkodzenia sieć połączeń. Gdy użytkownik inicjuje transakcję, informacja o niej jest
+propagowana do wszystkich osiągalnych węzłów (ang.~\textit{gossip protocol}), aż dotrze
+do walidatora, który włączy ją do nowego bloku.
+
+Taka architektura gwarantuje wysoką odporność na cenzurę. Wyłączenie grupy węzłów w
+konkretnej lokalizacji geograficznej nie przerywa działania całej sieci, o ile istnieje
+choć jedna ścieżka połączeniowa do jej pozostałych uczestników.
+
+% -----------------------------------------------------------------------
+\section{Smart kontrakty}
+
+Smart kontrakt (ang.~\textit{smart contract}) to program komputerowy przechowywany i
+wykonywany bezpośrednio na blockchainie. Pojęcie to zostało wprowadzone przez Nicka Szabo
+w latach 90. XX~wieku, jednak praktyczne zastosowanie na szeroką skalę umożliwiła dopiero
+sieć Ethereum, zaprojektowana przez Vitalika Buterina~\cite{buterin2014ethereum}.
+
+Smart kontrakt działa autonomicznie -- po wdrożeniu na blockchain jego kod jest niezmienny
+i publicznie weryfikowalny, a wykonanie następuje automatycznie po spełnieniu zdefiniowanych
+warunków, bez udziału żadnej strony trzeciej. Właściwości te czynią smart kontrakty
+naturalnym narzędziem do budowania systemów wymagających zaufania między stronami, które
+się nie znają.
+
+W kontekście niniejszego projektu smart kontrakt pełni rolę niezmiennego rejestru
+dokumentów: zapisuje kryptograficzne skróty plików wraz z metadanymi i udostępnia funkcję
+weryfikacji, której wynik jest publicznie sprawdzalny przez każdego uczestnika sieci.
+
+% -----------------------------------------------------------------------
+\section{IPFS -- rozproszony system plików}
+
+IPFS (ang.~\textit{InterPlanetary File System}) to protokół i sieć peer-to-peer służąca
+do przechowywania i udostępniania danych w sposób rozproszony. W odróżnieniu od
+tradycyjnego internetu, gdzie pliki są adresowane przez lokalizację serwera (URL), w IPFS
+każdy plik jest identyfikowany przez swój hash -- tzw.~CID
+(ang.~\textit{Content Identifier}).
+
+Kluczową konsekwencją tego podejścia jest to, że \textbf{zawartość pliku jest nierozłącznie
+związana z jego adresem}. Jeśli plik zostanie choćby minimalnie zmodyfikowany, jego CID
+zmieni się całkowicie -- nie można więc po cichu podmienić pliku pod tym samym adresem.
+Własność ta doskonale uzupełnia model weryfikacji oparty na hashach zapisanych
+w blockchainie.
+
+
+
+
+% ==================== ROZDZIAŁ 2: UŻYTE TECHNOLOGIE I METODY 
+(ROZSZERZONY) ====================
+\chapter{Użyte technologie i metody implementacji}
+
+
+\section{Warstwa aplikacyjna -- Backend ASP.NET Core 8}
+
+Logika biznesowa systemu obiegu dokumentów, obejmująca zarządzanie użytkownikami, rolami, uprawnieniami oraz procesami akceptacji dokumentów, zaimplementowana została w języku C\# z wykorzystaniem frameworka ASP.NET Core 8. Wybór tego stosu technologicznego podyktowany został jego wysoką wydajnością, dojrzałością ekosystemu oraz silnym typowaniem, które redukuje ryzyko błędów w fazie produkcyjnej.
+
+\textbf{ASP.NET Core} zapewnia warstwę prezentacji w postaci zestawu kontrolerów API RESTful. Oznacza to, że backend nie generuje interfejsu graficznego (HTML), a jedynie udostępnia zestaw adresów URL (endpointów), za pomocą których zewnętrzna aplikacja kliencka (np. przeglądarkowa napisana w React lub Angular) może komunikować się z serwerem. Każdy endpoint odpowiada konkretnej akcji, np. `POST /api/documents` tworzy nowy dokument, a `GET /api/documents/{id}` pobiera jego metadane.
+
+
+\textbf{Entity Framework Core (EF Core)} pełni funkcję mapowania obiektowo-relacyjnego (ORM). Umożliwia ono programiście operowanie na bazie danych za pomocą obiektów i kolekcji języka C\#, bez konieczności ręcznego pisania zapytań w języku SQL. EF Core tłumaczy operacje wykonane na obiektach (np. `context.Users.Add(nowyUzytkownik)`) na odpowiednie komendy SQL. Mechanizm migracji (`Add-Migration`, `Update-Database`) pozwala na utrzymywanie spójności schematu relacyjnej bazy danych PostgreSQL z modelem danych aplikacji, umożliwiając łatwe wprowadzanie zmian w strukturze projektu w trakcie jego rozwoju.
+
+\textbf{PostgreSQL} został wybrany jako główny system zarządzania bazą danych (RDBMS). W przeciwieństwie do lekkich baz plikowych (np. SQLite), PostgreSQL oferuje pełne wsparcie dla transakcji ACID, zaawansowane mechanizmy integralności referencyjnej oraz wysoką skalowalność. W kontekście systemu obiegu dokumentów przechowuje on dane, które nie wymagają niezmienności oferowanej przez blockchain, ale muszą być szybko wyszukiwane i modyfikowane -- są to przede wszystkim profile użytkowników, uprawnienia, historia akceptacji oraz metadane plików (nazwy, opisy, odnośniki do IPFS).
+
+\newpage
+\section{Bezpieczeństwo komunikacji i przechowywania danych uwierzytelniających}
+
+W systemie, który z założenia operuje na wrażliwych dokumentach, kluczowym aspektem jest bezpieczeństwo warstwy dostępu. Zastosowano dwa główne mechanizmy ochrony.
+
+\subsection{Uwierzytelnianie za pomocą tokenów JWT}
+Mechanizm sesji serwerowych opartych na ciasteczkach został zastąpiony przez nowoczesny standard JSON Web Token (JWT). Po pomyślnym zalogowaniu (poprzez podanie loginu i hasła lub podpisu kryptograficznego portfela DIVI), backend generuje podpisany cyfrowo token zawierający zakodowane informacje o użytkowniku (np. identyfikator, rolę) oraz czas ważności. Token ten jest odsyłany do klienta, który musi dołączać go do nagłówka `Authorization` każdego kolejnego żądania HTTP.
+Zastosowanie JWT zapewnia bezstanowość (ang. \textit{statelessness}) serwera. Oznacza to, że serwer nie musi przechowywać informacji o zalogowanych użytkownikach w pamięci RAM ani w bazie danych -- weryfikacja tożsamości odbywa się wyłącznie na podstawie kryptograficznej poprawności podpisu tokena. Znacząco ułatwia to skalowanie aplikacji w środowisku chmurowym oraz redukuje powierzchnię ataku związaną z kradzieżą sesji.
+
+\subsection{Bezpieczne przechowywanie haseł -- Argon2id}
+Bezpieczeństwo tradycyjnego loginu i hasła opiera się na algorytmie mieszającym Argon2id, który został zwycięzcą konkursu Password Hashing Competition (PHC) i jest rekomendowany przez OWASP jako najlepsza praktyka. W przeciwieństwie do starszych algorytmów (jak MD5 czy SHA-1), Argon2id został zaprojektowany tak, aby był odporny na ataki z wykorzystaniem dedykowanych układów scalonych (ASIC) oraz kart graficznych (GPU). Dzięki konfigurowalnym parametrom kosztu pamięci, czasu i równoległości, proces weryfikacji hasła jest celowo spowolniony i wymaga znacznych zasobów RAM, co czyni ataki słownikowe typu \textit{brute-force} ekonomicznie nieopłacalnymi dla potencjalnego włamywacza.
+
+\newpage
+\section{Warstwa integracji z blockchainem -- Ethereum, Solidity i Hardhat}
+
+Chociaż logika aplikacji osadzona jest w ekosystemie DIVI, rejestracja dowodów istnienia dokumentów realizowana jest na kompatybilnej maszynie wirtualnej Ethereum (EVM). Takie podejście umożliwia wykorzystanie dojrzałych narzędzi deweloperskich Ethereum i potencjalną migrację do innych sieci EVM w przyszłości.
+
+\subsection{Smart Kontrakt w języku Solidity}
+Smart kontrakt stanowi samowykonalny program komputerowy, którego kod i stan są przechowywane bezpośrednio w łańcuchu bloków. W projekcie napisano kontrakt w języku Solidity, który pełni rolę zdecentralizowanego rejestru metadanych dokumentów. Jego główne funkcje publiczne to:
+\begin{itemize}
+    \item \texttt{registerDocument(bytes32 fileHash, string memory ipfsCid, string memory metadata)} -- pozwala autoryzowanemu użytkownikowi (lub kontraktowi backendowemu) na zapisanie trwałego wpisu w blockchainie. Funkcja ta emituje zdarzenie (ang. \textit{event}) `DocumentRegistered`, które może być nasłuchiwane przez aplikację frontendową w czasie rzeczywistym.
+    \item \texttt{verifyDocument(bytes32 fileHash)} -- metoda widoku (nie modyfikująca stanu), która pozwala każdemu (nawet osobom nieposiadającym konta w systemie) zweryfikować, czy dany skrót pliku został wcześniej zarejestrowany i przez kogo.
+\end{itemize}
+Należy podkreślić, że kontrakt nie przechowuje całego dokumentu, a jedynie jego unikalny odcisk (hash SHA-256) oraz odnośnik do lokalizacji pliku w sieci IPFS. Dzięki temu koszt transakcji (gas) utrzymywany jest na akceptowalnym poziomie.
+
+\subsection{Środowisko deweloperskie Hardhat}
+Hardhat to kompleksowe środowisko programistyczne dla projektów Ethereum. W kontekście niniejszej pracy zapewnia ono powtarzalność procesu wdrażania i testowania.
+\begin{itemize}
+    \item \textbf{Kompilacja:} Narzędzie kompiluje kod źródłowy Solidity do kodu bajtowego EVM.
+    \item \textbf{Lokalny blockchain:} Uruchamia na komputerze dewelopera tymczasową, prywatną sieć Ethereum, na której można testować działanie kontraktu bez ponoszenia kosztów transakcji.
+    \item \textbf{Testy automatyczne:} Skrypty testowe napisane w JavaScript (z wykorzystaniem bibliotek Mocha i Chai) symulują interakcje z kontraktem, sprawdzając poprawność rejestracji, mechanizmy kontroli dostępu oraz odporność na próby fałszerstwa.
+    \item \textbf{Wdrażanie (Deployment):} Hardhat automatyzuje proces wysyłania transakcji tworzącej kontrakt na sieć testową Sepolia, zapisując adres wdrożonego kontraktu do późniejszego wykorzystania przez backend C\#.
+\end{itemize}
+
+\section{Rozproszone przechowywanie plików -- IPFS i Pinata}
+
+Bezpośrednie przechowywanie plików w bazie danych PostgreSQL lub w transakcjach blockchain jest nieefektywne kosztowo i technicznie (ograniczenia rozmiaru bloku, przepustowość sieci). W związku z tym system wykorzystuje protokół IPFS (InterPlanetary File System).
+
+\textbf{IPFS} to sieć P2P zaprojektowana do przechowywania i udostępniania danych w sposób rozproszony. Kluczową cechą IPFS jest adresowanie zawartości (ang. \textit{content addressing}). W tradycyjnym Internecie (HTTP) plik znajduje się pod konkretnym adresem URL (np. \texttt{serwer.pl/dokument.pdf}). Jeśli plik zostanie przeniesiony lub serwer przestanie działać, link przestaje działać. W IPFS identyfikatorem pliku jest jego kryptograficzny skrót (CID). Oznacza to, że:
+\begin{enumerate}
+    \item Plik jest weryfikowalny -- klient pobierający plik może sam obliczyć jego hash i porównać z CID, upewniając się, że dane nie zostały uszkodzone ani sfałszowane.
+    \item Plik jest odporny na cenzurę -- tak długo, jak przynajmniej jeden węzeł w sieci IPFS przechowuje kopię pliku, jest on dostępny pod tym samym CID.
+\end{enumerate}
+
+W projekcie wykorzystano usługę \textbf{Pinata} jako bramę IPFS (ang. \textit{pinning service}). Usługa ta dostarcza wygodne REST API, za pomocą którego backend C\# wysyła plik dokumentu. Pinata przechowuje plik na swoich serwerach węzłów IPFS oraz "przypina" go (ang. \textit{pin}), co gwarantuje, że plik nie zostanie usunięty przez mechanizm odśmiecania sieci (ang. \textit{garbage collection}). W odpowiedzi zwracany jest identyfikator CID, który następnie zostaje zapisany w smart kontrakcie jako trwały dowód powiązania dokumentu z plikiem.
+
+\section{Sieć testowa Sepolia jako środowisko uruchomieniowe}
+
+Całość operacji blockchainowych projektu realizowana jest na publicznej sieci testowej Ethereum o nazwie Sepolia. Wybór ten motywowany jest kilkoma czynnikami:
+\begin{itemize}
+    \item \textbf{Brak kosztów rzeczywistych:} Waluta Ether na Sepolii (SepoliaETH) nie posiada wartości rynkowej i jest dystrybuowana bezpłatnie przez tzw. krany (ang. \textit{faucets}). Pozwala to na swobodne testowanie wszystkich ścieżek działania systemu, w tym błędnych, bez ponoszenia strat finansowych.
+    \item \textbf{Identyczność techniczna:} Sieć Sepolia pod względem parametrów bloków, mechanizmu konsensusu (Proof of Stake) i działania maszyny wirtualnej EVM jest wierną kopią głównej sieci Ethereum (Mainnet). Gwarantuje to, że kod działający na testnecie będzie działał identycznie po ewentualnej migracji na produkcję.
+\end{itemize}
+
+
+
+
+
+
+
+
+
+
+% ==================== ROZDZIAŁ 3: REALIZACJA PRAKTYCZNA SYSTEMU (NOWY ROZDZIAŁ) ====================
+\chapter{Realizacja praktyczna systemu obiegu dokumentów}
+
+\section{Architektura logiczna systemu}
+
+System został zaprojektowany jako aplikacja hybrydowa, łącząca scentralizowaną logikę
+biznesową (backend C\#) z zdecentralizowaną warstwą zaufania (blockchain oraz IPFS).
+Podejście to pozwala na zachowanie wygody tradycyjnych aplikacji webowych przy jednoczesnym
+zapewnieniu kryptograficznie gwarantowanej niezmienności kluczowych danych. Można wyróżnić
+cztery główne komponenty współpracujące ze sobą w sposób asynchroniczny:
+
+\begin{enumerate}
+    \item \textbf{Klient (Frontend Web App):} Interfejs użytkownika działający w przeglądarce
+          internetowej. Odpowiada za interakcję z użytkownikiem: formularze logowania, listy
+          dokumentów, upload plików, moduł weryfikatora oraz panel administracyjny.
+          Komunikuje się wyłącznie z Backendem API poprzez żądania HTTP.
+
+    \item \textbf{Backend API (ASP.NET Core 8):} Centralny punkt koordynujący całą logikę
+          biznesową systemu. Odpowiada za autoryzację żądań, zarządzanie stanem procesu
+          akceptacji dokumentów w bazie PostgreSQL oraz orkiestrację komunikacji
+          z zewnętrznymi usługami (Pinata, sieć Ethereum Sepolia).
+
+    \item \textbf{Warstwa Blockchain (Smart Kontrakt na Sepolii):} Pełni rolę
+          niezmienialnego notariusza. Przechowuje dowód istnienia dokumentu (hash SHA-256
+          oraz CID IPFS) wraz z podstawowymi metadanymi (typ dokumentu, adres wystawcy,
+          data rejestracji on-chain). Żaden podmiot -- w tym twórcy systemu -- nie jest
+          w stanie zmodyfikować ani usunąć raz zapisanych danych.
+
+    \item \textbf{Warstwa Przechowywania Plików (IPFS + Pinata):} Odpowiada za fizyczne
+          przechowywanie treści plików w sposób rozproszony i odporny na utratę danych.
+          Dostęp do pliku możliwy jest przez dowolną publiczną bramę IPFS wyłącznie
+          na podstawie jego CID, bez zależności od konkretnego serwera.
+\end{enumerate}
+
+Całość systemu zaprojektowano zgodnie z zasadą rozdzielenia odpowiedzialności
+(ang.~\textit{Separation of Concerns}): baza PostgreSQL przechowuje dane operacyjne
+i aplikacyjne, blockchain przechowuje niezmienne dowody integralności, natomiast IPFS
+przechowuje rzeczywistą treść plików. Żadna z tych warstw nie jest zbędna -- ich
+współpraca tworzy kompletny i odporny system.
+
+% -----------------------------------------------------------------------
+\newpage
+\section{Przepływ procesu rejestracji dokumentu}
+
+Opisany poniżej scenariusz ilustruje ścieżkę danych od momentu wyboru pliku przez
+użytkownika do ostatecznego potwierdzenia jego autentyczności w łańcuchu bloków. Proces
+zaprojektowano tak, aby był transparentny dla użytkownika końcowego, który obserwuje
+jedynie standardowy wskaźnik postępu operacji.
+
+\begin{enumerate}
+    \item \textbf{Inicjalizacja:} Użytkownik, po pomyślnym uwierzytelnieniu tokenem JWT,
+          wybiera plik z dysku lokalnego i wypełnia formularz metadanymi: nazwa dokumentu,
+          opis, kategoria, lista odbiorców oraz data ważności (opcjonalna).
+
+    \item \textbf{Przetwarzanie wstępne w Backendzie:}
+    \begin{itemize}
+        \item Backend oblicza skrót SHA-256 odebranego strumienia bajtów pliku. Obliczenie
+              odbywa się w pamięci serwera bez zapisywania pliku na dysku lokalnym.
+        \item Przeprowadzana jest walidacja -- sprawdzenie, czy dokument o tym samym hashu
+              nie został już zarejestrowany w bazie PostgreSQL (zapobieganie duplikacji
+              wpisów lokalnych) oraz czy format i rozmiar pliku spełniają wymagania systemu.
+        \item Weryfikowany jest status wystawcy -- tylko użytkownicy z rolą zatwierdzonego
+              wystawcy (ang.~\textit{issuer}) mogą inicjować rejestrację nowego dokumentu.
+    \end{itemize}
+
+    \item \textbf{Zapis w IPFS:} Backend nawiązuje połączenie z API usługi Pinata
+          i przesyła plik. W odpowiedzi otrzymuje unikalny identyfikator treści (CID),
+          który od tej chwili jednoznacznie identyfikuje ten plik w sieci IPFS niezależnie
+          od jakiegokolwiek serwera.
+
+    \item \textbf{Zapis w Blockchain:} Backend, wykorzystując bibliotekę Nethereum oraz
+          klucz prywatny dedykowanego portfela systemowego (tzw.~\textit{relay wallet}),
+          konstruuje transakcję wywołującą metodę \texttt{registerDocument} w smart
+          kontrakcie. Transakcja zawiera hash SHA-256 oraz CID dokumentu. Po
+          rozpropagowaniu transakcji w sieci Sepolia i włączeniu jej do bloku dane stają
+          się publicznie niezmienialnie zapisane w historii łańcucha.
+
+    \item \textbf{Zapis lokalny i powiadomienie:} Po otrzymaniu potwierdzenia z sieci
+          (numer bloku i hash transakcji), Backend zapisuje w bazie PostgreSQL pełny rekord
+          dokumentu -- włączając CID, hash SHA-256, identyfikator wystawcy, metadane oraz
+          początkowy status dokumentu -- i zwraca odpowiedź sukcesu do klienta. Wystawca
+          otrzymuje potwierdzenie z linkiem do transakcji w eksploratorze bloków Sepolia.
+\end{enumerate}
+
+% -----------------------------------------------------------------------
+\newpage
+\section{Proces weryfikacji autentyczności dokumentu}
+
+Jedną z kluczowych funkcjonalności systemu jest możliwość niezależnej weryfikacji, czy
+dany plik odpowiada zapisowi znajdującemu się w blockchainie. Proces ten nie wymaga
+logowania ani posiadania specjalnych uprawnień -- jest dostępny publicznie.
+
+\begin{enumerate}
+    \item Użytkownik zewnętrzny (np.~audytor, odbiorca dokumentu) otrzymuje plik dokumentu
+          dowolnym kanałem komunikacji.
+    \item Korzystając z publicznego modułu weryfikatora w aplikacji, wgrywa plik do
+          dedykowanego formularza.
+    \item Aplikacja frontendowa oblicza lokalnie skrót SHA-256 pliku bezpośrednio
+          w przeglądarce użytkownika, bez przesyłania pliku na serwer. Rozwiązanie to
+          chroni prywatność treści dokumentu -- serwer nigdy nie widzi jego zawartości.
+    \item Obliczony skrót wysyłany jest do Backendu, który wywołuje funkcję
+          \texttt{verifyDocument} w smart kontrakcie na sieci Sepolia.
+    \item Smart kontrakt przeszukuje swoją wewnętrzną mapę rejestrów i zwraca wynik.
+    \item W przypadku znalezienia pasującego hasha zwracane są dane rejestracji: adres
+          portfela wystawcy, numer bloku i data rejestracji, CID pliku w IPFS oraz
+          typ dokumentu.
+    \item Backend, na podstawie CID, pobiera plik referencyjny z IPFS i porównuje jego
+          zawartość z plikiem dostarczonym do weryfikacji. Zgodność stanowi ostateczny,
+          matematyczny dowód autentyczności dokumentu.
+    \item W przypadku braku zgodności lub nieznalezienia hasha w kontrakcie system zwraca
+          jednoznaczną informację o negatywnym wyniku weryfikacji, wskazując czy dokument
+          jest nieznany systemowi, czy też mógł zostać zmodyfikowany po rejestracji.
+\end{enumerate}
+
+% -----------------------------------------------------------------------
+\newpage
+\section{Przeglądanie i zarządzanie dokumentami}
+
+\subsection{Lista dokumentów wystawcy}
+
+Każdy zalogowany wystawca ma dostęp do panelu z pełną historią wystawionych przez siebie
+dokumentów. Lista prezentuje dla każdej pozycji: nazwę dokumentu, datę rejestracji,
+aktualny status (oczekujący, zaakceptowany, odrzucony, wygasły), hash SHA-256 skrócony
+do formy czytelnego identyfikatora oraz link do transakcji rejestrującej w eksploratorze
+bloków Sepolia. Lista obsługuje stronicowanie oraz filtrowanie według statusu i zakresu
+dat, co umożliwia sprawne zarządzanie dużą liczbą dokumentów.
+
+\subsection{Podgląd szczegółów dokumentu}
+
+Po wybraniu konkretnego dokumentu z listy wyświetlany jest widok szczegółowy zawierający
+pełne metadane: kompletny hash SHA-256 w formacie szesnastkowym, adres CID z aktywnym
+linkiem do publicznej bramy IPFS, adres portfela Ethereum, który dokonał rejestracji,
+numer bloku, hash transakcji blockchain oraz listę odbiorców powiązanych z dokumentem.
+Z poziomu tego widoku możliwe jest pobranie oryginalnego pliku z IPFS oraz wygenerowanie
+raportu weryfikacyjnego w formacie PDF zawierającego wszystkie dane potwierdzające
+autentyczność dokumentu.
+
+\subsection{Historia operacji na dokumencie}
+
+Dla każdego dokumentu prowadzony jest dziennik zdarzeń (ang.~\textit{audit log})
+rejestrowany w bazie PostgreSQL. Dziennik obejmuje: moment przesłania dokumentu do
+systemu, zmianę statusu przez administratora, każdorazowe pobranie pliku przez odbiorcę
+oraz próby weryfikacji (zarówno zakończone powodzeniem, jak i nieudane). Dziennik ten
+nie jest modyfikowalny przez zwykłych użytkowników i stanowi uzupełnienie dowodów
+zapisanych na blockchainie w zakresie danych operacyjnych.
+
+% -----------------------------------------------------------------------
+\section{Mechanizm wygasania i odwoływania dokumentów}
+
+System obsługuje opcjonalne daty ważności dokumentów. Wystawca może podczas rejestracji
+określić datę, po której dokument powinien zostać uznany za nieaktywny. Po upływie tego
+terminu status dokumentu w bazie PostgreSQL jest automatycznie aktualizowany przez
+zadanie cykliczne działające w tle (ang.~\textit{background job}).
+
+Ważne jest podkreślenie, że wygaśnięcie dokumentu w warstwie aplikacyjnej nie usuwa
+danych z blockchainu -- hash i CID pozostają tam na zawsze. Wygaśnięcie oznacza jedynie,
+że system nie będzie traktował dokumentu jako aktualnie obowiązującego przy weryfikacji
+statusu biznesowego, co jest adekwatne np.~dla dokumentów takich jak umowy, certyfikaty
+czy pełnomocnictwa o ograniczonym czasie obowiązywania. Proces weryfikacji matematycznej
+(porównanie hasha z łańcuchem) nadal zwraca wynik pozytywny, co potwierdza, że plik nie
+był modyfikowany -- informacja o wygaśnięciu jest zwracana jako osobne pole w odpowiedzi.
+
+% -----------------------------------------------------------------------
+\section{Zarządzanie tożsamością i rolami w systemie}
+
+System wprowadza podział na role użytkowników w celu odwzorowania rzeczywistych procesów
+biznesowych w organizacji. Mechanizm ten realizowany jest w warstwie backendowej C\#
+i bazie danych PostgreSQL.
+
+Wyróżnione zostały następujące role:
+\begin{itemize}
+    \item \textbf{Gość (Guest):} Użytkownik niezalogowany, który ma dostęp wyłącznie
+          do publicznego modułu weryfikatora dokumentów.
+    \item \textbf{Użytkownik (User):} Konto zarejestrowane w systemie. Może przeglądać
+          dokumenty, do których zostało mu przyznane prawo dostępu jako odbiorcy,
+          oraz składać wnioski o nadanie roli wystawcy.
+    \item \textbf{Wystawca (Issuer):} Rola przyznawana przez administratora po pozytywnym
+          rozpatrzeniu wniosku. Umożliwia rejestrację nowych dokumentów w blockchain
+          oraz zarządzanie własnymi dokumentami.
+    \item \textbf{Administrator (Admin):} Pełny dostęp do systemu. Odpowiada za
+          rozpatrywanie wniosków o rolę wystawcy, zarządzanie kontami użytkowników,
+          podgląd dzienników systemowych oraz konfigurację parametrów aplikacji.
+\end{itemize}
+
+Każde żądanie do API jest weryfikowane pod kątem posiadanego tokenu JWT oraz przypisanej
+do konta roli. Próba wykonania operacji bez odpowiednich uprawnień skutkuje odpowiedzią
+HTTP 403 (Forbidden) i wpisem do dziennika zdarzeń bezpieczeństwa.
+
+% -----------------------------------------------------------------------
+\section{Proces wnioskowania o rolę wystawcy}
+
+Nadawanie uprawnień wystawcy nie odbywa się automatycznie -- wymaga złożenia formalnego
+wniosku i jego zatwierdzenia przez administratora. Proces ten odwzorowuje realne wymogi
+organizacyjne, gdzie nie każdy użytkownik systemu powinien mieć prawo do rejestrowania
+dokumentów w imieniu organizacji.
+
+Użytkownik wypełnia formularz wniosku, podając uzasadnienie oraz -- opcjonalnie --
+adres portfela Ethereum, którego zamierza używać do podpisywania transakcji. Wniosek
+trafia do kolejki w panelu administracyjnym, gdzie administrator może go zatwierdzić
+lub odrzucić z podaniem powodu. Po zatwierdzeniu rola użytkownika jest aktualizowana
+w bazie, a on sam otrzymuje powiadomienie. Cała historia wniosków jest archiwizowana
+w celach audytowych.
+
+% -----------------------------------------------------------------------
+\newpage
+\section{Uwierzytelnianie z użyciem portfela Ethereum}
+
+Oprócz standardowego logowania przez e-mail i hasło, system udostępnia mechanizm
+uwierzytelniania przy użyciu portfela Ethereum (np.~MetaMask). Proces ten opiera się
+na kryptograficznym dowodzie posiadania klucza prywatnego, bez przesyłania żadnych
+poświadczeń:
+
+\begin{enumerate}
+    \item Użytkownik inicjuje logowanie portfelem, podając adres swojego konta Ethereum.
+    \item Backend generuje jednorazowy losowy ciąg znaków (nonce) powiązany z tym adresem
+          i odsyła go do klienta.
+    \item Użytkownik podpisuje nonce swoim portfelem (operacja wykonywana lokalnie,
+          klucz prywatny nigdy nie opuszcza urządzenia).
+    \item Podpis oraz adres portfela są wysyłane do Backendu.
+    \item Backend weryfikuje, czy podpis został rzeczywiście utworzony kluczem prywatnym
+          odpowiadającym podanemu adresowi. Jeśli weryfikacja przebiegnie pomyślnie,
+          użytkownik otrzymuje token JWT ważny przez określony czas.
+    \item Nonce jest natychmiast unieważniany po użyciu, co uniemożliwia jego ponowne
+          wykorzystanie w ewentualnym ataku odtworzeniowym (ang.~\textit{replay attack}).
+\end{enumerate}
+
+% -----------------------------------------------------------------------
+\section{Bezpieczeństwo systemu}
+
+Bezpieczeństwo systemu zapewniane jest na kilku niezależnych poziomach, co zgodne jest
+z zasadą obrony warstwowej (ang.~\textit{defense in depth}).
+
+Hasła użytkowników nigdy nie są przechowywane w postaci jawnej. Do ich haszowania
+stosowany jest algorytm \textbf{Argon2id}, uznawany za aktualny standard w tej dziedzinie.
+Algorytm ten jest celowo kosztowny obliczeniowo i pamięciowo, co drastycznie spowalnia
+potencjalne ataki słownikowe i brute-force.
+
+Komunikacja między wszystkimi komponentami systemu odbywa się wyłącznie przez szyfrowane
+połączenia HTTPS/TLS. Wrażliwe dane konfiguracyjne (klucze prywatne portfela systemowego,
+klucze API Pinata) przechowywane są jako zmienne środowiskowe, nigdy w kodzie źródłowym
+ani repozytorium.
+
+\newpage
+Dostęp do poszczególnych endpointów API jest ograniczany atrybutami ról bezpośrednio
+w kodzie kontrolerów C\#, co eliminuje ryzyko przypadkowego pominięcia weryfikacji
+uprawnień. Każda próba nieautoryzowanego dostępu jest rejestrowana w dzienniku zdarzeń
+bezpieczeństwa z adresem IP i identyfikatorem żądania, co umożliwia późniejszą analizę
+i detekcję prób ataku.
+
+\begin{itemize}
+    \item \textbf{Użytkownik (User):} Podstawowa rola umożliwiająca tworzenie nowych dokumentów, przeglądanie dokumentów własnych oraz tych udostępnionych.
+    \item \textbf{Menedżer (Manager):} Rola posiadająca uprawnienia do zatwierdzania (akceptacji) lub odrzucania dokumentów w ramach zdefiniowanego obiegu. Menedżer może również przeglądać dokumenty podległych mu działów.
+    \item \textbf{Administrator (Admin):} Rola nadrzędna z dostępem do panelu zarządzania użytkownikami, definiowania struktur organizacyjnych oraz konfiguracji parametrów systemu (np. adresu smart kontraktu).
+\end{itemize}
+Mapowanie pomiędzy użytkownikiem systemu a jego adresem w sieci DIVI (lub Ethereum) jest opcjonalne i wykorzystywane głównie do potwierdzenia tożsamości poprzez podpisanie wiadomości kluczem prywatnym, co stanowi dodatkowy, silny czynnik uwierzytelniania.
+
+
+\begin{thebibliography}{9}
+\bibitem{nakamoto2008bitcoin}
+S.~Nakamoto, \textit{Bitcoin: A Peer-to-Peer Electronic Cash System}, 2008. [Online]. Dostęp: \url{https://bitcoin.org/bitcoin.pdf}
+
+\bibitem{ipfs}
+J.~Benet, \textit{IPFS - Content Addressed, Versioned, P2P File System}, 2014. [Online]. Dostęp: \url{https://ipfs.io/ipfs/QmR7GSQM93Cx5eAg6a6yRzNde1FQv7uL6X1o4k7zrJa3LX/ipfs.draft3.pdf}
+
+\bibitem{ethereum}
+V.~Buterin, \textit{Ethereum: A Next-Generation Smart Contract and Decentralized Application Platform}, 2014. [Online]. Dostęp: \url{https://ethereum.org/en/whitepaper/}
+\end{thebibliography}
+
+\end{document}
+
+\end{document}

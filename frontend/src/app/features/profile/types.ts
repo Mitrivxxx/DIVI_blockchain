@@ -1,3 +1,5 @@
+import type { DocumentListItem } from "@/types/documents";
+
 export type ProfileProps = {
   userRole?: string | null;
   walletAddress?: string | null;
@@ -16,8 +18,5 @@ export type ProfileData = {
 export type EditableField = "name" | "email" | "bio";
 export type ProfileTab = "profile" | "certyfikat" | "transactions";
 
-export type OwnerCertificate = {
-  hash: string;
-  issuer: string;
-  issuedAt: string;
-};
+/** Owner-owned documents from GET /api/documents/owner/{address}. */
+export type OwnerCertificate = DocumentListItem;

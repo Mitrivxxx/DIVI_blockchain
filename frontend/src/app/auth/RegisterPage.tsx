@@ -1,6 +1,7 @@
 import { useState, useEffect, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useWeb3Auth } from "../../service/web3/useWeb3Auth";
+import { EMAIL_LOGIN_STORAGE_KEY } from "../../service/auth/constants";
 import { API_URL } from "../../types/api";
 import logo from "../../assets/icons/divi_icon_demo.png";
 import metamaskIcon from "../../assets/icons/Metamask.svg";
@@ -44,18 +45,32 @@ const RegisterPage = () => {
         }),
       });
 
-      const responseBody = await response.json().catch(() => null);
+      const rawBody = await response.text();
+      let responseBody: unknown = null;
+      try {
+        responseBody = rawBody ? JSON.parse(rawBody) : null;
+      } catch {
+        responseBody = rawBody || null;
+      }
 
       if (!response.ok) {
+        const conflictHint =
+          response.status === 409
+            ? "Email jest już zajęty. Zaloguj się lub użyj innego adresu."
+            : null;
         const message =
-          typeof responseBody === "string"
+          typeof responseBody === "string" && responseBody.trim()
             ? responseBody
-            : responseBody?.title || responseBody?.detail || responseBody?.message || "Nie udało się utworzyć konta.";
+            : (responseBody as { title?: string; detail?: string; message?: string } | null)?.title ||
+              (responseBody as { detail?: string } | null)?.detail ||
+              (responseBody as { message?: string } | null)?.message ||
+              conflictHint ||
+              "Nie udało się utworzyć konta.";
         throw new Error(message);
       }
 
       // Konto utworzone - zaloguj się automatycznie
-      localStorage.setItem("email-auth-session", "1");
+      localStorage.setItem(EMAIL_LOGIN_STORAGE_KEY, "1");
 
       const loginResponse = await fetch(`${API_URL}/Auth/login`, {
         method: "POST",
@@ -127,7 +142,7 @@ const RegisterPage = () => {
         setJwt(googleBody.token);
       }
 
-      localStorage.setItem("email-auth-session", "1");
+      localStorage.setItem(EMAIL_LOGIN_STORAGE_KEY, "1");
       navigate("/app/dashboard", { replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Błąd podczas logowania przez Google.");

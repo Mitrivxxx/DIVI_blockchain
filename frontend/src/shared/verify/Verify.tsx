@@ -55,9 +55,11 @@ const Verify: React.FC = () => {
               className={`${styles.statusCard} ${
                 verificationOutcome.kind === 'verified'
                   ? styles.cardVerified
-                  : verificationOutcome.kind === 'missing'
-                    ? styles.cardNoResult
-                    : styles.cardError
+                  : verificationOutcome.kind === 'revoked'
+                    ? styles.cardRevoked
+                    : verificationOutcome.kind === 'missing'
+                      ? styles.cardNoResult
+                      : styles.cardError
               }`}
               leftClassName={styles.statusLeft}
               iconClassName={styles.statusIcon}
@@ -83,13 +85,19 @@ const Verify: React.FC = () => {
           <VerifyFileInfo
             file={file}
             selectedAt={selectedAt}
-            integrityPercent={verificationOutcome?.kind === 'missing' ? 0 : 100}
+            integrityPercent={
+              verificationOutcome?.kind === 'missing' || verificationOutcome?.kind === 'error'
+                ? 0
+                : 100
+            }
           />
           <VerifyBlockchainInfo
             transactionHash={verificationData?.transactionHash}
             blockNumber={verificationData?.blockNumber}
             blockTimestamp={verificationData?.blockTimestamp}
             networkName={verificationData?.networkName}
+            status={verificationData?.status}
+            isRevoked={verificationData?.isRevoked}
           />
         </div>
       )}

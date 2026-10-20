@@ -1,7 +1,7 @@
 import { type ReactNode } from 'react';
 
 type VerifyResultProps = {
-  variant: 'verified' | 'missing' | 'error' | 'verifying';
+  variant: 'verified' | 'revoked' | 'missing' | 'error' | 'verifying';
   title: string;
   children?: ReactNode;
   className?: string;
@@ -15,6 +15,7 @@ type VerifyResultProps = {
 
 const ICON_BY_VARIANT: Record<VerifyResultProps['variant'], string> = {
   verified: '✓',
+  revoked: '⊘',
   missing: '?',
   error: '×',
   verifying: '…',

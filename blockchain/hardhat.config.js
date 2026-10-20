@@ -1,7 +1,5 @@
 import dotenv from "dotenv";
 import { configVariable, defineConfig } from "hardhat/config";
-import "@nomicfoundation/hardhat-ethers";
-//import "@nomicfoundation/hardhat-chai-matchers";
 
 dotenv.config({ path: "../.env" });
 

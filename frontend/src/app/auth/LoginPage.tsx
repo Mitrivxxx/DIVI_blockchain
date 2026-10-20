@@ -7,9 +7,9 @@ import googleIcon from "../../assets/icons/google.svg";
 import { API_URL } from "@/types/api";
 import "./LoginPage.scss";
 import { useWeb3Auth } from "../../service/web3/useWeb3Auth";
+import { EMAIL_LOGIN_STORAGE_KEY } from "../../service/auth/constants";
 
 const GOOGLE_CLIENT_ID = "827137465970-kc668qkj4j9ck05ufeqsgi67eb67ak08.apps.googleusercontent.com";
-const EMAIL_LOGIN_STORAGE_KEY = "email-auth-session";
 
 const LoginPage = () => {
   const navigate = useNavigate();

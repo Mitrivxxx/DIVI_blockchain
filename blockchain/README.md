@@ -1,57 +1,84 @@
-# Sample Hardhat 3 Beta Project (`mocha` and `ethers`)
+# DIVI — Blockchain (DocumentIssuer)
 
-This project showcases a Hardhat 3 Beta project using `mocha` for tests and the `ethers` library for Ethereum interactions.
+Smart contract for issuing and verifying document hashes on Ethereum (Sepolia / local Hardhat).
 
-To learn more about the Hardhat 3 Beta, please visit the [Getting Started guide](https://hardhat.org/docs/getting-started#getting-started-with-hardhat-3). To share your feedback, join our [Hardhat 3 Beta](https://hardhat.org/hardhat3-beta-telegram-group) Telegram group or [open an issue](https://github.com/NomicFoundation/hardhat/issues/new) in our GitHub issue tracker.
+## Contracts
 
-## Project Overview
+| File | Role |
+| ---- | ---- |
+| `contracts/DocumentIssuer.sol` | Issue / verify / revoke documents; manage issuers & admins |
+| `contracts/DocumentTypes.sol` | `DocumentStatus`, `DocumentType`, `Document` struct |
 
-This example project includes:
+### Roles
 
-- A simple Hardhat configuration file.
-- Foundry-compatible Solidity unit tests.
-- TypeScript integration tests using `mocha` and ethers.js
-- Examples demonstrating how to connect to different types of networks, including locally simulating OP mainnet.
+- **owner** — deployer; manages admins; always authorized issuer
+- **admin** — can `addIssuer` / `removeIssuer`
+- **authorizedIssuers** — can `issueDocument`
 
-## Usage
+### Events
 
-### Running Tests
+- `DocumentIssued`, `DocumentRevoked`
+- `IssuerAdded`, `IssuerRemoved`
+- `AdminAdded`, `AdminRemoved`
 
-To run all the tests in the project, execute the following command:
+### Status
 
-```shell
-npx hardhat test
+`Pending` | `Confirmed` | `Revoked` — `verifyDocument` is true only for Confirmed.
+
+## Setup
+
+```bash
+cd blockchain
+npm install
+# Root ../.env must contain SEPOLIA_RPC_URL and SEPOLIA_PRIVATE_KEY for Sepolia deploys
 ```
 
-You can also selectively run the Solidity or `mocha` tests:
+## Compile
 
-```shell
-npx hardhat test solidity
-npx hardhat test mocha
+```bash
+npm run compile
+# or: npx hardhat compile
 ```
 
-### Make a deployment to Sepolia
+## Deploy (primary path)
 
-This project includes an example Ignition module to deploy the contract. You can deploy this module to a locally simulated chain or to Sepolia.
+One script for every Hardhat network:
 
-To run the deployment to a local chain:
+```bash
+# Local node (docker compose --profile tools / hardhat node on :8545)
+npm run deploy:local
+# npx hardhat run scripts/deploy.js --network localhost
 
-```shell
-npx hardhat ignition deploy ignition/modules/Counter.ts
+# Sepolia
+npm run deploy:sepolia
+# npx hardhat run scripts/deploy.js --network sepolia
 ```
 
-To run the deployment to Sepolia, you need an account with funds to send the transaction. The provided Hardhat configuration includes a Configuration Variable called `SEPOLIA_PRIVATE_KEY`, which you can use to set the private key of the account you want to use.
+Optional: set `INITIAL_ADMIN=0x...` in the environment before deploy.
 
-You can set the `SEPOLIA_PRIVATE_KEY` variable using the `hardhat-keystore` plugin or by setting it as an environment variable.
+### After deploy
 
-To set the `SEPOLIA_PRIVATE_KEY` config variable using `hardhat-keystore`:
+1. Copy ABI to `backend/Infrastructure/Contracts/DocumentIssuer.abi.json`
+2. Set `Blockchain__ContractAddress` / `BLOCKCHAIN_CONTRACT_ADDRESS` in root `.env`
 
-```shell
-npx hardhat keystore set SEPOLIA_PRIVATE_KEY
+## Deploy via Ignition (optional)
+
+```bash
+npx hardhat ignition deploy ignition/modules/DocumentIssuer.ts
+npx hardhat ignition deploy ignition/modules/DocumentIssuer.ts --network sepolia
 ```
 
-After setting the variable, you can run the deployment with the Sepolia network:
+## Tests
 
-```shell
-npx hardhat ignition deploy --network sepolia ignition/modules/Counter.ts
+```bash
+npm test
+# npx hardhat test
+```
+
+## Local RPC
+
+```bash
+# from repo root
+docker compose --profile tools up
+# RPC: http://127.0.0.1:8545
 ```

@@ -42,6 +42,61 @@ namespace backend.Migrations
                     b.ToTable("BlacklistedTokens");
                 });
 
+            modelBuilder.Entity("backend.Models.Document", b =>
+                {
+                    b.Property<string>("Hash")
+                        .HasMaxLength(66)
+                        .HasColumnType("character varying(66)");
+
+                    b.Property<long>("BlockNumber")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Cid")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<byte>("DocumentType")
+                        .HasColumnType("smallint");
+
+                    b.Property<DateTimeOffset?>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset>("IssuedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int?>("IssuedByMemberId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("IssuerAddress")
+                        .IsRequired()
+                        .HasMaxLength(42)
+                        .HasColumnType("character varying(42)");
+
+                    b.Property<string>("OwnerAddress")
+                        .IsRequired()
+                        .HasMaxLength(42)
+                        .HasColumnType("character varying(42)");
+
+                    b.Property<byte>("Status")
+                        .HasColumnType("smallint");
+
+                    b.Property<string>("TxHash")
+                        .IsRequired()
+                        .HasMaxLength(66)
+                        .HasColumnType("character varying(66)");
+
+                    b.HasKey("Hash");
+
+                    b.HasIndex("IssuedByMemberId");
+
+                    b.HasIndex("IssuerAddress");
+
+                    b.HasIndex("OwnerAddress");
+
+                    b.ToTable("Documents", (string)null);
+                });
+
             modelBuilder.Entity("backend.Models.IssuerApplication", b =>
                 {
                     b.Property<int>("Id")
@@ -127,6 +182,9 @@ namespace backend.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Email")
+                        .IsUnique();
+
                     b.HasIndex("GoogleSub")
                         .IsUnique();
 
@@ -139,8 +197,8 @@ namespace backend.Migrations
                         {
                             Id = 2,
                             CreatedAt = new DateTime(2026, 3, 6, 0, 21, 35, 566, DateTimeKind.Utc).AddTicks(2560),
-                            EthereumAddress = "0xeb2a27c7c6E72BC5022a49c4e044E72ab70E9bDb",
-                            MemberRoleId = 1
+                            EthereumAddress = "0x3590E41e29F2626B262A16225a207AaB33dBf782",
+                            MemberRoleId = 4
                         });
                 });
 
@@ -173,6 +231,11 @@ namespace backend.Migrations
                         {
                             Id = 3,
                             Name = "user"
+                        },
+                        new
+                        {
+                            Id = 4,
+                            Name = "owner"
                         });
                 });
 
@@ -203,6 +266,16 @@ namespace backend.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Nonces");
+                });
+
+            modelBuilder.Entity("backend.Models.Document", b =>
+                {
+                    b.HasOne("backend.Models.Member", "IssuedByMember")
+                        .WithMany()
+                        .HasForeignKey("IssuedByMemberId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("IssuedByMember");
                 });
 
             modelBuilder.Entity("backend.Models.Member", b =>

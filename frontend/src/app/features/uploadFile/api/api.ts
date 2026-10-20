@@ -32,6 +32,12 @@ export const verifyDocument = async (file: File) => {
   return response.data as {
     hash: string;
     isAuthentic: boolean;
+    isRevoked: boolean;
+    status?: number | null;
     message: string;
+    transactionHash?: string | null;
+    blockNumber?: number | null;
+    blockTimestamp?: string | null;
+    networkName?: string | null;
   };
 };

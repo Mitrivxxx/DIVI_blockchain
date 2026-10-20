@@ -4,6 +4,7 @@ using backend.Data;
 using backend.Infrastructure.Configuration;
 using backend.Infrastructure.Database;
 using backend.Infrastructure.Swagger;
+using backend.Services.Admins;
 using backend.Services.Auth;
 using backend.Services.BackgroundJobs;
 using backend.Services.Blockchain;
@@ -33,6 +34,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IBlockchainService, BlockchainService>();
         services.AddScoped<IUserRoleService, UserRoleService>();
         services.AddScoped<IIssuerApplicationService, IssuerApplicationService>();
+        services.AddScoped<IAdminManagementService, AdminManagementService>();
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IJwtService, JwtService>();
         services.AddScoped<IGetProfileService, GetProfileService>();
@@ -47,10 +49,16 @@ public static class ServiceCollectionExtensions
     {
         var corsOrigins = CorsOptions.ResolveAllowedOrigins(configuration);
 
-        services.AddOptions<DatabaseOptions>()
-            .Bind(configuration.GetSection("Database"))
-            .ValidateDataAnnotations()
-            .ValidateOnStart();
+        var aspireConnectionString = ResolveAspirePostgresConnectionString(configuration);
+        var databaseOptions = services.AddOptions<DatabaseOptions>()
+            .Bind(configuration.GetSection("Database"));
+
+        if (string.IsNullOrWhiteSpace(aspireConnectionString))
+        {
+            databaseOptions
+                .ValidateDataAnnotations()
+                .ValidateOnStart();
+        }
 
         services.AddOptions<BlockchainOptions>()
             .Bind(configuration.GetSection("Blockchain"))
@@ -59,8 +67,8 @@ public static class ServiceCollectionExtensions
 
         services.AddDbContext<AppDbContext>((serviceProvider, options) =>
         {
-            var databaseOptions = serviceProvider.GetRequiredService<IOptions<DatabaseOptions>>().Value;
-            options.UseNpgsql(databaseOptions.BuildConnectionString());
+            var config = serviceProvider.GetRequiredService<IConfiguration>();
+            options.UseNpgsql(ResolvePostgresConnectionString(config, serviceProvider));
         });
 
         services.AddCors(options =>
@@ -68,10 +76,27 @@ public static class ServiceCollectionExtensions
             options.AddPolicy("react",
                 policy =>
                 {
-                    policy.WithOrigins(corsOrigins)
-                        .AllowAnyHeader()
-                        .AllowAnyMethod()
-                        .AllowCredentials();
+                    // Aspire may assign a dynamic Vite port; allow any localhost origin in Development.
+                    if (string.Equals(
+                            Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT"),
+                            "Development",
+                            StringComparison.OrdinalIgnoreCase))
+                    {
+                        policy.SetIsOriginAllowed(origin =>
+                                origin.StartsWith("http://localhost:", StringComparison.OrdinalIgnoreCase)
+                                || origin.StartsWith("https://localhost:", StringComparison.OrdinalIgnoreCase)
+                                || corsOrigins.Contains(origin, StringComparer.OrdinalIgnoreCase))
+                            .AllowAnyHeader()
+                            .AllowAnyMethod()
+                            .AllowCredentials();
+                    }
+                    else
+                    {
+                        policy.WithOrigins(corsOrigins)
+                            .AllowAnyHeader()
+                            .AllowAnyMethod()
+                            .AllowCredentials();
+                    }
                 });
         });
 
@@ -149,6 +174,35 @@ public static class ServiceCollectionExtensions
 
         return services;
     }
+
+    /// <summary>
+    /// Aspire injects <c>ConnectionStrings__divi</c> (or portable <c>ConnectionStrings__divi</c>).
+    /// Local/docker runs continue to use <see cref="DatabaseOptions"/> / <c>DB_*</c>.
+    /// </summary>
+    public static string ResolvePostgresConnectionString(IConfiguration configuration, IServiceProvider? serviceProvider = null)
+    {
+        var aspire = ResolveAspirePostgresConnectionString(configuration);
+        if (!string.IsNullOrWhiteSpace(aspire))
+        {
+            return aspire;
+        }
+
+        if (serviceProvider is not null)
+        {
+            return serviceProvider.GetRequiredService<IOptions<DatabaseOptions>>().Value.BuildConnectionString();
+        }
+
+        var host = configuration["Database:Host"] ?? throw new InvalidOperationException("Database:Host missing");
+        var port = configuration["Database:Port"] ?? "5432";
+        var name = configuration["Database:Name"] ?? throw new InvalidOperationException("Database:Name missing");
+        var user = configuration["Database:Username"] ?? throw new InvalidOperationException("Database:Username missing");
+        var password = configuration["Database:Password"] ?? throw new InvalidOperationException("Database:Password missing");
+        return $"Host={host};Port={port};Database={name};Username={user};Password={password}";
+    }
+
+    private static string? ResolveAspirePostgresConnectionString(IConfiguration configuration) =>
+        configuration.GetConnectionString("divi")
+        ?? configuration.GetConnectionString("postgres");
 
     public static IServiceCollection AddPresentation(this IServiceCollection services)
     {

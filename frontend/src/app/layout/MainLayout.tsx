@@ -5,6 +5,7 @@ import Sidebar from "../features/sidebar/Sidebar";
 import Dashboard from "../features/Dashboard";
 import Upload from "../features/uploadFile/Upload";
 import MyDocuments from "../features/MyDocuments";
+import IssuedDocuments from "../features/issuedDocuments/IssuedDocuments";
 import Verify from "../features/Verify";
 import Profile from "../features/profile/Profile";
 import Help from "../features/Help";
@@ -14,9 +15,8 @@ import Header from "../../shared/header/Header";
 import { fetchUserRole } from "../features/sidebar/api/api";
 import { useUserRole } from "../features/sidebar/hooks/useUserRole";
 import { useWeb3Auth } from "../../service/web3/useWeb3Auth";
+import { EMAIL_LOGIN_STORAGE_KEY } from "../../service/auth/constants";
 import "./MainLayout.scss";
-
-const EMAIL_LOGIN_STORAGE_KEY = "email-auth-session";
 
 const MainLayout: React.FC = () => {
   const navigate = useNavigate();
@@ -64,6 +64,8 @@ const MainLayout: React.FC = () => {
         return <IssuerRole />;
       case "upload":
         return <Upload />;
+      case "issuedDocuments":
+        return <IssuedDocuments />;
       case "myDocuments":
         return <MyDocuments />;
       case "verify":
@@ -79,18 +81,18 @@ const MainLayout: React.FC = () => {
 
   return (
     <div className="mainlayout-root">
-      <Header
-        onBellClick={handleBellClick}
-        onUserClick={handleUserClick}
-        authMode="status"
-        userRole={userRole}
-        walletAddress={address}
-        shortAddress={shortAddress}
-        onLogout={handleLogout}
-      />
+      <Header onBellClick={handleBellClick} showUser={false} />
       <div className="mainlayout-body">
         <nav className="mainlayout-nav">
-          <Sidebar activeTab={activeTab} onTabSelect={navigateToTab} userRole={userRole} />
+          <Sidebar
+            activeTab={activeTab}
+            onTabSelect={navigateToTab}
+            userRole={userRole}
+            walletAddress={address}
+            shortAddress={shortAddress}
+            onLogout={handleLogout}
+            onProfileClick={handleUserClick}
+          />
         </nav>
         <main className="mainlayout-main">{renderContent()}</main>
       </div>

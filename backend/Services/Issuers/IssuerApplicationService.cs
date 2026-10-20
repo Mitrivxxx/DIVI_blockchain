@@ -10,6 +10,8 @@ namespace backend.Services.Issuers
 {
 	public class IssuerApplicationService : IIssuerApplicationService
 	 {
+        private const int IssuerRoleId = 2;
+
         private readonly AppDbContext _db;
         private readonly IBlockchainService _blockchainService;
 
@@ -21,7 +23,11 @@ namespace backend.Services.Issuers
 
         public async Task<IssuerApplication> CreateIssuerAsync(CreateIssuerApplicationDto dto)
         {
-            Console.WriteLine($"[IssuerApplicationService] CreateIssuerAsync - Creating for {dto?.InstitutionName}, {dto!.EthereumAddress}");
+            Log.Information(
+                "[IssuerApplicationService] CreateIssuerAsync for {Institution}, {Address}",
+                dto?.InstitutionName,
+                dto!.EthereumAddress);
+
             var entity = new IssuerApplication
             {
                 InstitutionName = dto.InstitutionName,
@@ -33,14 +39,12 @@ namespace backend.Services.Issuers
             };
             _db.IssuerApplications.Add(entity);
             await _db.SaveChangesAsync();
-            Console.WriteLine($"[IssuerApplicationService] Created entity with id: {entity.Id}");
             return entity;
         }
 
         public async Task<IEnumerable<IssuerApplicationListDto>> GetOnlyPendingIssuerAsync()
         {
-            Console.WriteLine("[IssuerApplicationService] GetOnlyPendingIssuerAsync called");
-            var result = await _db.IssuerApplications
+            return await _db.IssuerApplications
                 .Where(x => x.Status == IssuerApplicationStatus.Pending)
                 .Select(x => new IssuerApplicationListDto
                 {
@@ -50,43 +54,52 @@ namespace backend.Services.Issuers
                     Status = x.Status
                 })
                 .ToListAsync();
-            Console.WriteLine($"[IssuerApplicationService] Pending found: {result.Count}");
-            return result;
         }
 
-        public async Task<bool> UpdateStatusIssuerAsync(int id, string status)
+        public async Task<(bool Ok, string? Error)> UpdateStatusIssuerAsync(int id, string status)
         {
-            Console.WriteLine($"[IssuerApplicationService] UpdateStatusIssuerAsync - id: {id}, status: {status}");
             var entity = await _db.IssuerApplications.FirstOrDefaultAsync(x => x.Id == id);
             if (entity == null)
             {
-                Console.WriteLine("[IssuerApplicationService] UpdateStatusIssuerAsync - entity not found");
-                return false;
+                return (false, "Application not found.");
             }
 
             if (!Enum.TryParse<IssuerApplicationStatus>(status, true, out var newStatus) ||
                 (newStatus != IssuerApplicationStatus.Approved && newStatus != IssuerApplicationStatus.Rejected))
             {
-                Console.WriteLine("[IssuerApplicationService] UpdateStatusIssuerAsync - invalid status");
-                return false;
+                return (false, "Invalid status. Use Approved or Rejected.");
             }
 
             if (newStatus == IssuerApplicationStatus.Approved)
             {
+                var normalizedAddress = entity.EthereumAddress.Trim().ToLowerInvariant();
+                var member = await _db.Members
+                    .FirstOrDefaultAsync(m =>
+                        m.EthereumAddress != null &&
+                        m.EthereumAddress.ToLower() == normalizedAddress);
+
+                if (member is null)
+                {
+                    return (false, "No Member found for this Ethereum address. The applicant must register/login with that wallet first.");
+                }
+
                 try
                 {
                     await _blockchainService.AddIssuerAsync(entity.EthereumAddress);
                 }
                 catch (Exception ex)
                 {
-                    Log.Error("[IssuerApplicationService] Blockchain error: {Message}", ex.Message);
-                    return false;
+                    Log.Error(ex, "[IssuerApplicationService] Blockchain AddIssuer failed for {Address}", entity.EthereumAddress);
+                    return (false, $"Blockchain error: {ex.Message}");
                 }
+
+                member.MemberRoleId = IssuerRoleId;
             }
+
             entity.Status = newStatus;
             await _db.SaveChangesAsync();
-            Console.WriteLine($"[IssuerApplicationService] Status updated to {newStatus}");
-            return true;
+            Log.Information("[IssuerApplicationService] Application {Id} status → {Status}", id, newStatus);
+            return (true, null);
         }
     }
 }

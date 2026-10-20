@@ -1,7 +1,10 @@
 using System.Security.Cryptography;
+using backend.Data;
 using backend.DTOs;
 using backend.Infrastructure;
+using backend.Models;
 using backend.Services.Blockchain;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Nethereum.Util;
 
@@ -9,21 +12,31 @@ namespace backend.Services.Documents
 {
 	public class DocumentService : IDocumentService
 	  {
+        private const byte StatusConfirmed = 1;
+        private const byte StatusRevoked = 2;
+
         private readonly PinataClient _pinataClient;
         private readonly IBlockchainService _blockchainService;
+        private readonly AppDbContext _db;
         private readonly ILogger<DocumentService> _logger;
 
         public DocumentService(
             PinataClient pinataClient,
             IBlockchainService blockchainService,
+            AppDbContext db,
             ILogger<DocumentService> logger)
         {
             _pinataClient = pinataClient;
             _blockchainService = blockchainService;
+            _db = db;
             _logger = logger;
         }
 
-        public async Task<UploadResultDto> ProcessDocumentAsync(IFormFile file, string documentType, string owner)
+        public async Task<UploadResultDto> ProcessDocumentAsync(
+            IFormFile file,
+            string documentType,
+            string owner,
+            int? issuedByMemberId = null)
         {
             var uploadFile = file ?? throw new ArgumentNullException(nameof(file));
 
@@ -65,6 +78,8 @@ namespace backend.Services.Documents
                 };
             }
 
+            var normalizedOwner = owner.ToLowerInvariant();
+
             var tempPath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
             _logger.LogDebug("Temporary file created for upload pipeline. TempPath: {TempPath}", tempPath);
 
@@ -75,7 +90,6 @@ namespace backend.Services.Documents
 
             try
             {
-                // 1. SHA-256
                 string hash;
                 await using (var stream = File.OpenRead(tempPath))
                 {
@@ -86,7 +100,16 @@ namespace backend.Services.Documents
 
                 _logger.LogDebug("Computed SHA-256 hash for uploaded file. Hash: {Hash}", hash);
 
-                // 2. Sprawdź czy dokument już istnieje w blockchain
+                if (await _db.Documents.AsNoTracking().AnyAsync(d => d.Hash == hash))
+                {
+                    return new UploadResultDto
+                    {
+                        Hash = hash,
+                        Cid = string.Empty,
+                        Message = "Taki dokument już istnieje w bazie, nie możesz go wrzucić jeszcze raz."
+                    };
+                }
+
                 var exists = await _blockchainService.VerifyDocumentAsync(hash);
                 _logger.LogDebug("Blockchain duplicate check completed. Hash: {Hash}, Exists: {Exists}", hash, exists);
                 if (exists)
@@ -99,15 +122,14 @@ namespace backend.Services.Documents
                     };
                 }
 
-                // 3. Pre-check kontraktu przed uploadem do Pinata
                 try
                 {
-                    await _blockchainService.PrecheckIssueDocumentAsync(hash, owner, documentTypeValue);
-                    _logger.LogDebug("Blockchain precheck succeeded. Hash: {Hash}, Owner: {Owner}", hash, owner);
+                    await _blockchainService.PrecheckIssueDocumentAsync(hash, normalizedOwner, documentTypeValue);
+                    _logger.LogDebug("Blockchain precheck succeeded. Hash: {Hash}, Owner: {Owner}", hash, normalizedOwner);
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogDebug(ex, "Blockchain precheck failed. Hash: {Hash}, Owner: {Owner}", hash, owner);
+                    _logger.LogDebug(ex, "Blockchain precheck failed. Hash: {Hash}, Owner: {Owner}", hash, normalizedOwner);
                     return new UploadResultDto
                     {
                         Hash = hash,
@@ -116,7 +138,6 @@ namespace backend.Services.Documents
                     };
                 }
 
-                // 4. Upload do Pinata → CID
                 string cid;
                 try
                 {
@@ -134,12 +155,15 @@ namespace backend.Services.Documents
                     };
                 }
 
-                // 5. Zapis do blockchaina
-                string txHash;
+                IssueTransactionResultDto issueResult;
                 try
                 {
-                    txHash = await _blockchainService.IssueDocumentAsync(hash, cid, owner, documentTypeValue);
-                    _logger.LogDebug("Blockchain issue transaction confirmed. Hash: {Hash}, TxHash: {TxHash}", hash, txHash);
+                    issueResult = await _blockchainService.IssueDocumentAsync(hash, cid, normalizedOwner, documentTypeValue);
+                    _logger.LogDebug(
+                        "Blockchain issue transaction confirmed. Hash: {Hash}, TxHash: {TxHash}, Block: {BlockNumber}",
+                        hash,
+                        issueResult.TxHash,
+                        issueResult.BlockNumber);
                 }
                 catch (Exception ex)
                 {
@@ -152,17 +176,52 @@ namespace backend.Services.Documents
                     };
                 }
 
+                var issuerAddress = string.IsNullOrWhiteSpace(issueResult.IssuerAddress)
+                    ? _blockchainService.GetBackendAccountAddress()
+                    : issueResult.IssuerAddress;
+
+                var document = new Document
+                {
+                    Hash = hash,
+                    Cid = cid,
+                    IssuerAddress = issuerAddress.ToLowerInvariant(),
+                    OwnerAddress = normalizedOwner,
+                    IssuedByMemberId = issuedByMemberId,
+                    DocumentType = documentTypeValue,
+                    TxHash = issueResult.TxHash,
+                    BlockNumber = issueResult.BlockNumber,
+                    Status = StatusConfirmed,
+                    IssuedAt = issueResult.BlockTimestamp,
+                    ExpiresAt = null
+                };
+
+                _db.Documents.Add(document);
+                try
+                {
+                    await _db.SaveChangesAsync();
+                }
+                catch (DbUpdateException ex)
+                {
+                    _logger.LogWarning(ex, "Failed to persist document metadata for hash {Hash}", hash);
+                    return new UploadResultDto
+                    {
+                        Hash = hash,
+                        Cid = cid,
+                        TxHash = issueResult.TxHash,
+                        Message = $"Dokument zapisany on-chain (TxHash: {issueResult.TxHash}), ale zapis metadanych w DB nie powiódł się (możliwy duplikat hash)."
+                    };
+                }
+
                 return new UploadResultDto
                 {
                     Hash = hash,
                     Cid = cid,
-                    TxHash = txHash,
-                    Message = $"Dokument został zapisany w Pinata i blockchain (Confirmed). TxHash: {txHash}"
+                    TxHash = issueResult.TxHash,
+                    Message = $"Dokument został zapisany w Pinata, blockchain i bazie (Confirmed). TxHash: {issueResult.TxHash}"
                 };
             }
             finally
             {
-                // 6. CLEANUP
                 if (File.Exists(tempPath))
                 {
                     File.Delete(tempPath);
@@ -170,6 +229,112 @@ namespace backend.Services.Documents
                 }
             }
         }
+
+        public async Task<IReadOnlyList<DocumentListItemDto>> GetByOwnerAddressAsync(string ownerAddress)
+        {
+            var normalized = NormalizeAddress(ownerAddress);
+            var rows = await _db.Documents.AsNoTracking()
+                .Where(d => d.OwnerAddress == normalized)
+                .OrderByDescending(d => d.IssuedAt)
+                .ToListAsync();
+            return rows.Select(ToListItem).ToList();
+        }
+
+        public async Task<IReadOnlyList<DocumentListItemDto>> GetByIssuerAddressAsync(string issuerAddress)
+        {
+            var normalized = NormalizeAddress(issuerAddress);
+            var rows = await _db.Documents.AsNoTracking()
+                .Where(d => d.IssuerAddress == normalized)
+                .OrderByDescending(d => d.IssuedAt)
+                .ToListAsync();
+            return rows.Select(ToListItem).ToList();
+        }
+
+        public async Task<IReadOnlyList<DocumentListItemDto>> GetIssuedByMemberAsync(int memberId)
+        {
+            var rows = await _db.Documents.AsNoTracking()
+                .Where(d => d.IssuedByMemberId == memberId)
+                .OrderByDescending(d => d.IssuedAt)
+                .ToListAsync();
+            return rows.Select(ToListItem).ToList();
+        }
+
+        public async Task<DocumentListItemDto?> GetByHashAsync(string hash)
+        {
+            var normalized = NormalizeHash(hash);
+            var row = await _db.Documents.AsNoTracking()
+                .FirstOrDefaultAsync(d => d.Hash == normalized);
+            return row is null ? null : ToListItem(row);
+        }
+
+        public async Task<(bool Ok, int StatusCode, string? Error)> RevokeAsync(
+            string hash,
+            int? memberId,
+            string role)
+        {
+            var normalized = NormalizeHash(hash);
+            if (string.IsNullOrWhiteSpace(normalized))
+            {
+                return (false, 400, "hash is required");
+            }
+
+            var document = await _db.Documents.FirstOrDefaultAsync(d => d.Hash == normalized);
+            if (document is null)
+            {
+                return (false, 404, "Document not found in database.");
+            }
+
+            var normalizedRole = (role ?? string.Empty).Trim().ToLowerInvariant();
+            var isPrivileged = normalizedRole is "admin" or "owner";
+            var isIssuerOwner =
+                normalizedRole == "issuer" &&
+                memberId is not null &&
+                document.IssuedByMemberId == memberId;
+
+            if (!isPrivileged && !isIssuerOwner)
+            {
+                return (false, 403, "You are not allowed to revoke this document.");
+            }
+
+            if (document.Status == StatusRevoked)
+            {
+                return (false, 409, "Document is already revoked.");
+            }
+
+            try
+            {
+                await _blockchainService.RevokeDocumentAsync(normalized);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "On-chain revoke failed for hash {Hash}", normalized);
+                return (false, 502, $"Blockchain revoke failed: {ex.Message}");
+            }
+
+            document.Status = StatusRevoked;
+            await _db.SaveChangesAsync();
+            _logger.LogInformation("Document {Hash} revoked by member {MemberId} role {Role}", normalized, memberId, role);
+            return (true, 204, null);
+        }
+
+        private static DocumentListItemDto ToListItem(Document d) => new()
+        {
+            Hash = d.Hash,
+            Issuer = d.IssuerAddress,
+            IssuedAt = d.IssuedAt,
+            Cid = d.Cid,
+            DocumentType = d.DocumentType,
+            TxHash = d.TxHash,
+            BlockNumber = d.BlockNumber,
+            Status = d.Status,
+            OwnerAddress = d.OwnerAddress
+        };
+
+        private static string NormalizeAddress(string address) =>
+            (address ?? string.Empty).Trim().ToLowerInvariant();
+
+        private static string NormalizeHash(string hash) =>
+            (hash ?? string.Empty).Trim().ToLowerInvariant();
 
         private static string BuildBlockchainErrorMessage(Exception ex, bool hasPinataFile)
         {
@@ -229,8 +394,6 @@ namespace backend.Services.Documents
             return string.Join(" | ", messages.Distinct(StringComparer.Ordinal));
         }
 
-        // Contract enum mapping:
-        // 0 = Education, 1 = ProfessionalCertificates, 2 = EmploymentDocuments, 3 = License, 4 = OtherDocuments
         private static byte ParseDocumentType(string rawDocumentType)
         {
             if (string.IsNullOrWhiteSpace(rawDocumentType))

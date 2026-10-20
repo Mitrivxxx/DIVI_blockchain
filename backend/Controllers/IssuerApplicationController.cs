@@ -1,4 +1,5 @@
 using backend.DTOs;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Serilog;
 
@@ -18,47 +19,38 @@ namespace backend.Controllers
         /// Creates a new issuer application (applicationissuer -> notify).
         /// </summary>
         [HttpPost]
-        [Microsoft.AspNetCore.Authorization.Authorize(Roles = "user")]
+        [Authorize(Roles = "user")]
         public async Task<IActionResult> Create([FromBody] CreateIssuerApplicationDto dto)
         {
-            Console.WriteLine($"[IssuerApplicationController] POST /api/issuer - Received: {dto?.InstitutionName}, {dto!.EthereumAddress}");
             var entity = await _issuerApplicationService.CreateIssuerAsync(dto);
-            Console.WriteLine($"[IssuerApplicationController] Created issuer application with id: {entity.Id}");
             return CreatedAtAction(null, new { id = entity.Id });
         }
 
         /// <summary>
-        /// Gets only pending applications for admin to review.
+        /// Gets only pending applications for admin/owner to review.
         /// </summary>
         [HttpGet]
-        [Microsoft.AspNetCore.Authorization.Authorize(Roles = "admin")]
+        [Authorize(Roles = "admin,owner")]
         public async Task<ActionResult<IEnumerable<IssuerApplicationListDto>>> GetOnlyPending()
         {
-            Console.WriteLine("[IssuerApplicationController] GET /api/issuer - OnlyPending called");
             var pendingIssuers = await _issuerApplicationService.GetOnlyPendingIssuerAsync();
-            Console.WriteLine($"[IssuerApplicationController] Pending count: {pendingIssuers?.Count()}");
             return Ok(pendingIssuers);
         }
 
         /// <summary>
-        /// Updates application status (notify).
+        /// Updates application status (notify). Approve → on-chain addIssuer + DB role issuer.
         /// </summary>
         [HttpPatch("{id}/status")]
-        [Microsoft.AspNetCore.Authorization.Authorize(Roles = "admin")]
+        [Authorize(Roles = "admin,owner")]
         public async Task<IActionResult> UpdateStatus(int id, [FromQuery] string status)
         {
-            Console.WriteLine($"[IssuerApplicationController] PATCH /api/issuer/{{id}}/status - id: {id}, status: {status}");
-            var result = await _issuerApplicationService.UpdateStatusIssuerAsync(id, status);
-            if (!result)
+            var (ok, error) = await _issuerApplicationService.UpdateStatusIssuerAsync(id, status);
+            if (!ok)
             {
-                Log.Error("[IssuerApplicationController] UpdateStatus failed: Invalid request or status.");
-                return BadRequest("Invalid request or status.");
+                Log.Warning("[IssuerApplicationController] UpdateStatus failed: {Error}", error);
+                return BadRequest(error ?? "Invalid request or status.");
             }
-            Console.WriteLine("[IssuerApplicationController] UpdateStatus succeeded");
             return NoContent();
         }
-
-
-
     }
 }

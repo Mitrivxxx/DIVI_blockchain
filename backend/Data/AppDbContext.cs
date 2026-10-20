@@ -13,6 +13,7 @@ namespace backend.Data
         public DbSet<Member> Members { get; set; }
         public DbSet<MemberRole> MemberRoles { get; set; }
         public DbSet<BlacklistedToken> BlacklistedTokens { get; set; }
+        public DbSet<Document> Documents { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -26,20 +27,22 @@ namespace backend.Data
                 entity.HasData(
                     new MemberRole { Id = 1, Name = "admin" },
                     new MemberRole { Id = 2, Name = "issuer" },
-                    new MemberRole { Id = 3, Name = "user" }
+                    new MemberRole { Id = 3, Name = "user" },
+                    new MemberRole { Id = 4, Name = "owner" }
                 );
             });
 
-            modelBuilder.Entity<IssuerApplication>(entity =>
-            {
-                entity.HasKey(e => e.Id);
-                modelBuilder.Entity<Nonce>(entity =>
+            modelBuilder.Entity<Nonce>(entity =>
             {
                 entity.HasKey(e => e.Id);
                 entity.Property(e => e.Address).IsRequired().HasMaxLength(42);
                 entity.Property(e => e.Value).IsRequired();
                 entity.Property(e => e.ExpiresAt).IsRequired();
             });
+
+            modelBuilder.Entity<IssuerApplication>(entity =>
+            {
+                entity.HasKey(e => e.Id);
 
                 entity.Property(e => e.Status)
                       .HasConversion<string>()
@@ -73,15 +76,39 @@ namespace backend.Data
                     .WithMany(e => e.Members)
                     .HasForeignKey(e => e.MemberRoleId)
                     .IsRequired();
-                entity.HasIndex(u=> u.GoogleSub).IsUnique();
+                entity.HasIndex(u => u.GoogleSub).IsUnique();
+                // Multiple NULLs allowed (Web3-only members); non-null emails must be unique.
+                entity.HasIndex(u => u.Email).IsUnique();
 
+                // Platform owner — address must match Blockchain__PrivateKey / contract deployer
+                // (derived from .env.example SEPOLIA_PRIVATE_KEY).
                 entity.HasData(new Member
                 {
                   Id = 2,
-                  EthereumAddress = "0xeb2a27c7c6E72BC5022a49c4e044E72ab70E9bDb",
-                  MemberRoleId = 1,
+                  EthereumAddress = "0x3590E41e29F2626B262A16225a207AaB33dBf782",
+                  MemberRoleId = 4,
                   CreatedAt = new System.DateTime(2026, 3, 6, 0, 21, 35, 566, System.DateTimeKind.Utc).AddTicks(2560)
                 });
+            });
+
+            modelBuilder.Entity<Document>(entity =>
+            {
+                entity.ToTable("Documents");
+                entity.HasKey(e => e.Hash);
+                entity.Property(e => e.Hash).HasMaxLength(66);
+                entity.Property(e => e.Cid).IsRequired().HasMaxLength(128);
+                entity.Property(e => e.IssuerAddress).IsRequired().HasMaxLength(42);
+                entity.Property(e => e.OwnerAddress).IsRequired().HasMaxLength(42);
+                entity.Property(e => e.TxHash).IsRequired().HasMaxLength(66);
+
+                entity.HasIndex(e => e.OwnerAddress);
+                entity.HasIndex(e => e.IssuerAddress);
+                entity.HasIndex(e => e.IssuedByMemberId);
+
+                entity.HasOne(e => e.IssuedByMember)
+                    .WithMany()
+                    .HasForeignKey(e => e.IssuedByMemberId)
+                    .OnDelete(DeleteBehavior.SetNull);
             });
         }
     }

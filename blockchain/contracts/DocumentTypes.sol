@@ -2,7 +2,7 @@
 pragma solidity ^0.8.20;
 
 library DocumentTypes {
-    enum DocumentStatus { Pending, Confirmed }
+    enum DocumentStatus { Pending, Confirmed, Revoked }
     enum DocumentType { Education, ProfessionalCertificates, EmploymentDocuments, License, OtherDocuments }
 
     struct Document {

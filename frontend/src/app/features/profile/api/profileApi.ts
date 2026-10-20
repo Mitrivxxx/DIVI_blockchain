@@ -53,7 +53,9 @@ export const deleteProfileFieldApi = async (token: string, field: EditableField)
 };
 
 export const fetchOwnerCertificatesApi = async (ownerAddress: string): Promise<OwnerCertificate[]> => {
-  const response = await fetch(`${API_URL}/api/documents/owner/${encodeURIComponent(ownerAddress)}`);
+  const response = await fetch(`${API_URL}/api/documents/owner/${encodeURIComponent(ownerAddress)}`, {
+    credentials: "include",
+  });
 
   if (!response.ok) {
     throw new Error("Nie udało się pobrać certyfikatów właściciela.");

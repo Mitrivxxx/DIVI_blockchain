@@ -4,6 +4,11 @@ import ProfileTabContent from "./components/ProfileTabContent";
 import ProfileTabs from "./components/ProfileTabs";
 import { useProfile } from "./hooks/useProfile";
 import type { ProfileProps, ProfileTab } from "./types";
+import {
+  documentStatusLabel,
+  documentTypeLabel,
+  shortHex,
+} from "@/types/documents";
 import "./Profile.scss";
 
 const Profile: React.FC<ProfileProps> = ({ userRole, walletAddress }) => {
@@ -120,20 +125,34 @@ const Profile: React.FC<ProfileProps> = ({ userRole, walletAddress }) => {
           ) : null}
 
           {!certificatesLoading && !certificatesError && ownerCertificates.length > 0 ? (
-            <ul className="profile-certificates-list">
-              {ownerCertificates.map(certificate => (
-                <li key={certificate.hash} className="profile-certificate-card">
-                  <p className="profile-certificate-label">Hash</p>
-                  <p className="profile-certificate-value profile-certificate-value--mono">{certificate.hash}</p>
-                  <p className="profile-certificate-label">Issuer</p>
-                  <p className="profile-certificate-value profile-certificate-value--mono">{certificate.issuer}</p>
-                  <p className="profile-certificate-label">Issued at</p>
-                  <p className="profile-certificate-value">
-                    {new Date(certificate.issuedAt).toLocaleString("pl-PL")}
-                  </p>
-                </li>
-              ))}
-            </ul>
+            <div className="profile-certificates-table-wrap">
+              <table className="profile-certificates-table">
+                <thead>
+                  <tr>
+                    <th scope="col">Hash</th>
+                    <th scope="col">Issuer</th>
+                    <th scope="col">Typ</th>
+                    <th scope="col">Status</th>
+                    <th scope="col">Issued at</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {ownerCertificates.map(certificate => (
+                    <tr key={certificate.hash}>
+                      <td className="profile-certificates-table__mono" title={certificate.hash}>
+                        {shortHex(certificate.hash)}
+                      </td>
+                      <td className="profile-certificates-table__mono" title={certificate.issuer}>
+                        {shortHex(certificate.issuer)}
+                      </td>
+                      <td>{documentTypeLabel(certificate.documentType)}</td>
+                      <td>{documentStatusLabel(certificate.status)}</td>
+                      <td>{new Date(certificate.issuedAt).toLocaleString("pl-PL")}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           ) : null}
         </section>
       ) : activeTab === "transactions" ? (

@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import bell from "../../assets/icons/bell.svg";
 import user from "../../assets/icons/user.svg";
 import logo from "../../assets/icons/divi_icon_demo.png";
+import { useIsAuthenticated } from "../../service/auth/useIsAuthenticated";
 
 import "./Header.scss";
 
@@ -42,6 +43,7 @@ const Header: React.FC<HeaderProps> = ({
   authLabel = "Logowanie",
   authLinks,
 }) => {
+  const isAuthenticated = useIsAuthenticated();
   const resolvedAuthLinks = authLinks?.length
     ? authLinks
     : authHref
@@ -56,7 +58,7 @@ const Header: React.FC<HeaderProps> = ({
       </div>
 
       <div className="header-icons">
-        {authMode !== "status" && resolvedAuthLinks.length > 0 && (
+        {!isAuthenticated && authMode !== "status" && resolvedAuthLinks.length > 0 && (
           <div className="header-auth-links">
             {resolvedAuthLinks.map((link) => (
               <Link key={`${link.to}-${link.label}`} className="header-auth-link" to={link.to}>

@@ -161,13 +161,13 @@ Unieważnione tokeny JWT (po wylogowaniu, sprawdzane na `OnTokenValidated`).
 
 Wdrożony na Ethereum Sepolia. Główne funkcje:
 
-- **issueDocument(hash, cid, owner, type)** — wystawienie dokumentu (tylko issuer)
-- **verifyDocument(hash)** — sprawdzenie czy hash istnieje w blockchain
+- **issueDocument(hash, cid, owner, type)** — wystawienie dokumentu (`authorizedIssuers`)
+- **verifyDocument(hash)** — dokument istnieje i ma status Confirmed (nie revoked)
+- **revokeDocument(hash)** — unieważnienie (issuer dokumentu / admin / owner)
 - **getDocument(hash)** — pobranie metadanych dokumentu
 - **getDocumentsByOwner(owner)** — lista dokumentów danego właściciela
-- **applyForIssuer()** — zgłoszenie się na wystawcę
-- **approveIssuer(addr)** — zatwierdzenie wystawcy (tylko admin)
-- **addIssuer/removeIssuer** — zarządzanie wystawcami (tylko owner)
+- **addIssuer/removeIssuer** — zarządzanie wystawcami (owner lub admin); wnioski o rolę issuer są off-chain (API)
+- **addAdmin/removeAdmin** — zarządzanie adminami (tylko owner)
 
 Typy dokumentów: `Education`, `ProfessionalCertificates`, `EmploymentDocuments`, `License`, `OtherDocuments`.
 

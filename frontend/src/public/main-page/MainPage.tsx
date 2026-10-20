@@ -1,20 +1,22 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useWeb3Auth } from "../../service/web3/useWeb3Auth";
+import { useIsAuthenticated } from "../../service/auth/useIsAuthenticated";
 import Header from "../../shared/header/Header";
 import Verify from "@/shared/verify/Verify";
 import "./MainPage.scss";
 
 const PublicPage = () => {
   const navigate = useNavigate();
-  const { address, jwt, connect, signAndVerifyNonce } = useWeb3Auth();
+  const { address, connect, signAndVerifyNonce } = useWeb3Auth();
+  const isAuthenticated = useIsAuthenticated();
   const [pendingAuthorization, setPendingAuthorization] = useState(false);
 
   useEffect(() => {
-    if (jwt) {
+    if (isAuthenticated) {
       navigate("/app/dashboard", { replace: true });
     }
-  }, [jwt, navigate]);
+  }, [isAuthenticated, navigate]);
 
   const handleConnect = async () => {
     await connect();

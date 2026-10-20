@@ -1,0 +1,71 @@
+.my-documents {
+  width: 100%;
+  max-width: 860px;
+  color: var(--app-bg);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.my-documents__header {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.my-documents__title {
+  margin: 0;
+  font-size: clamp(1.2rem, 2vw, 1.5rem);
+}
+
+.my-documents__address {
+  margin: 0;
+  word-break: break-all;
+  color: color-mix(in srgb, var(--app-bg) 75%, transparent);
+}
+
+.my-documents__table-wrap {
+  overflow-x: auto;
+  border: 1px solid color-mix(in srgb, var(--app-bg) 24%, transparent);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--app-amaranth-light) 88%, white);
+}
+
+.my-documents__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+
+.my-documents__table th,
+.my-documents__table td {
+  padding: 12px 16px;
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid color-mix(in srgb, var(--app-bg) 18%, transparent);
+}
+
+.my-documents__table th {
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--app-bg) 62%, transparent);
+  white-space: nowrap;
+}
+
+.my-documents__table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.my-documents__mono {
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  font-size: 0.9rem;
+  word-break: break-all;
+}
+
+.my-documents__table .btn {
+  font-size: 0.85rem;
+  padding: 0.35rem 0.75rem;
+  white-space: nowrap;
+}

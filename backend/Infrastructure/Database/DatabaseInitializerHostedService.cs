@@ -1,26 +1,26 @@
 using backend.Data;
-using backend.Infrastructure.Configuration;
+using backend.Extensions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Options;
 
 namespace backend.Infrastructure.Database;
 
 public sealed class DatabaseInitializerHostedService : IHostedService
 {
-    private readonly DatabaseOptions _databaseOptions;
+    private readonly IConfiguration _configuration;
     private readonly IServiceProvider _serviceProvider;
 
-    public DatabaseInitializerHostedService(IOptions<DatabaseOptions> databaseOptions, IServiceProvider serviceProvider)
+    public DatabaseInitializerHostedService(IConfiguration configuration, IServiceProvider serviceProvider)
     {
-        _databaseOptions = databaseOptions.Value;
+        _configuration = configuration;
         _serviceProvider = serviceProvider;
     }
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {
-        var connectionString = _databaseOptions.BuildConnectionString();
+        var connectionString = ServiceCollectionExtensions.ResolvePostgresConnectionString(_configuration, _serviceProvider);
         await PostgresDatabaseInitializer.EnsureDatabaseExistsAsync(connectionString, cancellationToken);
 
         using var scope = _serviceProvider.CreateScope();

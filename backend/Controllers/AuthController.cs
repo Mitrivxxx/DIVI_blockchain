@@ -10,6 +10,7 @@ using System.IdentityModel.Tokens.Jwt;
 using Microsoft.AspNetCore.Authorization;
 using backend.Services.GoogleUser;
 using backend.Infrastructure.Google;
+using Serilog;
 
 namespace backend.Controllers
 {
@@ -66,9 +67,21 @@ namespace backend.Controllers
             if (string.IsNullOrWhiteSpace(dto.Password))
                 return BadRequest("Password required");
 
+            var normalizedEmail = dto.Email.Trim().ToLowerInvariant();
+
+            var emailTaken = await _context.Members
+                .AsNoTracking()
+                .AnyAsync(m => m.Email != null && m.Email.ToLower() == normalizedEmail);
+
+            if (emailTaken)
+            {
+                Log.Warning("[AuthController] Register rejected: email already registered");
+                return Conflict("Email already registered.");
+            }
+
             var member = new Member
             {
-                Email = dto.Email.Trim(),
+                Email = normalizedEmail,
                 Password = PasswordHasher.HashPassword(dto.Password),
                 EthereumAddress = null,
                 MemberRoleId = 3,
@@ -77,7 +90,15 @@ namespace backend.Controllers
             };
 
             _context.Members.Add(member);
-            await _context.SaveChangesAsync();
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateException ex)
+            {
+                Log.Warning(ex, "[AuthController] Register failed due to unique constraint on email");
+                return Conflict("Email already registered.");
+            }
 
             return StatusCode(201, new
             {
@@ -204,7 +225,10 @@ namespace backend.Controllers
         [HttpPost("verify")]
         public async Task<IActionResult> Verify([FromBody] VerifyDto dto)
         {
-            Console.WriteLine($"[AuthController] POST /auth/verify - address: {dto!.Address}, nonce: {dto.Nonce}, signature: {dto.Signature?.Substring(0, Math.Min(20, dto.Signature?.Length ?? 0))}...");
+            Log.Debug(
+                "[AuthController] Web3 verify for {Address}, nonce length {NonceLength}",
+                dto!.Address,
+                dto.Nonce?.Length ?? 0);
 
             var storedNonce = await _context.Nonces
                 .Where(n => n.Address == dto.Address.ToLower() && n.IsUsed && n.ExpiresAt > DateTime.UtcNow)
@@ -213,7 +237,7 @@ namespace backend.Controllers
 
             if (storedNonce == null)
             {
-                Console.WriteLine("[AuthController] Verify failed: no valid nonce found in DB for this address");
+                Log.Warning("[AuthController] Web3 verify failed: no valid nonce for {Address}", dto.Address);
                 return Unauthorized("Nonce not found or expired");
             }
 
@@ -221,11 +245,12 @@ namespace backend.Controllers
             var signer = new EthereumMessageSigner();
             var recoveredAddress = signer.EncodeUTF8AndEcRecover(message, dto.Signature);
 
-            Console.WriteLine($"[AuthController] Recovered address: {recoveredAddress}, expected: {dto.Address}");
-
             if (recoveredAddress.ToLower() != dto.Address.ToLower())
             {
-                Console.WriteLine("[AuthController] Verify failed: address mismatch");
+                Log.Warning(
+                    "[AuthController] Web3 verify failed: address mismatch recovered={Recovered} expected={Expected}",
+                    recoveredAddress,
+                    dto.Address);
                 return Unauthorized("Signature verification failed");
             }
 
@@ -248,14 +273,15 @@ namespace backend.Controllers
                 _context.Members.Add(member);
                 await _context.SaveChangesAsync();
                 await _context.Entry(member).Reference(m => m.Role).LoadAsync();
-                Console.WriteLine($"[AuthController] New member created for address: {dto.Address}");
+                Log.Information("[AuthController] Created member for Web3 address {Address}", dto.Address);
             }
+
             var accessToken = _jwtService.GenerateAccessToken(member.Id.ToString(), member.Role?.Name ?? "user");
             var refreshToken = _jwtService.GenerateRefreshToken(member.Id.ToString());
 
             SetTokenCookies(accessToken, refreshToken);
 
-            Console.WriteLine("[AuthController] Verify succeeded, token issued");
+            Log.Information("[AuthController] Web3 verify succeeded for member {MemberId}", member.Id);
             return Ok(new { token = accessToken });
         }
 

@@ -5,7 +5,16 @@ type VerifyBlockchainInfoProps = {
   blockNumber?: number | null;
   blockTimestamp?: string | null;
   networkName?: string | null;
+  status?: number | null;
+  isRevoked?: boolean;
   className?: string;
+};
+
+const statusLabel = (status: number | null | undefined, isRevoked?: boolean): string | null => {
+  if (isRevoked || status === 2) return 'Revoked';
+  if (status === 1) return 'Confirmed';
+  if (status === 0) return 'Pending';
+  return null;
 };
 
 const dateFormatter = new Intl.DateTimeFormat('pl-PL', {
@@ -42,15 +51,26 @@ export const VerifyBlockchainInfo = ({
   blockNumber,
   blockTimestamp,
   networkName,
+  status,
+  isRevoked,
   className,
 }: VerifyBlockchainInfoProps) => {
-  if (!transactionHash && blockNumber == null && !blockTimestamp && !networkName) {
+  const documentStatus = statusLabel(status, isRevoked);
+
+  if (!transactionHash && blockNumber == null && !blockTimestamp && !networkName && !documentStatus) {
     return null;
   }
 
   return (
     <section className={[styles.infoCard, className].filter(Boolean).join(' ')} aria-label="Dane z blockchain">
       <p className={styles.infoCardTitle}>Dane z blockchain</p>
+
+      {documentStatus && (
+        <div className={styles.infoRow}>
+          <span className={styles.infoLabel}>Status dokumentu</span>
+          <span className={styles.infoValue}>{documentStatus}</span>
+        </div>
+      )}
 
       {transactionHash && (
         <div className={styles.infoRow}>

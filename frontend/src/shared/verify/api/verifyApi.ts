@@ -4,6 +4,9 @@ import { API_URL } from '@/types/api';
 export type VerifyResult = {
   hash: string;
   isAuthentic: boolean;
+  isRevoked: boolean;
+  /** 0=Pending, 1=Confirmed, 2=Revoked. Null if never issued. */
+  status?: number | null;
   message: string;
   transactionHash?: string | null;
   blockNumber?: number | null;

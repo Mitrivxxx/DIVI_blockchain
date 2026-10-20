@@ -1,0 +1,16 @@
+---
+description: Keep AGENTS.md files short, in English, and up to date after every completed task
+alwaysApply: true
+---
+
+# AGENTS.md maintenance
+
+After every completed task (feature, bugfix, refactor, API/contract change):
+
+1. Update the relevant layer file — briefly, only assumptions that actually changed:
+   - `backend/AGENTS.md`
+   - `frontend/AGENTS.md`
+   - `blockchain/AGENTS.md`
+2. If architecture, business flow, or the key-file map changed — update root `AGENTS.md` too.
+3. Write in **English**. Keep it short (bullets / 1–2 sentences). Do not duplicate README.
+4. Do not add long changelog sections — keep files as the current project state.

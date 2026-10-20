@@ -1,8 +1,11 @@
 import { useState } from 'react';
 
-interface VerifyResult {
+export interface VerifyResult {
   hash: string;
   isAuthentic: boolean;
+  isRevoked: boolean;
+  status?: number | null;
+  message?: string;
 }
 
 export const useVerifyResult = () => {

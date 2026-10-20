@@ -1,7 +1,7 @@
 import React from 'react';
-import { tabs } from '../tabs';
-import type { TabKey } from '../tabs';
-
+import { tabSections, tabs } from '../tabs';
+import type { Tab, TabKey } from '../tabs';
+import { SidebarIcon } from './SidebarIcons';
 
 interface SidebarTabsProps {
   activeTab: TabKey;
@@ -9,71 +9,94 @@ interface SidebarTabsProps {
   userRole?: string | null;
 }
 
-import type { Tab } from '../tabs';
+/** Regular user: apply for issuer, view own docs, verify. */
+const userTabs: TabKey[] = ['dashboard', 'issuerRole', 'myDocuments', 'verify', 'profile', 'help'];
 
-// Konfiguracja widocznych tabów dla ról
-const tabsWithoutIssuerRole = tabs.filter(tab => tab.key !== 'issuerRole').map(tab => tab.key);
-const memberTabs = tabs.map(tab => tab.key); // Member widzi wszystko (w tym issuerRole)
-const adminTabs = tabs
-  .filter(tab => tab.key !== 'issuerRole' && tab.key !== 'myDocuments')
-  .map(tab => tab.key);
+/** Issuer / admin / owner: upload + issued list (revoke) + own docs. */
+const issuerToolTabs: TabKey[] = [
+  'dashboard',
+  'upload',
+  'issuedDocuments',
+  'myDocuments',
+  'verify',
+  'profile',
+  'help',
+];
+
+/** Owner keeps issuer-role tab for visibility into the application flow. */
+const ownerTabs: TabKey[] = [...issuerToolTabs, 'issuerRole'];
 
 const visibleTabsByRole: Record<string, TabKey[]> = {
-  'issuer': tabsWithoutIssuerRole,
-  '2': tabsWithoutIssuerRole, // 2 to zazwyczaj Issuer w bazie
-  'admin': adminTabs,
-  '1': adminTabs, // 1 to zazwyczaj Admin w bazie
-  'user': memberTabs,
-  'member': memberTabs,
-  '3': memberTabs, // 3 to zazwyczaj User w bazie
+  issuer: issuerToolTabs,
+  '2': issuerToolTabs,
+  admin: issuerToolTabs,
+  '1': issuerToolTabs,
+  owner: ownerTabs,
+  '4': ownerTabs,
+  user: userTabs,
+  member: userTabs,
+  '3': userTabs,
 };
 
 const publicTabs: TabKey[] = ['verify'];
 
-
-function getVisibleTabs(userRole: string | null | undefined, tabs: Tab[]): Tab[] {
+function getVisibleTabs(userRole: string | null | undefined, allTabs: Tab[]): Tab[] {
   const ensurePublicTabs = (tabKeys: TabKey[]) =>
     Array.from(new Set([...tabKeys, ...publicTabs]));
 
   const normalizedRole = userRole?.trim().toLowerCase();
 
-  // Jeśli brak roli (niezalogowany) -> pokazujemy taby dla 'member' (możliwość wnioskowania) 
-  // LUB ograniczamy tylko do publicznych, zależnie od polityki.
-  // Załóżmy, że role 3 (member) powinna widzieć issuerRole.
-  
   if (!normalizedRole) {
-    const allowed = ensurePublicTabs(visibleTabsByRole['member'] || memberTabs);
-    return tabs.filter(tab => allowed.includes(tab.key));
+    const allowed = ensurePublicTabs(visibleTabsByRole.user);
+    return allTabs.filter(tab => allowed.includes(tab.key));
   }
 
   const roleTabs = visibleTabsByRole[normalizedRole];
   if (roleTabs) {
     const allowed = ensurePublicTabs(roleTabs);
-    return tabs.filter(tab => allowed.includes(tab.key));
+    return allTabs.filter(tab => allowed.includes(tab.key));
   }
 
-
-  // Fallback: pokaż wszystko co publiczne + resztę jeśli rola jest nieznana
-  const allTabs = ensurePublicTabs(tabs.map(tab => tab.key));
-  return tabs.filter(tab => allTabs.includes(tab.key));
+  const allAllowed = ensurePublicTabs(allTabs.map(tab => tab.key));
+  return allTabs.filter(tab => allAllowed.includes(tab.key));
 }
-
-
 
 const SidebarTabs: React.FC<SidebarTabsProps> = ({ activeTab, onTabSelect, userRole }) => {
   const visibleTabs = getVisibleTabs(userRole, tabs);
+
   return (
-    <ul className="sidebar-list">
-      {visibleTabs.map(tab => (
-        <li
-          key={tab.key}
-          onClick={() => onTabSelect(tab.key)}
-          className={"sidebar-item" + (activeTab === tab.key ? " active" : "")}
-        >
-          {tab.label}
-        </li>
-      ))}
-    </ul>
+    <nav className="sidebar-nav" aria-label="Nawigacja aplikacji">
+      {tabSections.map(section => {
+        const sectionTabs = visibleTabs.filter(tab => tab.section === section.id);
+        if (sectionTabs.length === 0) {
+          return null;
+        }
+
+        return (
+          <section key={section.id} className="sidebar-section">
+            <h2 className="sidebar-section-title">{section.label}</h2>
+            <ul className="sidebar-list">
+              {sectionTabs.map(tab => {
+                const isActive = activeTab === tab.key;
+                return (
+                  <li key={tab.key}>
+                    <button
+                      type="button"
+                      onClick={() => onTabSelect(tab.key)}
+                      className={`sidebar-item${isActive ? ' active' : ''}`}
+                      aria-current={isActive ? 'page' : undefined}
+                    >
+                      <SidebarIcon name={tab.icon} className="sidebar-item-icon" />
+                      <span className="sidebar-item-label">{tab.label}</span>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </section>
+        );
+      })}
+    </nav>
   );
 };
 

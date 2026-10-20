@@ -237,6 +237,28 @@
   color: #888780;
 }
 
+.cardRevoked {
+  background: #f3ece8;
+  border: 0.5px solid #c48a6a;
+}
+
+.cardRevoked .statusIcon {
+  background: #8a4b2f;
+}
+
+.cardRevoked .statusTitle {
+  color: #5c2f1a;
+}
+
+.cardRevoked .statusDesc {
+  color: #8a4b2f;
+}
+
+.cardRevoked .statusAction {
+  color: #8a4b2f;
+  opacity: 0.6;
+}
+
 .cardNoResult {
   background: #faeeda;
   border: 0.5px solid #fac775;

@@ -30,7 +30,10 @@ public partial class BlockchainService
         );
     }
 
-    public async Task<string> IssueDocumentAsync(
+    public string GetBackendAccountAddress() =>
+        _web3.TransactionManager.Account.Address;
+
+    public async Task<IssueTransactionResultDto> IssueDocumentAsync(
         string hash,
         string cid,
         string owner,
@@ -63,7 +66,7 @@ public partial class BlockchainService
                 documentType
             });
 
-        return await WaitForMinedSuccessAsync(txHash);
+        return await WaitForMinedSuccessAsync(txHash, fromAddress);
     }
 
     public async Task<bool> VerifyDocumentAsync(string hash)
@@ -74,12 +77,63 @@ public partial class BlockchainService
         return await function.CallAsync<bool>(hashBytes32);
     }
 
+    public async Task<bool> DocumentExistsAsync(string hash)
+    {
+        var contract = _web3.Eth.GetContract(_abi, _contractAddress);
+        var function = contract.GetFunction("exists");
+        var hashBytes32 = Bytes32Helper.StringToBytes32(hash, true);
+        return await function.CallAsync<bool>(hashBytes32);
+    }
+
+    public async Task<byte?> GetDocumentStatusAsync(string hash)
+    {
+        try
+        {
+            var fields = await GetDocumentAsync(hash);
+            // Document struct: issuer, documentOwner, issuedAt, cid, documentType, exists, status
+            if (fields is null || fields.Count < 7)
+            {
+                return null;
+            }
+
+            return Convert.ToByte(fields[6]);
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
     public async Task<List<object>> GetDocumentAsync(string hash)
     {
         var contract = _web3.Eth.GetContract(_abi, _contractAddress);
         var function = contract.GetFunction("getDocument");
         var hashBytes32 = Bytes32Helper.StringToBytes32(hash, true);
         return await function.CallAsync<List<object>>(hashBytes32);
+    }
+
+    public async Task<string> RevokeDocumentAsync(string hash)
+    {
+        var contract = _web3.Eth.GetContract(_abi, _contractAddress);
+        var function = contract.GetFunction("revokeDocument");
+        var hashBytes32 = Bytes32Helper.StringToBytes32(hash, true);
+        var fromAddress = _web3.TransactionManager.Account.Address;
+
+        var gasEstimate = await function.EstimateGasAsync(
+            from: fromAddress,
+            null,
+            null,
+            hashBytes32
+        );
+        var gasWithBuffer = new Nethereum.Hex.HexTypes.HexBigInteger(gasEstimate.Value + (gasEstimate.Value / 10));
+
+        var txHash = await function.SendTransactionAsync(
+            from: fromAddress,
+            gas: gasWithBuffer,
+            value: null,
+            functionInput: hashBytes32);
+
+        return await WaitForMinedSuccessAsync(txHash);
     }
 
     public async Task<BlockchainTransactionInfoDto?> GetDocumentBlockchainInfoAsync(string hash)
@@ -135,6 +189,12 @@ public partial class BlockchainService
 
     private async Task<string> WaitForMinedSuccessAsync(string txHash)
     {
+        var result = await WaitForMinedSuccessAsync(txHash, issuerAddress: string.Empty);
+        return result.TxHash;
+    }
+
+    private async Task<IssueTransactionResultDto> WaitForMinedSuccessAsync(string txHash, string issuerAddress)
+    {
         TransactionReceipt? receipt = await _web3.TransactionManager.TransactionReceiptService
             .PollForReceiptAsync(txHash);
 
@@ -148,6 +208,25 @@ public partial class BlockchainService
             throw new Exception($"Transakcja została odrzucona on-chain (status=0). txHash: {txHash}");
         }
 
-        return txHash;
+        var blockNumber = receipt.BlockNumber?.Value ?? System.Numerics.BigInteger.Zero;
+        DateTimeOffset blockTimestamp = DateTimeOffset.UtcNow;
+
+        if (receipt.BlockNumber is not null)
+        {
+            var block = await _web3.Eth.Blocks.GetBlockWithTransactionsByNumber
+                .SendRequestAsync(new BlockParameter(receipt.BlockNumber));
+            if (block?.Timestamp is not null)
+            {
+                blockTimestamp = DateTimeOffset.FromUnixTimeSeconds((long)block.Timestamp.Value);
+            }
+        }
+
+        return new IssueTransactionResultDto
+        {
+            TxHash = txHash,
+            BlockNumber = (long)blockNumber,
+            BlockTimestamp = blockTimestamp,
+            IssuerAddress = issuerAddress
+        };
     }
 }

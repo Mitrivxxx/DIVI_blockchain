@@ -2,6 +2,12 @@
   "name": "blockchain",
   "version": "1.0.0",
   "type": "module",
+  "scripts": {
+    "compile": "hardhat compile",
+    "test": "hardhat test",
+    "deploy:local": "hardhat run scripts/deploy.js --network localhost",
+    "deploy:sepolia": "hardhat run scripts/deploy.js --network sepolia"
+  },
   "devDependencies": {
     "@types/chai": "^4.3.20",
     "@types/chai-as-promised": "^8.0.2",

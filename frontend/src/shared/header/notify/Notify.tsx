@@ -8,9 +8,10 @@ interface NotifyProps {
 
 const Notify: React.FC<NotifyProps> = ({ userRole }) => {
   const { pending, loading, error, handleUpdateStatus } = usePendingIssuerApplications();
-  const isAdmin = userRole?.toLowerCase() === "admin";
+  const role = userRole?.toLowerCase();
+  const canReviewIssuerApps = role === "admin" || role === "owner";
 
-  if (!isAdmin) {
+  if (!canReviewIssuerApps) {
     return <h1>Powiadomienia</h1>;
   }
 
