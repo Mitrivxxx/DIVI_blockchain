@@ -25,7 +25,12 @@ const validateSelectedFile = (selectedFile: File): string | null => {
 
 const getErrorMessage = (error: unknown): string => {
   if (typeof error === 'object' && error !== null) {
-    const apiMessage = (error as { response?: { data?: string } }).response?.data;
+    const { response } = error as { response?: { data?: string } };
+    if (!response) {
+      return 'Brak połączenia z serwerem. Spróbuj ponownie za chwilę.';
+    }
+
+    const apiMessage = response.data;
     if (typeof apiMessage === 'string' && apiMessage.length > 0) {
       return apiMessage;
     }
@@ -141,7 +146,7 @@ export const useVerify = () => {
       setVerificationData(null);
       setVerificationOutcome({
         kind: 'error',
-        title: 'NIEZGODNY',
+        title: 'BŁĄD WERYFIKACJI',
         description: getErrorMessage(error),
       });
       setStatus('');

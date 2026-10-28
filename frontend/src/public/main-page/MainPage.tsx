@@ -2,9 +2,16 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useWeb3Auth } from "../../service/web3/useWeb3Auth";
 import { useIsAuthenticated } from "../../service/auth/useIsAuthenticated";
-import Header from "../../shared/header/Header";
-import Verify from "@/shared/verify/Verify";
-import "./MainPage.scss";
+import { LandingHeader } from "./components/LandingHeader";
+import { LandingHero } from "./components/LandingHero";
+import { LandingStack } from "./components/LandingStack";
+import { LandingHowItWorks } from "./components/LandingHowItWorks";
+import { LandingIssuers } from "./components/LandingIssuers";
+import { LandingFeatures } from "./components/LandingFeatures";
+import { LandingUseCases } from "./components/LandingUseCases";
+import { LandingFaq } from "./components/LandingFaq";
+import { LandingCta } from "./components/LandingCta";
+import { LandingFooter } from "./components/LandingFooter";
 
 const PublicPage = () => {
   const navigate = useNavigate();
@@ -41,24 +48,19 @@ const PublicPage = () => {
   }, [pendingAuthorization, address, signAndVerifyNonce, navigate]);
 
   return (
-    <div>
-      <Header
-        showBell={false}
-        authMode="connect"
-        connect={handleConnect}
-        authLinks={[
-          { to: "/auth", label: "Zarejestruj się" },
-          { to: "/login", label: "Zaloguj się" },
-        ]}
-      />
-
-      <div className="block">
-        <Verify />
-      </div>
-      <div className="block">
-        <h1>public</h1>
-      </div>
-      
+    <div className="landing min-h-screen bg-canvas font-sans text-neutral-900 antialiased">
+      <LandingHeader onConnect={handleConnect} isConnecting={pendingAuthorization} />
+      <main>
+        <LandingHero />
+        <LandingStack />
+        <LandingHowItWorks />
+        <LandingIssuers />
+        <LandingFeatures />
+        <LandingUseCases />
+        <LandingFaq />
+        <LandingCta />
+      </main>
+      <LandingFooter />
     </div>
   );
 };

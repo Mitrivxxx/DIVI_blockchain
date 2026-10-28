@@ -28,7 +28,10 @@ UI for login, document issuing/verification, and profile / issuer-role managemen
 - Documents list DTO: `src/types/documents.ts` (`DocumentListItem` + status/type helpers). APIs: `features/documents/api/documentsApi.ts` (`owner`, `issued-by-me`, `revoke`).
 - Verify (app + public shared): response uses `isAuthentic` / `isRevoked` / `status` — revoked ≠ missing.
 - State: no Redux/Zustand — Context + local hooks.
-- Styles: SCSS modules + global.
+- Styles: SCSS modules + global for `/app` and auth pages. Tailwind v4 (`@tailwindcss/vite`, `src/styles/tailwind.css`, imported last in `frontend.tsx`) is used only by the landing and `src/shared/verify`.
+- Tailwind setup: theme layered, utilities **unlayered** (so they beat unlayered global SCSS like `_base.scss` `h1`), **no preflight** — a minimal reset is scoped to `:where(.landing)`. Tokens: `brand`/`brand-pink` (coral→pink gradient), `canvas`, `hairline`, `shadow-soft`, font Figtree.
+- Public landing (`src/public/main-page/MainPage.tsx` + `components/Landing*.tsx`, OriginX-style): own header (nav anchors, login/register, gradient "Podłącz portfel" → MetaMask sign-in), hero with shared `Verify` in a framed card (`#verify`, main element), stack strip, how-it-works, issuers, features, use cases, FAQ, CTA, footer. Does not use shared `Header`.
+- `src/shared/verify` (landing only; `/app` uses `features/Verify`): Tailwind dropzone/result/file/blockchain cards; request failures show "BŁĄD WERYFIKACJI" (not a hash mismatch).
 - API: Axios; files under `features/*/api/`.
 - New feature: folder in `features/` → tab in `tabs.ts` → render in `MainLayout`.
 

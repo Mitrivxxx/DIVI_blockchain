@@ -10,6 +10,7 @@ import { createRoot } from "react-dom/client";
 import './style/global.scss';
 import App from "./App";
 import "./index.scss";
+import "@/styles/tailwind.css";
 
 const mountId = window.location.pathname.startsWith("/app") ? "app" : "root";
 document.body.dataset.mount = mountId;
