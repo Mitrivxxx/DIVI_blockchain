@@ -2,13 +2,16 @@ using System.ComponentModel.DataAnnotations;
 
 namespace backend.DTOs
 {
+    /// <summary>
+    /// Accepts either a single <see cref="Name"/> or FirstName (+ optional LastName).
+    /// </summary>
     public class UpdateProfileNameDto
     {
-        [Required]
-        public string FirstName { get; set; } = string.Empty;
+        public string? Name { get; set; }
 
-        [Required]
-        public string LastName { get; set; } = string.Empty;
+        public string? FirstName { get; set; }
+
+        public string? LastName { get; set; }
     }
 
     public class UpdateProfileEmailDto

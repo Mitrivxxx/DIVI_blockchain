@@ -7,7 +7,6 @@ declare global {
 
 import React from 'react';
 import type { TabKey } from './tabs';
-import './Sidebar.scss';
 import SidebarTabs from './components/SidebarTabs';
 import SidebarUserFooter from './components/SidebarUserFooter';
 
@@ -31,10 +30,8 @@ const Sidebar: React.FC<SidebarProps> = ({
   onProfileClick,
 }) => {
   return (
-    <div className="sidebar-root">
-      <div className="sidebar-top">
-        <SidebarTabs activeTab={activeTab} onTabSelect={onTabSelect} userRole={userRole} />
-      </div>
+    <div>
+      <SidebarTabs activeTab={activeTab} onTabSelect={onTabSelect} userRole={userRole} />
       <SidebarUserFooter
         userRole={userRole}
         walletAddress={walletAddress}

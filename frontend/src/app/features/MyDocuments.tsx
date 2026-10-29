@@ -5,9 +5,11 @@ import type { OwnerCertificate } from "./profile/types";
 import {
   documentStatusLabel,
   documentTypeLabel,
+  formatDocumentPeriod,
+  formatIssuerLabel,
   shortHex,
 } from "@/types/documents";
-import "./MyDocuments.scss";
+import { AppCard } from "@/shared/ui";
 
 const MyDocuments: React.FC = () => {
   const { address } = useWeb3Auth();
@@ -55,50 +57,58 @@ const MyDocuments: React.FC = () => {
   }, [ownerAddress]);
 
   return (
-    <section className="my-documents" aria-live="polite">
-      <header className="my-documents__header">
-        <h1 className="my-documents__title">Moje dokumenty</h1>
-        {ownerAddress ? <p className="my-documents__address">{ownerAddress}</p> : null}
-      </header>
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl font-semibold tracking-[-0.02em] text-neutral-900">Moje dokumenty</h1>
+        {ownerAddress ? (
+          <p className="mt-2 font-mono text-sm text-neutral-500">{ownerAddress}</p>
+        ) : null}
+      </div>
 
-      {loading ? <p>Ładowanie dokumentów...</p> : null}
-      {!loading && error ? <p>{error}</p> : null}
-      {!loading && !error && !ownerAddress ? <p>Brak powiązanego adresu portfela.</p> : null}
-      {!loading && !error && ownerAddress && documents.length === 0 ? (
-        <p>Brak dokumentów dla tego adresu.</p>
-      ) : null}
+      <AppCard>
+        {loading ? <p className="text-sm text-neutral-500">Ładowanie dokumentów...</p> : null}
+        {!loading && error ? <p className="text-sm text-red-600">{error}</p> : null}
+        {!loading && !error && !ownerAddress ? (
+          <p className="text-sm text-neutral-500">Brak powiązanego adresu portfela.</p>
+        ) : null}
+        {!loading && !error && ownerAddress && documents.length === 0 ? (
+          <p className="text-sm text-neutral-500">Brak dokumentów dla tego adresu.</p>
+        ) : null}
 
-      {!loading && !error && documents.length > 0 ? (
-        <div className="my-documents__table-wrap">
-          <table className="my-documents__table">
-            <thead>
-              <tr>
-                <th scope="col">Hash</th>
-                <th scope="col">Issuer</th>
-                <th scope="col">Typ</th>
-                <th scope="col">Status</th>
-                <th scope="col">Issued at</th>
-              </tr>
-            </thead>
-            <tbody>
-              {documents.map(document => (
-                <tr key={document.hash}>
-                  <td className="my-documents__mono" title={document.hash}>
-                    {shortHex(document.hash)}
-                  </td>
-                  <td className="my-documents__mono" title={document.issuer}>
-                    {shortHex(document.issuer)}
-                  </td>
-                  <td>{documentTypeLabel(document.documentType)}</td>
-                  <td>{documentStatusLabel(document.status)}</td>
-                  <td>{new Date(document.issuedAt).toLocaleString("pl-PL")}</td>
+        {!loading && !error && documents.length > 0 ? (
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[40rem] text-left text-sm">
+              <thead>
+                <tr className="border-b border-hairline text-neutral-500">
+                  <th className="py-2 pr-3 font-medium">Hash</th>
+                  <th className="py-2 pr-3 font-medium">Issuer</th>
+                  <th className="py-2 pr-3 font-medium">Typ</th>
+                  <th className="py-2 pr-3 font-medium">Status</th>
+                  <th className="py-2 font-medium">Issued at</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      ) : null}
-    </section>
+              </thead>
+              <tbody>
+                {documents.map(document => (
+                  <tr key={document.hash} className="border-b border-hairline last:border-0">
+                    <td className="py-3 pr-3 font-mono text-xs" title={document.hash}>
+                      {shortHex(document.hash)}
+                    </td>
+                    <td className="py-3 pr-3" title={document.issuer}>
+                      {formatIssuerLabel(document.issuerDisplayName, document.issuer)}
+                    </td>
+                    <td className="py-3 pr-3">{documentTypeLabel(document.documentType)}</td>
+                    <td className="py-3 pr-3">{documentStatusLabel(document.status)}</td>
+                    <td className="py-3">
+                      {formatDocumentPeriod(document.periodStart, document.expiresAt, document.issuedAt)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : null}
+      </AppCard>
+    </div>
   );
 };
 

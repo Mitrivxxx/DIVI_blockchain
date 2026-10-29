@@ -16,38 +16,22 @@ const AuthPage = () => {
 
   useEffect(() => {
     if (jwt) {
-      navigate("/app/dashboard", { replace: true });
+      navigate("/", { replace: true });
     }
   }, [jwt, navigate]);
-
-  useEffect(() => {
-    if (!pendingAction || !address) {
-      return;
-    }
-
-    const authorize = async () => {
-      try {
-        await signAndVerifyNonce();
-        navigate("/app/dashboard", { replace: true });
-      } catch (authError) {
-        setError(authError instanceof Error ? authError.message : "Nie udało się zakończyć logowania.");
-      } finally {
-        setPendingAction(null);
-      }
-    };
-
-    void authorize();
-  }, [pendingAction, address, signAndVerifyNonce, navigate]);
 
   const handleAuth = async (action: AuthAction) => {
     setError(null);
     setPendingAction(action);
 
     try {
-      await connect();
+      const { signer, address: connectedAddress } = await connect();
+      await signAndVerifyNonce(signer, connectedAddress);
+      navigate("/", { replace: true });
     } catch (connectError) {
-      setPendingAction(null);
       setError(connectError instanceof Error ? connectError.message : "Nie udało się połączyć z MetaMask.");
+    } finally {
+      setPendingAction(null);
     }
   };
 

@@ -104,6 +104,8 @@ const Verify: React.FC = () => {
             networkName={verificationData.networkName}
             status={verificationData.status}
             isRevoked={verificationData.isRevoked}
+            issuerAddress={verificationData.issuerAddress}
+            issuerDisplayName={verificationData.issuerDisplayName}
           />
         </div>
       )}

@@ -34,6 +34,7 @@ namespace backend.Models
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
+        /// <summary>Public MinIO object URL for the profile avatar.</summary>
         public string? AvatarUrl { get; set; }
     }
 }

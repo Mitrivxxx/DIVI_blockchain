@@ -78,13 +78,27 @@ namespace backend.Migrations
                         .HasMaxLength(42)
                         .HasColumnType("character varying(42)");
 
+                    b.Property<DateTimeOffset?>("PeriodStart")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ShareToken")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
                     b.Property<byte>("Status")
                         .HasColumnType("smallint");
+
+                    b.Property<string>("Title")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
 
                     b.Property<string>("TxHash")
                         .IsRequired()
                         .HasMaxLength(66)
                         .HasColumnType("character varying(66)");
+
+                    b.Property<byte>("Visibility")
+                        .HasColumnType("smallint");
 
                     b.HasKey("Hash");
 
@@ -94,7 +108,51 @@ namespace backend.Migrations
 
                     b.HasIndex("OwnerAddress");
 
+                    b.HasIndex("ShareToken")
+                        .IsUnique()
+                        .HasFilter("\"ShareToken\" IS NOT NULL");
+
                     b.ToTable("Documents", (string)null);
+                });
+
+            modelBuilder.Entity("backend.Models.DocumentActivity", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<byte>("ActivityType")
+                        .HasColumnType("smallint");
+
+                    b.Property<long?>("BlockNumber")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DocumentHash")
+                        .IsRequired()
+                        .HasMaxLength(66)
+                        .HasColumnType("character varying(66)");
+
+                    b.Property<int?>("MemberId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("TxHash")
+                        .HasMaxLength(66)
+                        .HasColumnType("character varying(66)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedAt");
+
+                    b.HasIndex("DocumentHash");
+
+                    b.HasIndex("MemberId");
+
+                    b.ToTable("DocumentActivities", (string)null);
                 });
 
             modelBuilder.Entity("backend.Models.IssuerApplication", b =>
@@ -135,6 +193,44 @@ namespace backend.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("IssuerApplications");
+                });
+
+            modelBuilder.Entity("backend.Models.IssuerProfile", b =>
+                {
+                    b.Property<int>("MemberId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Country")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("InstitutionName")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("LogoUrl")
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
+
+                    b.Property<string>("TaxId")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("WebsiteUrl")
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
+
+                    b.HasKey("MemberId");
+
+                    b.ToTable("IssuerProfiles", (string)null);
                 });
 
             modelBuilder.Entity("backend.Models.Member", b =>
@@ -276,6 +372,27 @@ namespace backend.Migrations
                         .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("IssuedByMember");
+                });
+
+            modelBuilder.Entity("backend.Models.DocumentActivity", b =>
+                {
+                    b.HasOne("backend.Models.Member", "Member")
+                        .WithMany()
+                        .HasForeignKey("MemberId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Member");
+                });
+
+            modelBuilder.Entity("backend.Models.IssuerProfile", b =>
+                {
+                    b.HasOne("backend.Models.Member", "Member")
+                        .WithOne()
+                        .HasForeignKey("backend.Models.IssuerProfile", "MemberId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Member");
                 });
 
             modelBuilder.Entity("backend.Models.Member", b =>

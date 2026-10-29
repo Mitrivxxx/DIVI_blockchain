@@ -19,35 +19,23 @@ const CopyField: React.FC<CopyFieldProps> = ({ label, value }) => {
   };
 
   return (
-    <div className="hash-row">
-      {label && <div className="hash-label">{label}</div>}
-      
-      <div className="copy-field">
-        <div className="copy-field-value" title={value}>
+    <div className="space-y-1">
+      {label ? <p className="text-xs font-medium uppercase tracking-wide text-neutral-400">{label}</p> : null}
+      <div className="flex items-start gap-2">
+        <code
+          title={value}
+          className="min-w-0 flex-1 break-all rounded-lg border border-hairline bg-neutral-50 px-3 py-2 font-mono text-xs text-neutral-800"
+        >
           {value}
-        </div>
-
-        <button 
+        </code>
+        <button
           type="button"
-          className={`copy-field-btn ${copied ? 'is-copied' : ''}`}
           onClick={handleCopy}
           aria-label="Kopiuj"
+          className="shrink-0 rounded-lg border border-hairline bg-white px-3 py-2 text-xs font-medium text-neutral-800 shadow-soft hover:bg-neutral-50"
         >
-          {copied ? (
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="20 6 9 17 4 12"></polyline>
-            </svg>
-          ) : (
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-            </svg>
-          )}
+          {copied ? 'Skopiowano' : 'Kopiuj'}
         </button>
-
-        <div className={`copy-field-tooltip ${copied ? 'show' : ''}`}>
-          Skopiowano!
-        </div>
       </div>
     </div>
   );

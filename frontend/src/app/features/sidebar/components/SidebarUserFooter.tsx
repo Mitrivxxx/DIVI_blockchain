@@ -1,5 +1,4 @@
 import React from 'react';
-import { SidebarIcon } from './SidebarIcons';
 
 type SidebarUserFooterProps = {
   userRole?: string | null;
@@ -39,33 +38,21 @@ const SidebarUserFooter: React.FC<SidebarUserFooterProps> = ({
       : 'Brak połączonego portfela';
 
   return (
-    <div className="sidebar-user-footer">
-      <section className="sidebar-section">
-        <h2 className="sidebar-section-title">Sesja</h2>
-        <ul className="sidebar-list">
-          <li>
-            <button
-              type="button"
-              className="sidebar-item sidebar-item--user"
-              onClick={onProfileClick}
-              aria-label="Przejdź do profilu"
-            >
-              <SidebarIcon name="user" className="sidebar-item-icon" />
-              <span className="sidebar-user-info">
-                <span className="sidebar-user-address">{displayAddress}</span>
-                <span className="sidebar-user-role">{formatRole(userRole)}</span>
-              </span>
-            </button>
-          </li>
-          <li>
-            <button type="button" className="sidebar-item" onClick={onLogout}>
-              <SidebarIcon name="logout" className="sidebar-item-icon" />
-              <span className="sidebar-item-label">Wyloguj się</span>
-            </button>
-          </li>
-        </ul>
-      </section>
-    </div>
+    <section>
+      <h2>Sesja</h2>
+      <ul>
+        <li>
+          <button type="button" onClick={onProfileClick} aria-label="Przejdź do profilu">
+            Profil: {displayAddress} · {formatRole(userRole)}
+          </button>
+        </li>
+        <li>
+          <button type="button" onClick={onLogout}>
+            Wyloguj się
+          </button>
+        </li>
+      </ul>
+    </section>
   );
 };
 

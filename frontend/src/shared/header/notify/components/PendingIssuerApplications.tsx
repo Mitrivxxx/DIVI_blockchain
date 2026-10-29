@@ -1,6 +1,5 @@
 import React from "react";
 import { NotifyList } from "./IssuerList";
-import styles from "../Notify.module.scss";
 
 interface PendingIssuerApplicationsProps {
   pending: any[];
@@ -17,10 +16,10 @@ const PendingIssuerApplications: React.FC<PendingIssuerApplicationsProps> = ({
   onApprove,
   onReject,
 }) => (
-  <div className={styles.container}>
+  <div>
     <h2>Pending Issuer Applications</h2>
     {loading && <p>Loading...</p>}
-    {error && <p className={styles.error}>{error}</p>}
+    {error && <p>{error}</p>}
     {!loading && pending.length === 0 && <p>No pending applications.</p>}
     {!loading && pending.length > 0 && (
       <NotifyList

@@ -15,16 +15,16 @@
     0 27px 16px rgba(130, 130, 130, 0.08), 0 48px 19px rgba(130, 130, 130, 0.02);
 }
 
-/* Preflight is skipped so /app and auth pages keep their SCSS look; this reset applies only inside the landing. */
-:where(.landing),
-:where(.landing) *,
-:where(.landing) ::before,
-:where(.landing) ::after {
+/* Preflight skipped for auth SCSS; reset only inside landing + authenticated app shell. */
+:where(.landing, .app-shell),
+:where(.landing, .app-shell) *,
+:where(.landing, .app-shell) ::before,
+:where(.landing, .app-shell) ::after {
   box-sizing: border-box;
   border: 0 solid;
 }
 
-:where(.landing) :is(h1, h2, h3, h4, p, dl, dd, ul, ol, figure, blockquote) {
+:where(.landing, .app-shell) :is(h1, h2, h3, h4, p, dl, dd, ul, ol, figure, blockquote) {
   margin: 0;
   font-size: inherit;
   font-weight: inherit;
@@ -32,28 +32,33 @@
   color: inherit;
 }
 
-:where(.landing) :is(ul, ol) {
+:where(.landing, .app-shell) :is(ul, ol) {
   list-style: none;
   padding: 0;
 }
 
-:where(.landing) a {
+:where(.landing, .app-shell) a {
   color: inherit;
   text-decoration: inherit;
 }
 
-:where(.landing) button {
+:where(.landing, .app-shell) button {
   font: inherit;
   color: inherit;
   background: transparent;
   cursor: pointer;
 }
 
-:where(.landing) button:disabled {
+:where(.landing, .app-shell) button:disabled {
   cursor: not-allowed;
 }
 
-:where(.landing) :is(img, svg) {
+:where(.landing, .app-shell) :is(img, svg) {
   display: block;
   max-width: 100%;
+}
+
+:where(.app-shell) :is(input, select, textarea) {
+  font: inherit;
+  color: inherit;
 }

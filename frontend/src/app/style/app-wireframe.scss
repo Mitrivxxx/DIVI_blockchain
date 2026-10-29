@@ -1,0 +1,29 @@
+/* /app refactor baseline — no visual design, document flow only.
+   Feature SCSS modules are not imported; keep browser defaults. */
+
+body[data-mount="app"] {
+  margin: 0;
+  font-family: system-ui, sans-serif;
+  background: #fff;
+  color: #000;
+  overflow: auto;
+}
+
+body[data-mount="app"] #root {
+  display: none !important;
+}
+
+body[data-mount="app"] #app {
+  display: block !important;
+  width: auto;
+  min-width: 0;
+  height: auto;
+  min-height: 100vh;
+  overflow: visible;
+  flex-direction: unset;
+  background: none;
+}
+
+.app-wireframe hr {
+  margin: 1rem 0;
+}

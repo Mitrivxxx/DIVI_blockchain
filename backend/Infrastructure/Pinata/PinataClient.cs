@@ -54,5 +54,31 @@ namespace backend.Infrastructure
                 throw new ApplicationException("Wystąpił błąd podczas uploadu pliku do Pinata.", ex);
             }
         }
+
+        public async Task<byte[]> DownloadAsync(string cid, CancellationToken cancellationToken = default)
+        {
+            if (string.IsNullOrWhiteSpace(cid))
+            {
+                throw new ArgumentException("cid is required", nameof(cid));
+            }
+
+            var gateway = _options.GatewayUrl?.Trim();
+            if (string.IsNullOrWhiteSpace(gateway))
+            {
+                gateway = "https://gateway.pinata.cloud/ipfs/";
+            }
+
+            if (!gateway.EndsWith('/'))
+            {
+                gateway += "/";
+            }
+
+            var url = $"{gateway}{cid.Trim()}";
+            // Separate client: Pinata API HttpClient always sends JWT, which breaks public gateways.
+            using var gatewayClient = new HttpClient { Timeout = TimeSpan.FromMinutes(2) };
+            using var response = await gatewayClient.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+            response.EnsureSuccessStatusCode();
+            return await response.Content.ReadAsByteArrayAsync(cancellationToken);
+        }
     }
 }

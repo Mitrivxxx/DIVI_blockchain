@@ -4,7 +4,7 @@ const Dashboard: React.FC = () => {
   return (
     <div>
       <h1>Dashboard</h1>
-      <p>Podsumowanie dokumentów, ostatnie weryfikacje, statystyki.</p>
+      <p>[Placeholder] Podsumowanie dokumentów, ostatnie weryfikacje, statystyki.</p>
     </div>
   );
 };

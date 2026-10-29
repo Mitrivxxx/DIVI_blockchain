@@ -6,6 +6,8 @@ export interface VerifyResult {
   isRevoked: boolean;
   status?: number | null;
   message?: string;
+  issuerAddress?: string | null;
+  issuerDisplayName?: string | null;
 }
 
 export const useVerifyResult = () => {

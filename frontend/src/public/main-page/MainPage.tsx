@@ -15,37 +15,26 @@ import { LandingFooter } from "./components/LandingFooter";
 
 const PublicPage = () => {
   const navigate = useNavigate();
-  const { address, connect, signAndVerifyNonce } = useWeb3Auth();
+  const { connect, signAndVerifyNonce } = useWeb3Auth();
   const isAuthenticated = useIsAuthenticated();
   const [pendingAuthorization, setPendingAuthorization] = useState(false);
 
   useEffect(() => {
     if (isAuthenticated) {
-      navigate("/app/dashboard", { replace: true });
+      navigate("/", { replace: true });
     }
   }, [isAuthenticated, navigate]);
 
   const handleConnect = async () => {
-    await connect();
     setPendingAuthorization(true);
-  };
-
-  useEffect(() => {
-    if (!pendingAuthorization || !address) {
-      return;
+    try {
+      const { signer, address: connectedAddress } = await connect();
+      await signAndVerifyNonce(signer, connectedAddress);
+      navigate("/");
+    } finally {
+      setPendingAuthorization(false);
     }
-
-    const authorize = async () => {
-      try {
-        await signAndVerifyNonce();
-        navigate("/app/dashboard");
-      } finally {
-        setPendingAuthorization(false);
-      }
-    };
-
-    authorize();
-  }, [pendingAuthorization, address, signAndVerifyNonce, navigate]);
+  };
 
   return (
     <div className="landing min-h-screen bg-canvas font-sans text-neutral-900 antialiased">

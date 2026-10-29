@@ -42,6 +42,9 @@ coverage.cobertura.xml
 appsettings.Development.json
 appsettings.Local.json
 
+# Local profile avatars (Web2 uploads)
+backend/Data/avatars/
+
 # NuGet
 *.nupkg
 packages/

@@ -60,15 +60,13 @@ namespace backend.Controllers
                 return Unauthorized("Brak identyfikatora użytkownika w tokenie.");
             }
 
-            var normalizedFirstName = dto.FirstName?.Trim();
-            var normalizedLastName = dto.LastName?.Trim();
-            if (string.IsNullOrWhiteSpace(normalizedFirstName) || string.IsNullOrWhiteSpace(normalizedLastName))
+            if (dto is null || !TryResolveName(dto, out var firstName, out var lastName))
             {
                 _logger.LogInformation("Profile NAME update rejected due to empty payload for memberId {MemberId}", memberId);
-                return BadRequest("FirstName i LastName są wymagane.");
+                return BadRequest("Name (lub FirstName) jest wymagane.");
             }
 
-            var updated = await _profileService.UpdateNameByIdAsync(memberId, normalizedFirstName, normalizedLastName);
+            var updated = await _profileService.UpdateNameByIdAsync(memberId, firstName, lastName);
             if (!updated)
             {
                 _logger.LogInformation("Profile NAME update not found for memberId {MemberId}", memberId);
@@ -218,6 +216,67 @@ namespace backend.Controllers
             return NoContent();
         }
 
+        /// <summary>
+        /// Uploads a profile avatar image (JPEG/PNG/WebP, max 2 MB) for the current user.
+        /// </summary>
+        [HttpPost("avatar")]
+        [RequestSizeLimit(2 * 1024 * 1024 + 64 * 1024)]
+        public async Task<IActionResult> UploadAvatar(IFormFile file)
+        {
+            var memberId = GetCurrentMemberId();
+            _logger.LogInformation("Profile AVATAR upload requested for memberId {MemberId}", memberId);
+            if (memberId == 0)
+            {
+                return Unauthorized("Brak identyfikatora użytkownika w tokenie.");
+            }
+
+            var (avatarUrl, statusCode, error) = await _profileService.UploadAvatarByIdAsync(memberId, file);
+            if (statusCode != 200)
+            {
+                return StatusCode(statusCode, new { error });
+            }
+
+            return Ok(new { avatarUrl });
+        }
+
+        /// <summary>
+        /// Redirects to the public MinIO avatar URL (keeps old &lt;img src="/api/GetProfile/avatar/{id}"&gt; working).
+        /// </summary>
+        [HttpGet("avatar/{memberId:int}")]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetAvatar(int memberId)
+        {
+            var (ok, publicUrl, statusCode) = await _profileService.ResolveAvatarPublicUrlAsync(memberId);
+            if (!ok || string.IsNullOrWhiteSpace(publicUrl))
+            {
+                return StatusCode(statusCode);
+            }
+
+            return Redirect(publicUrl);
+        }
+
+        /// <summary>
+        /// Removes the current user's avatar.
+        /// </summary>
+        [HttpDelete("avatar")]
+        public async Task<IActionResult> DeleteAvatar()
+        {
+            var memberId = GetCurrentMemberId();
+            _logger.LogInformation("Profile AVATAR delete requested for memberId {MemberId}", memberId);
+            if (memberId == 0)
+            {
+                return Unauthorized("Brak identyfikatora użytkownika w tokenie.");
+            }
+
+            var (ok, statusCode, error) = await _profileService.DeleteAvatarByIdAsync(memberId);
+            if (!ok)
+            {
+                return StatusCode(statusCode, new { error });
+            }
+
+            return NoContent();
+        }
+
         private int GetCurrentMemberId()
         {
             var memberId = User.FindFirstValue(ClaimTypes.NameIdentifier)
@@ -230,6 +289,40 @@ namespace backend.Controllers
             }
 
             return 0;
+        }
+
+        /// <summary>
+        /// Prefer single Name; otherwise FirstName (+ optional LastName).
+        /// Name splits on first space: first token → FirstName, remainder → LastName.
+        /// </summary>
+        private static bool TryResolveName(UpdateProfileNameDto dto, out string firstName, out string? lastName)
+        {
+            firstName = string.Empty;
+            lastName = null;
+
+            var single = dto.Name?.Trim();
+            if (!string.IsNullOrWhiteSpace(single))
+            {
+                var space = single.IndexOf(' ');
+                if (space < 0)
+                {
+                    firstName = single;
+                    lastName = null;
+                }
+                else
+                {
+                    firstName = single[..space].Trim();
+                    var rest = single[(space + 1)..].Trim();
+                    lastName = string.IsNullOrWhiteSpace(rest) ? null : rest;
+                }
+
+                return !string.IsNullOrWhiteSpace(firstName);
+            }
+
+            firstName = dto.FirstName?.Trim() ?? string.Empty;
+            var ln = dto.LastName?.Trim();
+            lastName = string.IsNullOrWhiteSpace(ln) ? null : ln;
+            return !string.IsNullOrWhiteSpace(firstName);
         }
     }
 }

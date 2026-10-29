@@ -3,7 +3,13 @@ pragma solidity ^0.8.20;
 
 library DocumentTypes {
     enum DocumentStatus { Pending, Confirmed, Revoked }
-    enum DocumentType { Education, ProfessionalCertificates, EmploymentDocuments, License, OtherDocuments }
+    enum DocumentType {
+        Education,              // Wykształcenie
+        Experience,             // Doświadczenie
+        LicensesAndCertificates,// Licencje i certyfikaty
+        Recommendation,         // Rekomendacja
+        HonorsAndAwards         // Wyróżnienia i nagrody
+    }
 
     struct Document {
         address issuer; //wystawca

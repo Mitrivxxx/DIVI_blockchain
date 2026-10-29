@@ -4576,7 +4576,7 @@
     ]
   },
   "packageFolders": {
-    "/tmp/cursor-sandbox-cache/29f98e3564c1624e2fadfa36c06cd7e8/nuget": {}
+    "/home/matsma/.nuget/packages/": {}
   },
   "project": {
     "version": "1.0.0",
@@ -4584,7 +4584,7 @@
       "projectUniqueName": "/home/matsma/project/DIVI/backend/backend.csproj",
       "projectName": "backend",
       "projectPath": "/home/matsma/project/DIVI/backend/backend.csproj",
-      "packagesPath": "/tmp/cursor-sandbox-cache/29f98e3564c1624e2fadfa36c06cd7e8/nuget",
+      "packagesPath": "/home/matsma/.nuget/packages/",
       "outputPath": "/home/matsma/project/DIVI/backend/obj/",
       "projectStyle": "PackageReference",
       "configFilePaths": [

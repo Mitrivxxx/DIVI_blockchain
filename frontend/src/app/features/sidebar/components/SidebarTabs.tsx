@@ -1,7 +1,6 @@
 import React from 'react';
 import { tabSections, tabs } from '../tabs';
 import type { Tab, TabKey } from '../tabs';
-import { SidebarIcon } from './SidebarIcons';
 
 interface SidebarTabsProps {
   activeTab: TabKey;
@@ -65,7 +64,7 @@ const SidebarTabs: React.FC<SidebarTabsProps> = ({ activeTab, onTabSelect, userR
   const visibleTabs = getVisibleTabs(userRole, tabs);
 
   return (
-    <nav className="sidebar-nav" aria-label="Nawigacja aplikacji">
+    <nav aria-label="Zakładki aplikacji">
       {tabSections.map(section => {
         const sectionTabs = visibleTabs.filter(tab => tab.section === section.id);
         if (sectionTabs.length === 0) {
@@ -73,9 +72,9 @@ const SidebarTabs: React.FC<SidebarTabsProps> = ({ activeTab, onTabSelect, userR
         }
 
         return (
-          <section key={section.id} className="sidebar-section">
-            <h2 className="sidebar-section-title">{section.label}</h2>
-            <ul className="sidebar-list">
+          <section key={section.id}>
+            <h2>{section.label}</h2>
+            <ul>
               {sectionTabs.map(tab => {
                 const isActive = activeTab === tab.key;
                 return (
@@ -83,11 +82,10 @@ const SidebarTabs: React.FC<SidebarTabsProps> = ({ activeTab, onTabSelect, userR
                     <button
                       type="button"
                       onClick={() => onTabSelect(tab.key)}
-                      className={`sidebar-item${isActive ? ' active' : ''}`}
                       aria-current={isActive ? 'page' : undefined}
                     >
-                      <SidebarIcon name={tab.icon} className="sidebar-item-icon" />
-                      <span className="sidebar-item-label">{tab.label}</span>
+                      {isActive ? `→ ${tab.label}` : tab.label}
+                      {tab.icon ? ` [${tab.icon}]` : ''}
                     </button>
                   </li>
                 );

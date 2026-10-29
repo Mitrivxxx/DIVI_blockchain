@@ -13,5 +13,8 @@ namespace backend.DTOs
         public long? BlockNumber { get; set; }
         public DateTimeOffset? BlockTimestamp { get; set; }
         public string? NetworkName { get; set; }
+        public string? IssuerAddress { get; set; }
+        public int? IssuedByMemberId { get; set; }
+        public string? IssuerDisplayName { get; set; }
     }
 }

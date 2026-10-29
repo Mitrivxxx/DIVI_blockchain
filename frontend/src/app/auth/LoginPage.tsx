@@ -61,7 +61,7 @@ const LoginPage = () => {
         setJwt(responseBody.token);
       }
       localStorage.setItem(EMAIL_LOGIN_STORAGE_KEY, "1");
-      navigate("/app/dashboard", { replace: true });
+      navigate("/", { replace: true });
     } catch (loginError) {
       setError(loginError instanceof Error ? loginError.message : "Logowanie nie powiodlo sie.");
     } finally {
@@ -92,7 +92,7 @@ const LoginPage = () => {
       }
 
       localStorage.setItem(EMAIL_LOGIN_STORAGE_KEY, "1");
-      navigate("/app/dashboard", { replace: true });
+      navigate("/", { replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Błąd podczas logowania przez Google.");
     } finally {
@@ -140,7 +140,7 @@ const LoginPage = () => {
       const { signer, address: connectedAddress } = await connect();
       await signAndVerifyNonce(signer, connectedAddress);
       localStorage.setItem(EMAIL_LOGIN_STORAGE_KEY, "1");
-      navigate("/app/dashboard", { replace: true });
+      navigate("/", { replace: true });
     } catch (connectError) {
       setError(connectError instanceof Error ? connectError.message : "Nie udało się połączyć z MetaMask.");
     } finally {

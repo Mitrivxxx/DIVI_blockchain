@@ -169,7 +169,7 @@ Wdrożony na Ethereum Sepolia. Główne funkcje:
 - **addIssuer/removeIssuer** — zarządzanie wystawcami (owner lub admin); wnioski o rolę issuer są off-chain (API)
 - **addAdmin/removeAdmin** — zarządzanie adminami (tylko owner)
 
-Typy dokumentów: `Education`, `ProfessionalCertificates`, `EmploymentDocuments`, `License`, `OtherDocuments`.
+Typy dokumentów: `Education` (Wykształcenie), `Experience` (Doświadczenie), `LicensesAndCertificates` (Licencje i certyfikaty), `Recommendation` (Rekomendacja), `HonorsAndAwards` (Wyróżnienia i nagrody).
 
 ## Flow upload dokumentu
 

@@ -12,6 +12,9 @@ export type VerifyResult = {
   blockNumber?: number | null;
   blockTimestamp?: string | null;
   networkName?: string | null;
+  issuerAddress?: string | null;
+  issuedByMemberId?: number | null;
+  issuerDisplayName?: string | null;
 };
 
 export const verifyDocument = async (file: File): Promise<VerifyResult> => {

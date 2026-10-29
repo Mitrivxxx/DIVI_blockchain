@@ -104,7 +104,10 @@ namespace backend.Services.DocumentVerification
                 TransactionHash = blockchainInfo?.TransactionHash,
                 BlockNumber = blockchainInfo?.BlockNumber,
                 BlockTimestamp = blockchainInfo?.BlockTimestamp,
-                NetworkName = blockchainInfo?.NetworkName ?? networkName
+                NetworkName = blockchainInfo?.NetworkName ?? networkName,
+                IssuerAddress = stored?.Issuer,
+                IssuedByMemberId = stored?.IssuedByMemberId,
+                IssuerDisplayName = stored?.IssuerDisplayName,
             };
         }
     }

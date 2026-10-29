@@ -14,11 +14,16 @@ namespace backend.Services.Issuers
 
         private readonly AppDbContext _db;
         private readonly IBlockchainService _blockchainService;
+        private readonly IIssuerProfileService _issuerProfileService;
 
-        public IssuerApplicationService(AppDbContext db, IBlockchainService blockchainService)
+        public IssuerApplicationService(
+            AppDbContext db,
+            IBlockchainService blockchainService,
+            IIssuerProfileService issuerProfileService)
         {
             _db = db;
             _blockchainService = blockchainService;
+            _issuerProfileService = issuerProfileService;
         }
 
         public async Task<IssuerApplication> CreateIssuerAsync(CreateIssuerApplicationDto dto)
@@ -70,6 +75,8 @@ namespace backend.Services.Issuers
                 return (false, "Invalid status. Use Approved or Rejected.");
             }
 
+            Member? approvedMember = null;
+
             if (newStatus == IssuerApplicationStatus.Approved)
             {
                 var normalizedAddress = entity.EthereumAddress.Trim().ToLowerInvariant();
@@ -94,10 +101,20 @@ namespace backend.Services.Issuers
                 }
 
                 member.MemberRoleId = IssuerRoleId;
+                approvedMember = member;
             }
 
             entity.Status = newStatus;
             await _db.SaveChangesAsync();
+
+            if (approvedMember is not null)
+            {
+                await _issuerProfileService.UpsertFromApplicationAsync(
+                    approvedMember.Id,
+                    entity.InstitutionName,
+                    entity.Description);
+            }
+
             Log.Information("[IssuerApplicationService] Application {Id} status → {Status}", id, newStatus);
             return (true, null);
         }

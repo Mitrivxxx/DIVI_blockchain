@@ -10,7 +10,7 @@ export const LandingFooter = () => (
     <Container>
       <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-[2fr_1fr_1fr_1fr]">
         <div className="max-w-xs">
-          <LogoLink />
+          <LogoLink to="/public" />
           <p className="mt-4 text-sm leading-relaxed text-neutral-500">
             Wystawianie i weryfikacja dokumentów z hashem zapisanym w blockchainie Ethereum.
           </p>

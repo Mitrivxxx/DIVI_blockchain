@@ -39,7 +39,7 @@ After deploy: copy ABI → `backend/Infrastructure/Contracts/DocumentIssuer.abi.
 - Issuer applications are **off-chain** (Postgres). No on-chain `applyForIssuer` / `approveIssuer` / `isIssuer`.
 - Constructor: `(address[] initialIssuers, address initialAdmin)` — `initialAdmin` may be `address(0)`.
 - Document key = `bytes32` hash; fields: issuer, documentOwner, issuedAt, cid, documentType, exists, status.
-- Types (`DocumentType`): Education(0), ProfessionalCertificates(1), EmploymentDocuments(2), License(3), OtherDocuments(4).
+- Types (`DocumentType`): Education(0), Experience(1), LicensesAndCertificates(2), Recommendation(3), HonorsAndAwards(4).
 - Status: Pending / Confirmed / **Revoked**. `exists` stays true after revoke; `verifyDocument` = exists && Confirmed.
 - `revokeDocument(hash)` — document issuer, admin, or owner; emits `DocumentRevoked`.
 - Events: `DocumentIssued`, `DocumentRevoked`, `IssuerAdded` / `IssuerRemoved`, `AdminAdded` / `AdminRemoved`.

@@ -1,4 +1,5 @@
 import { type ReactNode } from "react";
+import { formatIssuerLabel, shortHex } from "@/types/documents";
 
 type VerifyBlockchainInfoProps = {
   transactionHash?: string | null;
@@ -7,6 +8,8 @@ type VerifyBlockchainInfoProps = {
   networkName?: string | null;
   status?: number | null;
   isRevoked?: boolean;
+  issuerAddress?: string | null;
+  issuerDisplayName?: string | null;
 };
 
 const statusLabel = (status: number | null | undefined, isRevoked?: boolean): string | null => {
@@ -52,10 +55,23 @@ export const VerifyBlockchainInfo = ({
   networkName,
   status,
   isRevoked,
+  issuerAddress,
+  issuerDisplayName,
 }: VerifyBlockchainInfoProps) => {
   const documentStatus = statusLabel(status, isRevoked);
+  const issuerLabel =
+    issuerDisplayName || issuerAddress
+      ? formatIssuerLabel(issuerDisplayName, issuerAddress)
+      : null;
 
-  if (!transactionHash && blockNumber == null && !blockTimestamp && !networkName && !documentStatus) {
+  if (
+    !transactionHash &&
+    blockNumber == null &&
+    !blockTimestamp &&
+    !networkName &&
+    !documentStatus &&
+    !issuerLabel
+  ) {
     return null;
   }
 
@@ -64,6 +80,18 @@ export const VerifyBlockchainInfo = ({
       <h3 className="text-xs font-semibold tracking-wider text-neutral-400 uppercase">Blockchain</h3>
       <dl className="mt-2 divide-y divide-neutral-100">
         {documentStatus && <Row label="Status">{documentStatus}</Row>}
+        {issuerLabel && (
+          <Row label="Wystawca">
+            <span title={issuerAddress ?? undefined}>
+              {issuerLabel}
+              {issuerDisplayName && issuerAddress ? (
+                <span className="mt-0.5 block font-mono text-xs text-neutral-500">
+                  {shortHex(issuerAddress)}
+                </span>
+              ) : null}
+            </span>
+          </Row>
+        )}
         {transactionHash && (
           <Row label="Transakcja" mono>
             {formatTransactionHash(transactionHash)}

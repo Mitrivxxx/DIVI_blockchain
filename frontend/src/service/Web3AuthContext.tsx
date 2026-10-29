@@ -1,12 +1,17 @@
-import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
+import React, { createContext, useContext, useState, useCallback, useEffect, useRef } from "react";
 import type { ReactNode } from "react";
 import { ethers } from "ethers";
 import {
   getJwtExpiryMs,
-  getAddressFromJwt,
   getRoleFromJwt,
 } from "./utils/jwt";
-import { connectToWallet, signAndVerifyNonce as web3SignAndVerifyNonce } from "./web3/web3Utils";
+import {
+  connectToWallet,
+  revokeWalletPermissions,
+  signAndVerifyNonce as web3SignAndVerifyNonce,
+} from "./web3/web3Utils";
+import { refreshAuthSession } from "./auth/session";
+import { EMAIL_LOGIN_STORAGE_KEY } from "./auth/constants";
 
 interface Web3AuthContextProps {
   provider: ethers.BrowserProvider | null;
@@ -28,15 +33,20 @@ export const Web3AuthProvider = ({ children }: { children: ReactNode }) => {
   const [address, setAddress] = useState<string | null>(null);
   const [jwt, setJwtState] = useState<string | null>(null);
   const [role, setRole] = useState<string | null>(null);
+  const addressRef = useRef<string | null>(null);
+  const jwtRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    addressRef.current = address;
+  }, [address]);
+
+  useEffect(() => {
+    jwtRef.current = jwt;
+  }, [jwt]);
 
   const setJwt = useCallback((token: string) => {
     setJwtState(token);
-
-    const tokenAddress = getAddressFromJwt(token);
-    if (tokenAddress) {
-      setAddress(tokenAddress);
-    }
-
+    // JWT `sub` is member id, not an Ethereum address — keep wallet address from connect().
     setRole(getRoleFromJwt(token));
   }, []);
 
@@ -74,7 +84,33 @@ export const Web3AuthProvider = ({ children }: { children: ReactNode }) => {
     } catch (error) {
       console.error('Logout API call failed:', error);
     }
+
+    // Clear MetaMask site permissions so the next login uses the currently selected account.
+    await revokeWalletPermissions();
   }, []);
+
+  // After Aspire/page reload JWT is gone from memory; restore via refresh_token cookie.
+  useEffect(() => {
+    let cancelled = false;
+
+    const restore = async () => {
+      if (jwtRef.current) {
+        return;
+      }
+
+      const token = await refreshAuthSession();
+      if (cancelled || !token) {
+        return;
+      }
+
+      setJwt(token);
+    };
+
+    void restore();
+    return () => {
+      cancelled = true;
+    };
+  }, [setJwt]);
 
   useEffect(() => {
     if (!jwt) {
@@ -89,13 +125,85 @@ export const Web3AuthProvider = ({ children }: { children: ReactNode }) => {
 
     const remainingTime = expiresAt - Date.now();
     if (remainingTime <= 0) {
-      logout();
+      // Try silent refresh before logging out (e.g. after Aspire restart).
+      void (async () => {
+        const token = await refreshAuthSession();
+        if (token) {
+          setJwt(token);
+          return;
+        }
+        localStorage.removeItem(EMAIL_LOGIN_STORAGE_KEY);
+        logout();
+      })();
       return;
     }
 
-    const timer = window.setTimeout(() => logout(), remainingTime);
+    // Refresh a minute before expiry so profile data stays available.
+    const refreshIn = Math.max(remainingTime - 60_000, 5_000);
+    const timer = window.setTimeout(() => {
+      void (async () => {
+        const token = await refreshAuthSession();
+        if (token) {
+          setJwt(token);
+          return;
+        }
+        localStorage.removeItem(EMAIL_LOGIN_STORAGE_KEY);
+        logout();
+      })();
+    }, refreshIn);
     return () => window.clearTimeout(timer);
-  }, [jwt, logout]);
+  }, [jwt, logout, setJwt]);
+
+  // Keep React wallet state in sync when the user switches accounts in MetaMask.
+  useEffect(() => {
+    const ethereum = window.ethereum;
+    if (!ethereum?.on) {
+      return;
+    }
+
+    const handleAccountsChanged = async (accounts: string[]) => {
+      if (!accounts.length) {
+        if (jwtRef.current) {
+          await logout();
+        } else {
+          setAddress(null);
+          setSigner(null);
+          setProvider(null);
+        }
+        return;
+      }
+
+      const nextAddress = ethers.getAddress(accounts[0]);
+      const currentAddress = addressRef.current;
+
+      if (currentAddress && nextAddress.toLowerCase() === currentAddress.toLowerCase()) {
+        return;
+      }
+
+      // Logged-in JWT belongs to the previous wallet — force a fresh login.
+      if (jwtRef.current) {
+        await logout();
+        return;
+      }
+
+      try {
+        const browserProvider = new ethers.BrowserProvider(ethereum);
+        const nextSigner = await browserProvider.getSigner(nextAddress);
+        setProvider(browserProvider);
+        setSigner(nextSigner);
+        setAddress(nextAddress);
+      } catch {
+        setAddress(null);
+        setSigner(null);
+        setProvider(null);
+      }
+    };
+
+    ethereum.on("accountsChanged", handleAccountsChanged);
+    return () => {
+      ethereum.removeListener?.("accountsChanged", handleAccountsChanged);
+    };
+  }, [logout]);
 
   return (
     <Web3AuthContext.Provider value={{ provider, signer, address, jwt, role, connect, setJwt, signAndVerifyNonce, logout }}>

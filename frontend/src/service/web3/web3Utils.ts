@@ -9,11 +9,31 @@ export async function connectToWallet(): Promise<{
   if (!window.ethereum) throw new Error("MetaMask not found");
 
   const provider = new ethers.BrowserProvider(window.ethereum);
-  await provider.send("eth_requestAccounts", []);
-  const signer = await provider.getSigner();
-  const address = await signer.getAddress();
+  const accounts: string[] = await provider.send("eth_requestAccounts", []);
+
+  if (!accounts?.length) {
+    throw new Error("Nie wybrano konta MetaMask");
+  }
+
+  // Always use the account MetaMask returns now — never a cached signer/address.
+  const address = ethers.getAddress(accounts[0]);
+  const signer = await provider.getSigner(address);
 
   return { provider, signer, address };
+}
+
+/** Drop site↔wallet permissions so the next connect must pick the current MetaMask account. */
+export async function revokeWalletPermissions(): Promise<void> {
+  if (!window.ethereum?.request) return;
+
+  try {
+    await window.ethereum.request({
+      method: "wallet_revokePermissions",
+      params: [{ eth_accounts: {} }],
+    });
+  } catch {
+    // Older wallets may not support revoke — ignore.
+  }
 }
 
 export async function signAndVerifyNonce(

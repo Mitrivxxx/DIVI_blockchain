@@ -1,6 +1,31 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { deleteProfileFieldApi, fetchOwnerCertificatesApi, fetchProfileApi, patchProfileFieldApi } from "../api/profileApi";
-import type { EditableField, OwnerCertificate, ProfileData, ProfileTab } from "../types";
+import {
+  deleteProfileAvatarApi,
+  deleteProfileFieldApi,
+  fetchMyActivityApi,
+  fetchMyCredentialsApi,
+  fetchProfileApi,
+  patchProfileFieldApi,
+  resolveAvatarSrc,
+  updateCredentialVisibilityApi,
+  uploadProfileAvatarApi,
+} from "../api/profileApi";
+import type {
+  CredentialSection,
+  CredentialVisibility,
+  DocumentActivityItem,
+  EditableField,
+  ProfileData,
+} from "../types";
+import { DOCUMENT_TYPE_SECTIONS } from "@/types/documents";
+import { useWeb3Auth } from "@/service/web3/useWeb3Auth";
+
+const emptyCredentialSections = (): CredentialSection[] =>
+  DOCUMENT_TYPE_SECTIONS.map(section => ({
+    documentType: section.id,
+    label: section.label,
+    items: [],
+  }));
 
 type UseProfileParams = {
   userRole?: string | null;
@@ -9,38 +34,59 @@ type UseProfileParams = {
 };
 
 export const useProfile = ({ userRole, walletAddress, fallbackAvatar }: UseProfileParams) => {
+  const { jwt } = useWeb3Auth();
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
   const [menuOpenFor, setMenuOpenFor] = useState<EditableField | null>(null);
   const [editingField, setEditingField] = useState<EditableField | null>(null);
   const [editingValue, setEditingValue] = useState("");
   const [saving, setSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState<ProfileTab>("profile");
-  const [ownerCertificates, setOwnerCertificates] = useState<OwnerCertificate[]>([]);
-  const [certificatesLoading, setCertificatesLoading] = useState(false);
-  const [certificatesError, setCertificatesError] = useState<string | null>(null);
+  const [profileError, setProfileError] = useState<string | null>(null);
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const [credentialSections, setCredentialSections] = useState<CredentialSection[]>(emptyCredentialSections);
+  const [credentialsLoading, setCredentialsLoading] = useState(false);
+  const [credentialsError, setCredentialsError] = useState<string | null>(null);
+  const [visibilityUpdatingHash, setVisibilityUpdatingHash] = useState<string | null>(null);
+  const [activity, setActivity] = useState<DocumentActivityItem[]>([]);
+  const [activityLoading, setActivityLoading] = useState(false);
+  const [activityError, setActivityError] = useState<string | null>(null);
+  /** Local UI toggle: public = full page; private = Profil + Instytucja card only. */
+  const [isPublicProfile, setIsPublicProfile] = useState(true);
 
   useEffect(() => {
+    let cancelled = false;
+
     const loadProfile = async () => {
       try {
-        const data = await fetchProfileApi("");
-        setProfile(data);
+        setLoading(true);
+        const data = await fetchProfileApi(jwt ?? "");
+        if (!cancelled) {
+          setProfile(data);
+        }
       } catch {
-        setProfile(null);
+        if (!cancelled) {
+          setProfile(null);
+        }
       } finally {
-        setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
     };
 
     void loadProfile();
-  }, []);
+    return () => {
+      cancelled = true;
+    };
+  }, [jwt]);
 
   const role = profile?.role ?? userRole ?? null;
   const displayName = profile?.name?.trim() || null;
   const email = profile?.email?.trim() || null;
   const bio = profile?.bio?.trim() || null;
   const profileAddress = profile?.ethereumAddress || walletAddress || null;
-  const avatar = profile?.avatarUrl?.trim() || fallbackAvatar;
+  const hasCustomAvatar = Boolean(profile?.avatarUrl?.trim());
+  const avatar = resolveAvatarSrc(profile?.avatarUrl, fallbackAvatar);
 
   const shortAddress = useMemo(() => {
     if (!profileAddress || profileAddress.length < 13) return profileAddress;
@@ -63,6 +109,7 @@ export const useProfile = ({ userRole, walletAddress, fallbackAvatar }: UseProfi
 
   const startEditing = useCallback((field: EditableField, value: string) => {
     setMenuOpenFor(null);
+    setProfileError(null);
     setEditingField(field);
     setEditingValue(value);
   }, []);
@@ -76,11 +123,8 @@ export const useProfile = ({ userRole, walletAddress, fallbackAvatar }: UseProfi
     async (field: EditableField) => {
       try {
         setSaving(true);
-        const isSaved = await patchProfileFieldApi("", field, editingValue);
-
-        if (!isSaved) {
-          return;
-        }
+        setProfileError(null);
+        await patchProfileFieldApi("", field, editingValue);
 
         setProfile(prev => {
           if (!prev) return prev;
@@ -90,6 +134,8 @@ export const useProfile = ({ userRole, walletAddress, fallbackAvatar }: UseProfi
         });
 
         cancelEditing();
+      } catch (error) {
+        setProfileError(error instanceof Error ? error.message : "Nie udało się zapisać.");
       } finally {
         setSaving(false);
       }
@@ -101,15 +147,12 @@ export const useProfile = ({ userRole, walletAddress, fallbackAvatar }: UseProfi
     async (field: EditableField) => {
       try {
         setSaving(true);
-        const isDeleted = await deleteProfileFieldApi("", field);
-
-        if (!isDeleted) {
-          return;
-        }
+        setProfileError(null);
+        await deleteProfileFieldApi("", field);
 
         setProfile(prev => {
           if (!prev) return prev;
-          if (field === "name") return { ...prev, name: null };
+          if (field === "name") return { ...prev, name: null, firstName: null, lastName: null };
           if (field === "email") return { ...prev, email: null };
           return { ...prev, bio: null };
         });
@@ -119,6 +162,8 @@ export const useProfile = ({ userRole, walletAddress, fallbackAvatar }: UseProfi
         }
 
         setMenuOpenFor(null);
+      } catch (error) {
+        setProfileError(error instanceof Error ? error.message : "Nie udało się usunąć.");
       } finally {
         setSaving(false);
       }
@@ -126,35 +171,93 @@ export const useProfile = ({ userRole, walletAddress, fallbackAvatar }: UseProfi
     [cancelEditing, editingField],
   );
 
-  const loadOwnerCertificates = useCallback(async (ownerAddress: string | null | undefined) => {
-    const normalizedAddress = ownerAddress?.trim();
-
-    if (!normalizedAddress) {
-      setOwnerCertificates([]);
-      setCertificatesError("Brak adresu właściciela do pobrania certyfikatów.");
-      return;
-    }
-
+  const uploadAvatar = useCallback(async (file: File) => {
     try {
-      setCertificatesLoading(true);
-      setCertificatesError(null);
-      const certificates = await fetchOwnerCertificatesApi(normalizedAddress);
-      setOwnerCertificates(certificates);
+      setAvatarUploading(true);
+      setProfileError(null);
+      const avatarUrl = await uploadProfileAvatarApi(file);
+      setProfile(prev => (prev ? { ...prev, avatarUrl: `${avatarUrl}?v=${Date.now()}` } : prev));
     } catch (error) {
-      setOwnerCertificates([]);
-      setCertificatesError(error instanceof Error ? error.message : "Nie udało się pobrać certyfikatów.");
+      setProfileError(error instanceof Error ? error.message : "Nie udało się wgrać zdjęcia.");
     } finally {
-      setCertificatesLoading(false);
+      setAvatarUploading(false);
+    }
+  }, []);
+
+  const deleteAvatar = useCallback(async () => {
+    try {
+      setAvatarUploading(true);
+      setProfileError(null);
+      await deleteProfileAvatarApi();
+      setProfile(prev => (prev ? { ...prev, avatarUrl: null } : prev));
+    } catch (error) {
+      setProfileError(error instanceof Error ? error.message : "Nie udało się usunąć zdjęcia.");
+    } finally {
+      setAvatarUploading(false);
+    }
+  }, []);
+
+  const loadCredentials = useCallback(async () => {
+    try {
+      setCredentialsLoading(true);
+      setCredentialsError(null);
+      const wallet = await fetchMyCredentialsApi();
+      setCredentialSections(
+        wallet.sections?.length ? wallet.sections : emptyCredentialSections(),
+      );
+    } catch (error) {
+      setCredentialSections(emptyCredentialSections());
+      setCredentialsError(error instanceof Error ? error.message : "Nie udało się pobrać credentials.");
+    } finally {
+      setCredentialsLoading(false);
+    }
+  }, []);
+
+  const updateCredentialVisibility = useCallback(async (hash: string, visibility: CredentialVisibility) => {
+    try {
+      setVisibilityUpdatingHash(hash);
+      setCredentialsError(null);
+      const updated = await updateCredentialVisibilityApi(hash, visibility);
+      setCredentialSections(prev =>
+        prev.map(section => ({
+          ...section,
+          items: section.items.map(item => (item.hash === hash ? updated : item)),
+        })),
+      );
+    } catch (error) {
+      setCredentialsError(error instanceof Error ? error.message : "Nie udało się zmienić widoczności.");
+    } finally {
+      setVisibilityUpdatingHash(null);
+    }
+  }, []);
+
+  const loadActivity = useCallback(async () => {
+    try {
+      setActivityLoading(true);
+      setActivityError(null);
+      const items = await fetchMyActivityApi();
+      setActivity(items);
+    } catch (error) {
+      setActivity([]);
+      setActivityError(error instanceof Error ? error.message : "Nie udało się pobrać historii transakcji.");
+    } finally {
+      setActivityLoading(false);
     }
   }, []);
 
   return {
     loading,
     saving,
-    activeTab,
-    ownerCertificates,
-    certificatesLoading,
-    certificatesError,
+    profileError,
+    avatarUploading,
+    hasCustomAvatar,
+    credentialSections,
+    credentialsLoading,
+    credentialsError,
+    visibilityUpdatingHash,
+    activity,
+    activityLoading,
+    activityError,
     menuOpenFor,
     editingField,
     editingValue,
@@ -166,13 +269,18 @@ export const useProfile = ({ userRole, walletAddress, fallbackAvatar }: UseProfi
     shortAddress,
     joinedAt,
     avatar,
-    setActiveTab,
     setMenuOpenFor,
     setEditingValue,
     startEditing,
     cancelEditing,
     saveField,
     deleteField,
-    loadOwnerCertificates,
+    uploadAvatar,
+    deleteAvatar,
+    loadCredentials,
+    updateCredentialVisibility,
+    loadActivity,
+    isPublicProfile,
+    setIsPublicProfile,
   };
 };

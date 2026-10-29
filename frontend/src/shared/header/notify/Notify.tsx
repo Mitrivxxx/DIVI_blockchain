@@ -12,17 +12,25 @@ const Notify: React.FC<NotifyProps> = ({ userRole }) => {
   const canReviewIssuerApps = role === "admin" || role === "owner";
 
   if (!canReviewIssuerApps) {
-    return <h1>Powiadomienia</h1>;
+    return (
+      <div>
+        <h1>Powiadomienia</h1>
+        <p>Brak powiadomień do przeglądu dla tej roli.</p>
+      </div>
+    );
   }
 
   return (
-    <PendingIssuerApplications
-      pending={pending}
-      loading={loading}
-      error={error}
-      onApprove={id => handleUpdateStatus(id, 'Approved')}
-      onReject={id => handleUpdateStatus(id, 'Rejected')}
-    />
+    <div>
+      <h1>Powiadomienia</h1>
+      <PendingIssuerApplications
+        pending={pending}
+        loading={loading}
+        error={error}
+        onApprove={id => handleUpdateStatus(id, 'Approved')}
+        onReject={id => handleUpdateStatus(id, 'Rejected')}
+      />
+    </div>
   );
 };
 

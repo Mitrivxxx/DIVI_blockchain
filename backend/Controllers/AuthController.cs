@@ -152,6 +152,7 @@ namespace backend.Controllers
             });
         }
 
+        [AllowAnonymous]
         [HttpPost("refresh")]
         public async Task<IActionResult> Refresh()
         {
@@ -174,7 +175,8 @@ namespace backend.Controllers
 
             SetTokenCookies(newAccessToken, newRefreshToken);
 
-            return Ok(new { message = "Tokens refreshed" });
+            // Return token so SPA can restore in-memory JWT after Aspire/page reload.
+            return Ok(new { message = "Tokens refreshed", token = newAccessToken });
         }
 
         [Authorize]

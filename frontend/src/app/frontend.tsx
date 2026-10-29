@@ -1,23 +1,19 @@
 /**
- * This file is the entry point for the React app, it sets up the root
- * element and renders the App component to the DOM.
- *
- * It is included in `src/index.html`.
+ * Entry point for the React app — mounts App into #root.
  */
 
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import './style/global.scss';
-import App from "./App";
+import "./style/global.scss";
 import "./index.scss";
 import "@/styles/tailwind.css";
+import App from "./App";
 
-const mountId = window.location.pathname.startsWith("/app") ? "app" : "root";
-document.body.dataset.mount = mountId;
+document.body.dataset.mount = "root";
 
-const elem = document.getElementById(mountId);
+const elem = document.getElementById("root");
 if (!elem) {
-  throw new Error(`Missing mount element: #${mountId}`);
+  throw new Error("Missing mount element: #root");
 }
 
 const app = (
@@ -27,10 +23,8 @@ const app = (
 );
 
 if (import.meta.hot) {
-  // With hot module reloading, `import.meta.hot.data` is persisted.
   const root = (import.meta.hot.data.root ??= createRoot(elem));
   root.render(app);
 } else {
-  // The hot module reloading API is not available in production.
   createRoot(elem).render(app);
 }

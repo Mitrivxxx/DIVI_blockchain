@@ -14,6 +14,8 @@ namespace backend.Data
         public DbSet<MemberRole> MemberRoles { get; set; }
         public DbSet<BlacklistedToken> BlacklistedTokens { get; set; }
         public DbSet<Document> Documents { get; set; }
+        public DbSet<DocumentActivity> DocumentActivities { get; set; }
+        public DbSet<IssuerProfile> IssuerProfiles { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -100,15 +102,54 @@ namespace backend.Data
                 entity.Property(e => e.IssuerAddress).IsRequired().HasMaxLength(42);
                 entity.Property(e => e.OwnerAddress).IsRequired().HasMaxLength(42);
                 entity.Property(e => e.TxHash).IsRequired().HasMaxLength(66);
+                entity.Property(e => e.ShareToken).HasMaxLength(64);
+                entity.Property(e => e.Title).HasMaxLength(256);
 
                 entity.HasIndex(e => e.OwnerAddress);
                 entity.HasIndex(e => e.IssuerAddress);
                 entity.HasIndex(e => e.IssuedByMemberId);
+                entity.HasIndex(e => e.ShareToken)
+                    .IsUnique()
+                    .HasFilter("\"ShareToken\" IS NOT NULL");
 
                 entity.HasOne(e => e.IssuedByMember)
                     .WithMany()
                     .HasForeignKey(e => e.IssuedByMemberId)
                     .OnDelete(DeleteBehavior.SetNull);
+            });
+
+            modelBuilder.Entity<DocumentActivity>(entity =>
+            {
+                entity.ToTable("DocumentActivities");
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.DocumentHash).IsRequired().HasMaxLength(66);
+                entity.Property(e => e.TxHash).HasMaxLength(66);
+
+                entity.HasIndex(e => e.DocumentHash);
+                entity.HasIndex(e => e.MemberId);
+                entity.HasIndex(e => e.CreatedAt);
+
+                entity.HasOne(e => e.Member)
+                    .WithMany()
+                    .HasForeignKey(e => e.MemberId)
+                    .OnDelete(DeleteBehavior.SetNull);
+            });
+
+            modelBuilder.Entity<IssuerProfile>(entity =>
+            {
+                entity.ToTable("IssuerProfiles");
+                entity.HasKey(e => e.MemberId);
+                entity.Property(e => e.InstitutionName).IsRequired().HasMaxLength(255);
+                entity.Property(e => e.Description).HasMaxLength(500);
+                entity.Property(e => e.LogoUrl).HasMaxLength(512);
+                entity.Property(e => e.WebsiteUrl).HasMaxLength(512);
+                entity.Property(e => e.Country).HasMaxLength(64);
+                entity.Property(e => e.TaxId).HasMaxLength(32);
+
+                entity.HasOne(e => e.Member)
+                    .WithOne()
+                    .HasForeignKey<IssuerProfile>(e => e.MemberId)
+                    .OnDelete(DeleteBehavior.Cascade);
             });
         }
     }

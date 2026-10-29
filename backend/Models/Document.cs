@@ -32,7 +32,7 @@ namespace backend.Models
         [ForeignKey(nameof(IssuedByMemberId))]
         public Member? IssuedByMember { get; set; }
 
-        /// <summary>0–4 matching DocumentTypes.DocumentType on-chain.</summary>
+        /// <summary>0–4 matching DocumentTypes.DocumentType on-chain (Education, Experience, LicensesAndCertificates, Recommendation, HonorsAndAwards).</summary>
         public byte DocumentType { get; set; }
 
         [Required]
@@ -46,6 +46,20 @@ namespace backend.Models
 
         public DateTimeOffset IssuedAt { get; set; }
 
+        /// <summary>Period start for Education/Experience metadata credentials.</summary>
+        public DateTimeOffset? PeriodStart { get; set; }
+
         public DateTimeOffset? ExpiresAt { get; set; }
+
+        /// <summary>Education: degree / field of study (tytuł/kierunek). Optional for other types.</summary>
+        [MaxLength(256)]
+        public string? Title { get; set; }
+
+        /// <summary>0=private, 1=unlisted, 2=public.</summary>
+        public byte Visibility { get; set; }
+
+        /// <summary>Opaque share token for unlisted (and retained for public) credentials.</summary>
+        [MaxLength(64)]
+        public string? ShareToken { get; set; }
     }
 }

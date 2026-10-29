@@ -10,10 +10,12 @@ export const NotifyList: React.FC<NotifyListProps> = ({ pending, onApprove, onRe
   <ul>
     {pending.map((item) => (
       <li key={item.id}>
-        <b>{item.institutionName}</b> - {item.status}<br />
-        <span className="notify-eth">Ethereum: {item.ethereumAddress}</span>
-        <button onClick={() => onApprove(item.id)}>Akceptuj</button>
-        <button onClick={() => onReject(item.id)}>Odrzuć</button>
+        <b>{item.institutionName}</b> — {item.status}
+        <br />
+        Ethereum: {item.ethereumAddress}
+        <br />
+        <button type="button" onClick={() => onApprove(item.id)}>Akceptuj</button>{" "}
+        <button type="button" onClick={() => onReject(item.id)}>Odrzuć</button>
       </li>
     ))}
   </ul>

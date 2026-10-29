@@ -2,12 +2,12 @@ import React from 'react';
 import { useFile } from './hooks/useFile';
 import { useStatus } from './hooks/useStatus';
 import { useVerifyResult } from './hooks/useVerifyResult';
-import styles from './Verify.module.scss';
 
 import { verifyDocument } from '../uploadFile/api/api';
 import FilePicker from '../../components/FilePicker';
 import CopyField from '../../components/ui/CopyField';
-import { documentStatusLabel } from '@/types/documents';
+import { documentStatusLabel, formatIssuerLabel, shortHex } from '@/types/documents';
+import { AppCard, buttonDark } from '@/shared/ui';
 
 const Verify = () => {
   const { file, setFile } = useFile();
@@ -46,6 +46,8 @@ const Verify = () => {
         isRevoked: Boolean(data.isRevoked || data.status === 2),
         status: data.status,
         message: data.message,
+        issuerAddress: data.issuerAddress,
+        issuerDisplayName: data.issuerDisplayName,
       });
     } catch (err: unknown) {
       console.error(err);
@@ -61,98 +63,74 @@ const Verify = () => {
   const authenticityLabel = (() => {
     if (!verifyResult) return null;
     if (verifyResult.isRevoked) {
-      return { color: 'var(--warning, #b45309)', text: 'Dokument unieważniony (Revoked)' };
+      return 'Dokument unieważniony (Revoked)';
     }
     if (verifyResult.isAuthentic) {
-      return { color: 'var(--success, #10b981)', text: 'Potwierdzona autentyczność' };
+      return 'Potwierdzona autentyczność';
     }
-    return { color: 'var(--error, #ef4444)', text: 'Nie odnaleziono w rejestrze' };
+    return 'Nie odnaleziono w rejestrze';
   })();
 
   return (
-    <div className={styles.wrap}>
-      <div className={styles['top-badge']}>
-        <div className={styles.dot}></div>
-        Blockchain Verification
+    <div className="mx-auto max-w-xl space-y-6">
+      <div>
+        <p className="text-sm font-medium text-neutral-500">Blockchain Verification</p>
+        <h1 className="mt-1 text-3xl font-semibold tracking-[-0.02em] text-neutral-900">
+          Zweryfikuj dokument
+        </h1>
       </div>
 
-      <h1>Zweryfikuj dokument</h1>
+      <AppCard>
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <FilePicker
+            file={file}
+            setFile={setFile}
+            label="Plik do weryfikacji"
+            accept=".pdf"
+          />
 
-      <form onSubmit={handleSubmit}>
-        <FilePicker
-          file={file}
-          setFile={setFile}
-          label="Plik do weryfikacji"
-          accept=".pdf"
-        />
+          <button type="submit" disabled={!file} className={`${buttonDark} disabled:opacity-50`}>
+            Weryfikuj dokument
+          </button>
+        </form>
 
-        <button className="btn" type="submit" disabled={!file}>
-          Weryfikuj dokument
-        </button>
-      </form>
+        {status ? (
+          <p
+            className={`mt-5 text-sm font-medium ${
+              type === 'error' ? 'text-red-600' : type === 'success' ? 'text-emerald-600' : 'text-neutral-600'
+            }`}
+          >
+            [{type === 'error' ? 'Błąd' : type === 'success' ? 'Sukces' : 'Info'}] {status}
+          </p>
+        ) : null}
 
-      {status && (
-        <div className={`validation-box ${type === 'error' ? 'is-error' : type === 'success' ? 'is-success' : ''}`}>
-          <div className="validation-box-icon">
-            {type === 'error' ? (
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="12" r="10"></circle>
-                <line x1="12" y1="8" x2="12" y2="12"></line>
-                <line x1="12" y1="16" x2="12.01" y2="16"></line>
-              </svg>
-            ) : type === 'success' ? (
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="20 6 9 17 4 12"></polyline>
-              </svg>
-            ) : (
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="12" r="10"></circle>
-                <line x1="12" y1="16" x2="12" y2="12"></line>
-                <line x1="12" y1="8" x2="12.01" y2="8"></line>
-              </svg>
-            )}
+        {verifyResult && authenticityLabel ? (
+          <div className="mt-6 space-y-3 border-t border-hairline pt-5">
+            <h2 className="text-lg font-semibold text-neutral-900">Szczegóły weryfikacji</h2>
+            <CopyField label="HASH" value={verifyResult.hash} />
+            <p className="text-sm text-neutral-700">
+              Status dokumentu:{' '}
+              <strong>
+                {documentStatusLabel(verifyResult.status ?? (verifyResult.isRevoked ? 2 : null))}
+              </strong>
+            </p>
+            <p className="text-sm text-neutral-700">
+              Status autentyczności: <strong>{authenticityLabel}</strong>
+            </p>
+            {(verifyResult.issuerDisplayName || verifyResult.issuerAddress) ? (
+              <p className="text-sm text-neutral-700" title={verifyResult.issuerAddress ?? undefined}>
+                Wystawca:{' '}
+                <strong>
+                  {formatIssuerLabel(verifyResult.issuerDisplayName, verifyResult.issuerAddress)}
+                </strong>
+                {verifyResult.issuerDisplayName && verifyResult.issuerAddress
+                  ? ` (${shortHex(verifyResult.issuerAddress)})`
+                  : null}
+              </p>
+            ) : null}
           </div>
-          <div className="validation-box-content">
-            <span className="validation-box-title">
-              {type === 'error' ? 'Wystąpił błąd' : type === 'success' ? 'Sukces' : 'Informacja'}
-            </span>
-            <span className="validation-box-message">{status}</span>
-          </div>
-        </div>
-      )}
-
-      {verifyResult && authenticityLabel && (
-        <>
-          <div className={styles.divider}></div>
-
-          <div className={styles['result-title']}>Szczegóły weryfikacji</div>
-
-          <CopyField label="HASH" value={verifyResult.hash} />
-
-          <div className="field">
-            <label>Status dokumentu</label>
-            <div style={{ fontWeight: 600, marginTop: '0.5rem' }}>
-              {documentStatusLabel(verifyResult.status ?? (verifyResult.isRevoked ? 2 : null))}
-            </div>
-          </div>
-
-          <div className="field">
-            <label>Status autentyczności</label>
-            <div
-              style={{
-                fontWeight: 600,
-                color: authenticityLabel.color,
-                marginTop: '0.5rem',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-              }}
-            >
-              {authenticityLabel.text}
-            </div>
-          </div>
-        </>
-      )}
+        ) : null}
+      </AppCard>
     </div>
   );
 };

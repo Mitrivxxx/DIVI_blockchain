@@ -3,11 +3,14 @@ using backend.Infrastructure;
 using backend.Data;
 using backend.Infrastructure.Configuration;
 using backend.Infrastructure.Database;
+using backend.Infrastructure.Minio;
 using backend.Infrastructure.Swagger;
 using backend.Services.Admins;
 using backend.Services.Auth;
 using backend.Services.BackgroundJobs;
 using backend.Services.Blockchain;
+using backend.Services.Activity;
+using backend.Services.Credentials;
 using backend.Services.Documents;
 using backend.Services.DocumentVerification;
 using backend.Services.GetProfile;
@@ -30,14 +33,17 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddApplication(this IServiceCollection services)
     {
         services.AddScoped<IDocumentService, DocumentService>();
+        services.AddScoped<IDocumentActivityService, DocumentActivityService>();
         services.AddScoped<IDocumentVerification, DocumentVerificationService>();
         services.AddScoped<IBlockchainService, BlockchainService>();
         services.AddScoped<IUserRoleService, UserRoleService>();
         services.AddScoped<IIssuerApplicationService, IssuerApplicationService>();
+        services.AddScoped<IIssuerProfileService, IssuerProfileService>();
         services.AddScoped<IAdminManagementService, AdminManagementService>();
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IJwtService, JwtService>();
         services.AddScoped<IGetProfileService, GetProfileService>();
+        services.AddScoped<ICredentialWalletService, CredentialWalletService>();
         services.AddScoped<backend.Services.GoogleUser.UserService>();
         services.AddHostedService<DatabaseInitializerHostedService>();
         services.AddHostedService<NonceCleanupService>();
@@ -108,6 +114,17 @@ public static class ServiceCollectionExtensions
         });
 
         services.Configure<PinataOptions>(configuration.GetSection("Pinata"));
+        services.Configure<MinioOptions>(configuration.GetSection(MinioOptions.SectionName));
+        BindMinioFromEnvironment(configuration);
+
+        // Plain HttpClient — Aspire ServiceDefaults resilience would retry ~10s on dead MinIO and delay startup.
+        services.AddSingleton<IMinioObjectStorage>(sp =>
+        {
+            var options = sp.GetRequiredService<IOptions<MinioOptions>>();
+            var logger = sp.GetRequiredService<Microsoft.Extensions.Logging.ILogger<MinioObjectStorage>>();
+            var http = new HttpClient { Timeout = TimeSpan.FromSeconds(15) };
+            return new MinioObjectStorage(http, options, logger);
+        });
 
         services.AddAuthentication(options =>
         {
@@ -203,6 +220,38 @@ public static class ServiceCollectionExtensions
     private static string? ResolveAspirePostgresConnectionString(IConfiguration configuration) =>
         configuration.GetConnectionString("divi")
         ?? configuration.GetConnectionString("postgres");
+
+    private static void BindMinioFromEnvironment(IConfiguration configuration)
+    {
+        void SetIfPresent(string configKey, string envName)
+        {
+            var value = Environment.GetEnvironmentVariable(envName);
+            if (!string.IsNullOrWhiteSpace(value))
+            {
+                configuration[configKey] = value;
+            }
+        }
+
+        SetIfPresent("Minio:Endpoint", "MINIO_ENDPOINT");
+        SetIfPresent("Minio:AccessKey", "MINIO_ACCESS_KEY");
+        SetIfPresent("Minio:SecretKey", "MINIO_SECRET_KEY");
+        SetIfPresent("Minio:Bucket", "MINIO_BUCKET");
+        SetIfPresent("Minio:PublicBaseUrl", "MINIO_PUBLIC_BASE_URL");
+        SetIfPresent("Minio:Region", "MINIO_REGION");
+
+        var useSsl = Environment.GetEnvironmentVariable("MINIO_USE_SSL");
+        if (!string.IsNullOrWhiteSpace(useSsl) && bool.TryParse(useSsl, out var ssl))
+        {
+            configuration["Minio:UseSsl"] = ssl.ToString();
+        }
+
+        // Also accept nested env style used by Aspire WithEnvironment
+        SetIfPresent("Minio:Endpoint", "Minio__Endpoint");
+        SetIfPresent("Minio:AccessKey", "Minio__AccessKey");
+        SetIfPresent("Minio:SecretKey", "Minio__SecretKey");
+        SetIfPresent("Minio:Bucket", "Minio__Bucket");
+        SetIfPresent("Minio:PublicBaseUrl", "Minio__PublicBaseUrl");
+    }
 
     public static IServiceCollection AddPresentation(this IServiceCollection services)
     {

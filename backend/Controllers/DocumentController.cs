@@ -24,32 +24,28 @@ public class DocumentController : ControllerBase
     }
 
     /// <summary>
-    /// Uploads a document, stores it in IPFS, issues it on the blockchain, and saves metadata in the database.
+    /// Issues a document: PDF → IPFS + chain, or Education/Experience metadata (period dates) → chain only.
     /// </summary>
     [HttpPost("upload-document")]
     [Authorize(Roles = "issuer,admin,owner")]
     [Consumes("multipart/form-data")]
     public async Task<IActionResult> UploadDocument(
-        IFormFile file,
+        IFormFile? file,
         [FromForm] string documentType,
-        [FromForm] string owner)
+        [FromForm] string owner,
+        [FromForm] string? periodFrom = null,
+        [FromForm] string? periodTo = null,
+        [FromForm] string? title = null)
     {
         _logger.LogInformation(
-            "UploadDocument request received. FileName: {FileName}, ContentType: {ContentType}, DocumentType: {DocumentType}, Owner: {Owner}",
+            "UploadDocument request received. FileName: {FileName}, ContentType: {ContentType}, DocumentType: {DocumentType}, Owner: {Owner}, PeriodFrom: {PeriodFrom}, PeriodTo: {PeriodTo}, Title: {Title}",
             file?.FileName,
             file?.ContentType,
             documentType,
-            owner);
-
-        if (file == null)
-        {
-            return BadRequest("file is required");
-        }
-
-        if (file.Length == 0)
-        {
-            return BadRequest("file is empty");
-        }
+            owner,
+            periodFrom,
+            periodTo,
+            title);
 
         if (string.IsNullOrWhiteSpace(documentType))
         {
@@ -61,21 +57,70 @@ public class DocumentController : ControllerBase
             return BadRequest("owner is required");
         }
 
-        const long maxFileSizeBytes = 5 * 1024 * 1024;
-        if (file.Length > maxFileSizeBytes)
+        byte documentTypeValue;
+        try
         {
-            return BadRequest("file is too large");
+            documentTypeValue = DocumentTypeCatalog.Parse(documentType);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(ex.Message);
         }
 
-        var extension = Path.GetExtension(file.FileName);
-        if (!string.Equals(extension, ".pdf", StringComparison.OrdinalIgnoreCase)
-            && !string.Equals(file.ContentType, "application/pdf", StringComparison.OrdinalIgnoreCase))
+        var metadataOnly = DocumentTypeCatalog.IsMetadataOnly(documentTypeValue);
+
+        if (metadataOnly)
         {
-            return BadRequest("only pdf files are allowed");
+            if (file is { Length: > 0 })
+            {
+                return BadRequest("Dla Wykształcenia i Doświadczenia nie przesyła się pliku.");
+            }
+
+            if (string.IsNullOrWhiteSpace(periodFrom) || string.IsNullOrWhiteSpace(periodTo))
+            {
+                return BadRequest("periodFrom and periodTo are required for Education/Experience");
+            }
+
+            if (documentTypeValue == 0 && string.IsNullOrWhiteSpace(title))
+            {
+                return BadRequest("title (tytuł/kierunek studiów) is required for Education");
+            }
+        }
+        else
+        {
+            if (file == null)
+            {
+                return BadRequest("file is required");
+            }
+
+            if (file.Length == 0)
+            {
+                return BadRequest("file is empty");
+            }
+
+            const long maxFileSizeBytes = 5 * 1024 * 1024;
+            if (file.Length > maxFileSizeBytes)
+            {
+                return BadRequest("file is too large");
+            }
+
+            var extension = Path.GetExtension(file.FileName);
+            if (!string.Equals(extension, ".pdf", StringComparison.OrdinalIgnoreCase)
+                && !string.Equals(file.ContentType, "application/pdf", StringComparison.OrdinalIgnoreCase))
+            {
+                return BadRequest("only pdf files are allowed");
+            }
         }
 
         var memberId = TryGetMemberId();
-        var result = await _documentService.ProcessDocumentAsync(file, documentType, owner, memberId);
+        var result = await _documentService.ProcessUploadAsync(
+            file,
+            documentType,
+            owner,
+            periodFrom,
+            periodTo,
+            title,
+            memberId);
 
         _logger.LogInformation(
             "UploadDocument completed. Hash: {Hash}, Cid: {Cid}, TxHash: {TxHash}, Message: {Message}",
@@ -88,72 +133,40 @@ public class DocumentController : ControllerBase
     }
 
     /// <summary>
-    /// Verifies document authenticity by checking whether its SHA-256 hash exists on blockchain.
+    /// Lists documents owned by the given Ethereum address (from DB).
     /// </summary>
-    [HttpPost("verify-document")]
-    [Consumes("multipart/form-data")]
-    public async Task<IActionResult> VerifyDocument(IFormFile file)
-    {
-        _logger.LogInformation(
-            "VerifyDocument request received. FileName: {FileName}, ContentType: {ContentType}",
-            file?.FileName,
-            file?.ContentType);
-
-        if (file == null)
-        {
-            return BadRequest("file is required");
-        }
-
-        if (file.Length == 0)
-        {
-            return BadRequest("file is empty");
-        }
-
-        const long maxFileSizeBytes = 5 * 1024 * 1024;
-        if (file.Length > maxFileSizeBytes)
-        {
-            return BadRequest("file is too large");
-        }
-
-        var extension = Path.GetExtension(file.FileName);
-        if (!string.Equals(extension, ".pdf", StringComparison.OrdinalIgnoreCase)
-            && !string.Equals(file.ContentType, "application/pdf", StringComparison.OrdinalIgnoreCase))
-        {
-            return BadRequest("only pdf files are allowed");
-        }
-
-        var result = await _documentVerification.VerifyDocumentAsync(file);
-        _logger.LogInformation("VerifyDocument completed. Hash: {Hash}, IsAuthentic: {IsAuthentic}", result.Hash, result.IsAuthentic);
-
-        return Ok(result);
-    }
-
     [HttpGet("owner/{ownerAddress}")]
-    public async Task<IActionResult> GetOwnerCertificates(string ownerAddress)
+    [Authorize]
+    public async Task<IActionResult> GetByOwner(string ownerAddress)
     {
-        _logger.LogInformation("GetOwnerCertificates request received. Owner: {Owner}", ownerAddress);
-
         if (string.IsNullOrWhiteSpace(ownerAddress))
         {
             return BadRequest("ownerAddress is required");
         }
 
-        var certificates = await _documentService.GetByOwnerAddressAsync(ownerAddress);
-        return Ok(certificates);
+        var items = await _documentService.GetByOwnerAddressAsync(ownerAddress);
+        return Ok(items);
     }
 
+    /// <summary>
+    /// Lists documents issued by the given on-chain issuer address (from DB).
+    /// </summary>
     [HttpGet("issuer/{issuerAddress}")]
-    public async Task<IActionResult> GetIssuerDocuments(string issuerAddress)
+    [Authorize]
+    public async Task<IActionResult> GetByIssuer(string issuerAddress)
     {
         if (string.IsNullOrWhiteSpace(issuerAddress))
         {
             return BadRequest("issuerAddress is required");
         }
 
-        var documents = await _documentService.GetByIssuerAddressAsync(issuerAddress);
-        return Ok(documents);
+        var items = await _documentService.GetByIssuerAddressAsync(issuerAddress);
+        return Ok(items);
     }
 
+    /// <summary>
+    /// Lists documents issued by the current member (JWT), regardless of hot-wallet issuer address.
+    /// </summary>
     [HttpGet("issued-by-me")]
     [Authorize(Roles = "issuer,admin,owner")]
     public async Task<IActionResult> GetIssuedByMe()
@@ -161,48 +174,77 @@ public class DocumentController : ControllerBase
         var memberId = TryGetMemberId();
         if (memberId is null)
         {
-            return Unauthorized("Member id missing from token.");
+            return Unauthorized();
         }
 
-        var documents = await _documentService.GetIssuedByMemberAsync(memberId.Value);
-        return Ok(documents);
+        var items = await _documentService.GetIssuedByMemberAsync(memberId.Value);
+        return Ok(items);
     }
 
     /// <summary>
-    /// Revokes an issued document on-chain and marks Status=Revoked in the database.
+    /// Revokes a document on-chain and in DB. Issuer of the row, admin, or owner.
     /// </summary>
     [HttpDelete("{hash}/revoke")]
     [Authorize(Roles = "issuer,admin,owner")]
-    public async Task<IActionResult> RevokeDocument(string hash)
+    public async Task<IActionResult> Revoke(string hash)
     {
-        var memberId = TryGetMemberId();
-        var role = User.FindFirstValue(ClaimTypes.Role) ?? "user";
-
-        var (ok, statusCode, error) = await _documentService.RevokeAsync(hash, memberId, role);
-        if (ok)
+        if (string.IsNullOrWhiteSpace(hash))
         {
-            return NoContent();
+            return BadRequest("hash is required");
         }
 
-        return statusCode switch
+        var memberId = TryGetMemberId();
+        var role = User.FindFirstValue(ClaimTypes.Role) ?? string.Empty;
+        var (ok, statusCode, error) = await _documentService.RevokeAsync(hash, memberId, role);
+        if (!ok)
         {
-            400 => BadRequest(error),
-            403 => StatusCode(StatusCodes.Status403Forbidden, error),
-            404 => NotFound(error),
-            409 => Conflict(error),
-            _ => StatusCode(statusCode, error)
-        };
+            return StatusCode(statusCode, new { error });
+        }
+
+        return NoContent();
+    }
+
+    /// <summary>
+    /// Streams the original PDF from IPFS (Pinata gateway) for authorized viewers.
+    /// </summary>
+    [HttpGet("{hash}/file")]
+    [Authorize]
+    public async Task<IActionResult> GetFile(string hash)
+    {
+        if (string.IsNullOrWhiteSpace(hash))
+        {
+            return BadRequest("hash is required");
+        }
+
+        var memberId = TryGetMemberId();
+        var role = User.FindFirstValue(ClaimTypes.Role) ?? string.Empty;
+        var (bytes, statusCode, error) = await _documentService.GetFileContentAsync(hash, memberId, role);
+        if (bytes is null)
+        {
+            return StatusCode(statusCode, new { error });
+        }
+
+        return File(bytes, "application/pdf");
+    }
+
+    [HttpPost("verify-document")]
+    [AllowAnonymous]
+    [Consumes("multipart/form-data")]
+    public async Task<IActionResult> VerifyDocument(IFormFile file)
+    {
+        if (file == null || file.Length == 0)
+        {
+            return BadRequest("file is required");
+        }
+
+        var result = await _documentVerification.VerifyDocumentAsync(file);
+        return Ok(result);
     }
 
     private int? TryGetMemberId()
     {
-        var sub = User.FindFirstValue(JwtRegisteredClaimNames.Sub)
-            ?? User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (int.TryParse(sub, out var id))
-        {
-            return id;
-        }
-
-        return null;
+        var raw = User.FindFirstValue(ClaimTypes.NameIdentifier)
+            ?? User.FindFirstValue(JwtRegisteredClaimNames.Sub);
+        return int.TryParse(raw, out var id) ? id : null;
     }
 }

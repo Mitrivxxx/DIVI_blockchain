@@ -12,36 +12,45 @@ UI for login, document issuing/verification, and profile / issuer-role managemen
 | ---- | -------- |
 | `app/` | Router, layout, auth pages, features |
 | `app/features/` | Feature folders: `hooks/`, `components/`, `api/` + main component |
-| `app/features/sidebar/tabs.ts` | App tab definitions |
+| `app/features/navigation/routes.ts` | App routes / primary nav / role helpers |
+| `app/layout/` | `MainLayout` + `AppHeader` (authenticated shell) |
 | `service/` | `Web3AuthContext`, JWT helpers |
-| `shared/` | Shared UI (Verify, Header, Notify) |
-| `public/` | Landing (unauthenticated) |
-| `styles/` | Global styles |
+| `shared/` | Shared UI (`shared/ui`, Verify, Header, Notify) |
+| `public/` | Marketing landing (unauthenticated) at `/public` |
+| `styles/` | Tailwind theme + auth SCSS globals |
 | `types/` | API types |
 
 ## Assumptions
 
 - Alias `@` → `src/`. Bundler: Vite 7, port **3000**, proxy `/api` → backend.
-- Routing: React Router 7. Public `/`, auth `/auth|/login|/register`, app `/app/:tabPath?`.
-- Tabs: `dashboard`, `upload`, `issuedDocuments`, `myDocuments`, `verify`, `issuerRole`, `profile`, `help` (+ `notify` via header).
-- Role-gated sidebar: `user` (issuer apply + own docs); `issuer`/`admin`/`owner` (upload + issued-by-me revoke + own docs). Notify review: `admin`|`owner`.
-- Documents list DTO: `src/types/documents.ts` (`DocumentListItem` + status/type helpers). APIs: `features/documents/api/documentsApi.ts` (`owner`, `issued-by-me`, `revoke`).
-- Verify (app + public shared): response uses `isAuthentic` / `isRevoked` / `status` — revoked ≠ missing.
-- State: no Redux/Zustand — Context + local hooks.
-- Styles: SCSS modules + global for `/app` and auth pages. Tailwind v4 (`@tailwindcss/vite`, `src/styles/tailwind.css`, imported last in `frontend.tsx`) is used only by the landing and `src/shared/verify`.
-- Tailwind setup: theme layered, utilities **unlayered** (so they beat unlayered global SCSS like `_base.scss` `h1`), **no preflight** — a minimal reset is scoped to `:where(.landing)`. Tokens: `brand`/`brand-pink` (coral→pink gradient), `canvas`, `hairline`, `shadow-soft`, font Figtree.
-- Public landing (`src/public/main-page/MainPage.tsx` + `components/Landing*.tsx`, OriginX-style): own header (nav anchors, login/register, gradient "Podłącz portfel" → MetaMask sign-in), hero with shared `Verify` in a framed card (`#verify`, main element), stack strip, how-it-works, issuers, features, use cases, FAQ, CTA, footer. Does not use shared `Header`.
-- `src/shared/verify` (landing only; `/app` uses `features/Verify`): Tailwind dropzone/result/file/blockchain cards; request failures show "BŁĄD WERYFIKACJI" (not a hash mismatch).
-- API: Axios; files under `features/*/api/`.
-- New feature: folder in `features/` → tab in `tabs.ts` → render in `MainLayout`.
+- Routing: React Router 7. Marketing `/public`, auth `/auth|/login|/register`, authenticated app at `/` (+ `/network`, `/institutions`, `/verify`, `/profile`, …). Legacy `/app/:path` redirects to new paths. `/share/:token` public credential smoke page.
+- Mount: always `#root`; Tailwind always loaded. Auth pages keep SCSS.
+- Primary header nav: Strona główna `/`, Moja sieć `/network`, Instytucje `/institutions`. Header `app-search` searches members via `GET /api/profiles/search?q=` (name or ETH); results open `/u/:ethereumAddress` (own address → `/profile`).
+- Profile dropdown: Wyświetl profil, Zweryfikuj teraz, Moje dokumenty; user → **Chcę być issuerem**; issuer/admin/owner → upload / issued (+ notify for admin/owner); Wyloguj → `/public`.
+- Guest on protected routes → `/public`. Post-login → `/`. Unknown shell paths redirect to `/`; `/u/:ethereumAddress` is a known shell path (`isKnownAppPath`).
+- Missing backend/blockchain capabilities are marked with red `MissingBackendNote` (institutions catalog, social feed).
+- Moja sieć `/network`: `GET /api/profiles` — all members/roles; cards link to `/u/:address` when ETH address exists.
+- Public member page: `/u/:ethereumAddress` (`PublicProfile.tsx`) — same five credential type sections as `/profile` (`CredentialTypeSections` readOnly; empty sections show „Brak dokumentów”; public/Confirmed items only).
+- Own `/profile` public/private toggle (local UI): public → Profil + Instytucja (form) + Dokumenty + Historia; private → only Profil + Instytucja card (`IssuerInstitutionCard`).
+- Documents list DTO: `src/types/documents.ts` (`DOCUMENT_TYPE_SECTIONS`, `isMetadataDocumentType`, `formatDocumentPeriod`). APIs: `features/documents/api/documentsApi.ts`.
+- Upload form order: type → owner → PDF **or** period dates (Education/Experience hide file picker). Education also requires **Tytuł / kierunek studiów** (`title`).
+- Profile (when public): **Profil** → **Instytucja** (issuer+) → **Dokumenty** (LinkedIn-style rows with issuer logo/avatar) → **Historia**. `avatarUrl` is a public MinIO object URL. Session restore via `POST /Auth/refresh`.
+- Verify (app + public shared): `isAuthentic` / `isRevoked` / `status`.
+- State: Context + local hooks (no Redux/Zustand).
+- Styles: authenticated shell + landing use Tailwind v4 (`.landing` / `.app-shell` scoped reset in `styles/tailwind.css`). Tokens: `brand`/`brand-pink`, `canvas`, `hairline`, `shadow-soft`, Figtree. Shared primitives: `src/shared/ui` (`LogoLink`, `Container`, `buttonDark`/`buttonLight`, `GradientButton`, `AppCard`, `MissingBackendNote`).
+- Public landing: OriginX-style sections under `src/public/main-page/`. Landing `./ui` re-exports `@/shared/ui`.
+- **Style skill:** `.cursor/skills/divi-landing-style/` applies to landing **and** `app-shell`.
+- `src/shared/verify` (landing hero); app uses `features/Verify`.
+- New authenticated page: feature folder → route in `App.tsx` under `MainLayout` → optional entry in `navigation/routes.ts` / `AppHeader`.
 
 ## Key files
 
-- `src/app/frontend.tsx` — entry
+- `src/app/frontend.tsx` — entry (`#root`)
 - `src/app/App.tsx` — router
-- `src/app/features/sidebar/tabs.ts` — tabs / paths
+- `src/app/layout/MainLayout.tsx` / `AppHeader.tsx` — authenticated chrome
+- `src/app/features/navigation/routes.ts` — paths / roles
+- `src/shared/ui/index.tsx` — shared Tailwind primitives
 - `src/app/features/issuedDocuments/IssuedDocuments.tsx` — issuer list + revoke
-- `src/types/documents.ts` — document list / status helpers
 - `src/service/Web3AuthContext.tsx` — wallet / sign-in
 - `vite.config.ts` — Vite + proxy
 

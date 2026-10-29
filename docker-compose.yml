@@ -44,11 +44,20 @@ services:
 
       PINATA_JWT: ${PINATA_JWT:-}
 
+      Minio__Endpoint: minio:9000
+      Minio__AccessKey: ${MINIO_ACCESS_KEY:-minioadmin}
+      Minio__SecretKey: ${MINIO_SECRET_KEY:-minioadmin}
+      Minio__Bucket: ${MINIO_BUCKET:-divi-avatars}
+      Minio__PublicBaseUrl: ${MINIO_PUBLIC_BASE_URL:-http://localhost:9000}
+      Minio__UseSsl: ${MINIO_USE_SSL:-false}
+
       Cors__AllowedOrigins__0: ${CORS_ALLOWED_ORIGIN_DEV:-http://localhost:3000}
       Cors__AllowedOrigins__1: ${CORS_ALLOWED_ORIGIN_PROD:-http://localhost:8080}
     depends_on:
       db:
         condition: service_healthy
+      minio:
+        condition: service_started
     ports:
       - "5021:5021"
     healthcheck:
@@ -90,6 +99,21 @@ services:
       backend:
         condition: service_healthy
 
+  minio:
+    # Community MinIO build — official minio/* / quay.io/minio images are no longer anonymously pullable.
+    image: soldevelo/minio:2024.12.18
+    container_name: divi-minio
+    restart: unless-stopped
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY:-minioadmin}
+      MINIO_DEFAULT_BUCKETS: ${MINIO_BUCKET:-divi-avatars}
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/bitnami/minio/data
+
   blockchain-tools:
     profiles: ["tools"]
     build:
@@ -119,3 +143,4 @@ services:
 volumes:
   db_data:
   frontend_node_modules:
+  minio_data:

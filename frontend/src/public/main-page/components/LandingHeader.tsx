@@ -21,7 +21,7 @@ export const LandingHeader = ({ onConnect, isConnecting }: LandingHeaderProps) =
   return (
     <header className="sticky top-0 z-50 border-b border-neutral-200/70 bg-canvas/85 backdrop-blur-md">
       <Container className="flex h-16 items-center justify-between gap-6">
-        <LogoLink onClick={closeMenu} />
+        <LogoLink to="/public" onClick={closeMenu} />
 
         <nav aria-label="Główna nawigacja" className="hidden md:block">
           <ul className="flex items-center gap-8">

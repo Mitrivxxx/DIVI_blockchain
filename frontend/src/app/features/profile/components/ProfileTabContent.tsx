@@ -1,11 +1,12 @@
-import React from "react";
+import React, { useRef } from "react";
 import type { EditableField } from "../types";
-import clockIcon from "../../../../assets/icons/clock.svg";
-import emailIcon from "../../../../assets/icons/email.svg";
-import ethIcon from "../../../../assets/icons/eth.svg";
+import { buttonDark, buttonLight } from "@/shared/ui";
 
 type ProfileTabContentProps = {
   avatar: string;
+  hasCustomAvatar: boolean;
+  avatarUploading: boolean;
+  profileError: string | null;
   role: string | null;
   displayName: string | null;
   email: string | null;
@@ -15,6 +16,7 @@ type ProfileTabContentProps = {
   copiedAddress: boolean;
   joinedAt: string | null;
   saving: boolean;
+  isPublicProfile: boolean;
   menuOpenFor: EditableField | null;
   editingField: EditableField | null;
   editingValue: string;
@@ -25,6 +27,9 @@ type ProfileTabContentProps = {
   onSaveField: (field: EditableField) => Promise<void>;
   onDeleteField: (field: EditableField) => Promise<void>;
   onCopyAddress: () => Promise<void> | void;
+  onPublicProfileChange: (isPublic: boolean) => void;
+  onAvatarSelected: (file: File) => void;
+  onAvatarDelete: () => void;
 };
 
 const formatRole = (roleValue: string | null | undefined): string | null => {
@@ -44,8 +49,14 @@ const formatRole = (roleValue: string | null | undefined): string | null => {
   return labels[normalized] ?? roleValue;
 };
 
+const inputClass =
+  "rounded-lg border border-hairline bg-white px-3 py-2 text-sm text-neutral-900 outline-none focus:border-neutral-300";
+
 const ProfileTabContent: React.FC<ProfileTabContentProps> = ({
   avatar,
+  hasCustomAvatar,
+  avatarUploading,
+  profileError,
   role,
   displayName,
   email,
@@ -55,6 +66,7 @@ const ProfileTabContent: React.FC<ProfileTabContentProps> = ({
   copiedAddress,
   joinedAt,
   saving,
+  isPublicProfile,
   menuOpenFor,
   editingField,
   editingValue,
@@ -65,179 +77,220 @@ const ProfileTabContent: React.FC<ProfileTabContentProps> = ({
   onSaveField,
   onDeleteField,
   onCopyAddress,
+  onPublicProfileChange,
+  onAvatarSelected,
+  onAvatarDelete,
 }) => {
   const roleLabel = formatRole(role);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   return (
-    <>
-      <header className="profile-header">
-        <div className="profile-avatar-wrap">
-          <img src={avatar} alt="Avatar" className="profile-avatar" />
+    <div className="space-y-6">
+      <header className="flex flex-wrap items-start gap-4">
+        <div className="space-y-2">
+          <button
+            type="button"
+            className="group relative block overflow-hidden rounded-xl border border-hairline bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={avatarUploading || saving}
+            aria-label="Zmień zdjęcie profilowe"
+          >
+            <img
+              src={avatar}
+              alt="Avatar"
+              className="size-16 object-cover transition group-hover:opacity-80"
+            />
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            className="hidden"
+            onChange={event => {
+              const file = event.target.files?.[0];
+              event.target.value = "";
+              if (file) onAvatarSelected(file);
+            }}
+          />
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              className="text-xs font-medium underline disabled:opacity-50"
+              disabled={avatarUploading || saving}
+              onClick={() => fileInputRef.current?.click()}
+            >
+              {avatarUploading ? "Wgrywanie…" : "Zmień zdjęcie"}
+            </button>
+            {hasCustomAvatar ? (
+              <button
+                type="button"
+                className="text-xs font-medium text-red-600 underline disabled:opacity-50"
+                disabled={avatarUploading || saving}
+                onClick={onAvatarDelete}
+              >
+                Usuń
+              </button>
+            ) : null}
+          </div>
         </div>
-
-        <div className="profile-headline">
+        <div className="min-w-0 flex-1 space-y-2">
           {editingField === "name" ? (
-            <div className="profile-edit-inline">
+            <div className="flex flex-wrap gap-2">
               <input
-                className="profile-input"
                 value={editingValue}
                 onChange={e => onEditValueChange(e.target.value)}
                 placeholder="Wpisz nazwę"
+                className={inputClass}
               />
-              <button type="button" className="profile-add-btn" onClick={() => onSaveField("name")} disabled={saving}>
+              <button type="button" className={buttonDark} onClick={() => onSaveField("name")} disabled={saving}>
                 Zapisz
               </button>
-              <button type="button" className="profile-add-btn" onClick={onCancelEditing} disabled={saving}>
+              <button type="button" className={buttonLight} onClick={onCancelEditing} disabled={saving}>
                 Anuluj
               </button>
             </div>
           ) : (
-            <div className="profile-field-with-menu">
-              <h1 className="profile-name">{displayName ?? "Brak nazwy"}</h1>
-              {displayName && (
-                <div className="profile-menu-wrap">
-                  <button
-                    type="button"
-                    className="profile-kebab-btn"
-                    onClick={() => onMenuToggle("name")}
-                  >
-                    ...
+            <div className="flex flex-wrap items-center gap-2">
+              <h1 className="text-2xl font-semibold tracking-[-0.02em] text-neutral-900">
+                {displayName ?? "Brak nazwy"}
+              </h1>
+              {displayName ? (
+                <>
+                  <button type="button" className="text-sm font-medium text-neutral-600 underline" onClick={() => onMenuToggle("name")}>
+                    Menu
                   </button>
-                  {menuOpenFor === "name" && (
-                    <div className="profile-menu">
-                      <button type="button" onClick={() => onStartEditing("name", displayName)}>Edytuj</button>
-                      <button type="button" onClick={() => onDeleteField("name")}>Usuń</button>
-                    </div>
-                  )}
-                </div>
+                  {menuOpenFor === "name" ? (
+                    <>
+                      <button type="button" className="text-sm" onClick={() => onStartEditing("name", displayName)}>Edytuj</button>
+                      <button type="button" className="text-sm text-red-600" onClick={() => onDeleteField("name")}>Usuń</button>
+                    </>
+                  ) : null}
+                </>
+              ) : (
+                <button type="button" className="text-sm font-medium underline" onClick={() => onStartEditing("name", "")}>
+                  Dodaj nazwę
+                </button>
               )}
+              {roleLabel ? (
+                <span className="rounded bg-neutral-100 px-2 py-1 text-xs font-medium text-neutral-700">
+                  {roleLabel}
+                </span>
+              ) : null}
             </div>
           )}
-          {!displayName && (
-            <button type="button" className="profile-add-btn" onClick={() => onStartEditing("name", "")}>
-              Dodaj nazwę
-            </button>
-          )}
-          {roleLabel ? <span className="profile-role-pill">{roleLabel}</span> : null}
         </div>
       </header>
 
-      <div className="profile-divider" />
+      {profileError ? <p className="text-sm text-red-600">{profileError}</p> : null}
 
-      <ul className="profile-details" aria-label="Szczegóły profilu">
-        <li className="profile-row">
-          <img src={ethIcon} alt="ETH" className="profile-row-icon" />
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-hairline bg-neutral-50 px-4 py-3">
+        <div>
+          <p className="text-sm font-medium text-neutral-900">
+            {isPublicProfile ? "Profil publiczny" : "Profil prywatny"}
+          </p>
+          <p className="text-xs text-neutral-500">
+            {isPublicProfile
+              ? "Pokazujemy pełny profil: dokumenty, historię i formularz instytucji."
+              : "Tryb prywatny: tylko sekcja Profil oraz Instytucja (podgląd, bez formularza)."}
+          </p>
+        </div>
+        <button
+          type="button"
+          role="switch"
+          aria-checked={isPublicProfile}
+          className={buttonLight}
+          onClick={() => onPublicProfileChange(!isPublicProfile)}
+        >
+          Przełącz na {isPublicProfile ? "prywatny" : "publiczny"}
+        </button>
+      </div>
+
+      <ul className="space-y-3 text-sm text-neutral-700" aria-label="Szczegóły profilu">
+        <li className="flex flex-wrap items-center gap-2">
+          <span className="font-medium text-neutral-500">ETH</span>
+          <span className="font-mono">{shortAddress ?? profileAddress ?? "Brak adresu ETH"}</span>
           {shortAddress ? (
             <>
-              <span>{shortAddress}</span>
-              <button type="button" className="profile-copy-btn" onClick={onCopyAddress}>
-                Skopiuj adres
-              </button>
-              {copiedAddress && <span className="profile-copy-status">Skopiowano</span>}
+              <button type="button" className="underline" onClick={onCopyAddress}>Skopiuj</button>
+              {copiedAddress ? <span className="text-emerald-600">Skopiowano</span> : null}
             </>
           ) : (
-            <>
-              <span>{profileAddress ?? "Brak adresu ETH"}</span>
-              <button type="button" className="profile-add-btn">Dodaj adres ETH</button>
-            </>
+            <button type="button" className="underline">Dodaj adres ETH</button>
           )}
         </li>
-        <li className="profile-row">
-          <img src={emailIcon} alt="E-mail" className="profile-row-icon" />
+        <li className="flex flex-wrap items-center gap-2">
+          <span className="font-medium text-neutral-500">E-mail</span>
           {editingField === "email" ? (
-            <div className="profile-edit-inline profile-edit-inline--row">
+            <>
               <input
-                className="profile-input"
                 value={editingValue}
                 onChange={e => onEditValueChange(e.target.value)}
                 placeholder="Wpisz e-mail"
+                className={inputClass}
               />
-              <button type="button" className="profile-add-btn" onClick={() => onSaveField("email")} disabled={saving}>
-                Zapisz
-              </button>
-              <button type="button" className="profile-add-btn" onClick={onCancelEditing} disabled={saving}>
-                Anuluj
-              </button>
-            </div>
+              <button type="button" className={buttonDark} onClick={() => onSaveField("email")} disabled={saving}>Zapisz</button>
+              <button type="button" className={buttonLight} onClick={onCancelEditing} disabled={saving}>Anuluj</button>
+            </>
           ) : (
-            <div className="profile-field-with-menu profile-field-with-menu--row">
+            <>
               <span>{email ?? "Brak e-maila"}</span>
               {email ? (
-                <div className="profile-menu-wrap">
-                  <button
-                    type="button"
-                    className="profile-kebab-btn"
-                    onClick={() => onMenuToggle("email")}
-                  >
-                    ...
-                  </button>
-                  {menuOpenFor === "email" && (
-                    <div className="profile-menu">
+                <>
+                  <button type="button" className="underline" onClick={() => onMenuToggle("email")}>Menu</button>
+                  {menuOpenFor === "email" ? (
+                    <>
                       <button type="button" onClick={() => onStartEditing("email", email)}>Edytuj</button>
-                      <button type="button" onClick={() => onDeleteField("email")}>Usuń</button>
-                    </div>
-                  )}
-                </div>
+                      <button type="button" className="text-red-600" onClick={() => onDeleteField("email")}>Usuń</button>
+                    </>
+                  ) : null}
+                </>
               ) : (
-                <button type="button" className="profile-add-btn" onClick={() => onStartEditing("email", "")}>
-                  Dodaj e-mail
-                </button>
+                <button type="button" className="underline" onClick={() => onStartEditing("email", "")}>Dodaj e-mail</button>
               )}
-            </div>
+            </>
           )}
         </li>
-        {joinedAt && (
-          <li className="profile-row">
-            <img src={clockIcon} alt="Data dołączenia" className="profile-row-icon" />
-            <span>Dołączono: {joinedAt}</span>
+        {joinedAt ? (
+          <li>
+            <span className="font-medium text-neutral-500">Dołączono</span> {joinedAt}
           </li>
-        )}
+        ) : null}
       </ul>
 
-      <div className="profile-divider" />
-      {editingField === "bio" ? (
-        <div className="profile-edit-inline profile-edit-inline--bio">
-          <input
-            className="profile-input"
-            value={editingValue}
-            onChange={e => onEditValueChange(e.target.value)}
-            placeholder="Wpisz bio"
-          />
-          <button type="button" className="profile-add-btn" onClick={() => onSaveField("bio")} disabled={saving}>
-            Zapisz
-          </button>
-          <button type="button" className="profile-add-btn" onClick={onCancelEditing} disabled={saving}>
-            Anuluj
-          </button>
-        </div>
-      ) : bio ? (
-        <div className="profile-field-with-menu profile-field-with-menu--bio">
-          <p className="profile-bio">{bio}</p>
-          <div className="profile-menu-wrap">
-            <button
-              type="button"
-              className="profile-kebab-btn"
-              onClick={() => onMenuToggle("bio")}
-            >
-              ...
-            </button>
-            {menuOpenFor === "bio" && (
-              <div className="profile-menu">
-                <button type="button" onClick={() => onStartEditing("bio", bio)}>Edytuj</button>
-                <button type="button" onClick={() => onDeleteField("bio")}>Usuń</button>
-              </div>
-            )}
+      <div className="border-t border-hairline pt-4">
+        {editingField === "bio" ? (
+          <div className="flex flex-wrap gap-2">
+            <input
+              value={editingValue}
+              onChange={e => onEditValueChange(e.target.value)}
+              placeholder="Wpisz bio"
+              className={`${inputClass} min-w-[16rem] flex-1`}
+            />
+            <button type="button" className={buttonDark} onClick={() => onSaveField("bio")} disabled={saving}>Zapisz</button>
+            <button type="button" className={buttonLight} onClick={onCancelEditing} disabled={saving}>Anuluj</button>
           </div>
-        </div>
-      ) : (
-        <p className="profile-bio profile-bio--empty">
-          Brak bio
-          <button type="button" className="profile-add-btn" onClick={() => onStartEditing("bio", "")}>
-            Dodaj bio
-          </button>
-        </p>
-      )}
-    </>
+        ) : bio ? (
+          <p className="text-sm leading-relaxed text-neutral-700">
+            {bio}{" "}
+            <button type="button" className="underline" onClick={() => onMenuToggle("bio")}>Menu</button>
+            {menuOpenFor === "bio" ? (
+              <>
+                {" "}
+                <button type="button" onClick={() => onStartEditing("bio", bio)}>Edytuj</button>{" "}
+                <button type="button" className="text-red-600" onClick={() => onDeleteField("bio")}>Usuń</button>
+              </>
+            ) : null}
+          </p>
+        ) : (
+          <p className="text-sm text-neutral-500">
+            Brak bio{" "}
+            <button type="button" className="underline" onClick={() => onStartEditing("bio", "")}>
+              Dodaj bio
+            </button>
+          </p>
+        )}
+      </div>
+    </div>
   );
 };
 

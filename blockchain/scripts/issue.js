@@ -11,7 +11,7 @@ async function main() {
     const hash = "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef";
     const cid = "QmExampleCID";
     const owner = issuer.address;
-    const documentType = 0; // DocumentTypes.DocumentType.Education
+    const documentType = 0; // DocumentTypes.DocumentType.Education (Wykształcenie)
 
     const tx = await contract.issueDocument(hash, cid, owner, documentType);
     await tx.wait();

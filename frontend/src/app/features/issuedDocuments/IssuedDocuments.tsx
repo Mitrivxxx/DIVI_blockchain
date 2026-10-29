@@ -5,9 +5,10 @@ import {
   DOCUMENT_STATUS,
   documentStatusLabel,
   documentTypeLabel,
+  formatDocumentPeriod,
   shortHex,
 } from '@/types/documents';
-import '../MyDocuments.scss';
+import { AppCard, buttonDark } from '@/shared/ui';
 
 const IssuedDocuments: React.FC = () => {
   const [documents, setDocuments] = useState<DocumentListItem[]>([]);
@@ -61,68 +62,80 @@ const IssuedDocuments: React.FC = () => {
   };
 
   return (
-    <section className="my-documents" aria-live="polite">
-      <header className="my-documents__header">
-        <h1 className="my-documents__title">Wystawione dokumenty</h1>
-        <p className="my-documents__address">
-          Lista dokumentów wystawionych przez Twoje konto (IssuedByMember). Możesz je unieważnić.
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl font-semibold tracking-[-0.02em] text-neutral-900">
+          Wystawione dokumenty
+        </h1>
+        <p className="mt-2 max-w-2xl text-base leading-relaxed text-neutral-500">
+          Dokumenty IssuedByMember — możesz je unieważnić on-chain.
         </p>
-      </header>
+      </div>
 
-      {loading ? <p>Ładowanie...</p> : null}
-      {!loading && error ? <p>{error}</p> : null}
-      {actionMessage ? <p>{actionMessage}</p> : null}
-      {!loading && !error && documents.length === 0 ? <p>Brak wystawionych dokumentów.</p> : null}
+      <AppCard>
+        {loading ? <p className="text-sm text-neutral-500">Ładowanie...</p> : null}
+        {!loading && error ? <p className="text-sm text-red-600">{error}</p> : null}
+        {actionMessage ? <p className="mb-4 text-sm text-neutral-700">{actionMessage}</p> : null}
+        {!loading && !error && documents.length === 0 ? (
+          <p className="text-sm text-neutral-500">Brak wystawionych dokumentów.</p>
+        ) : null}
 
-      {!loading && !error && documents.length > 0 ? (
-        <div className="my-documents__table-wrap">
-          <table className="my-documents__table">
-            <thead>
-              <tr>
-                <th scope="col">Hash</th>
-                <th scope="col">Właściciel</th>
-                <th scope="col">Typ</th>
-                <th scope="col">Status</th>
-                <th scope="col">Data</th>
-                <th scope="col">Akcja</th>
-              </tr>
-            </thead>
-            <tbody>
-              {documents.map(document => {
-                const revoked = document.status === DOCUMENT_STATUS.Revoked;
-                return (
-                  <tr key={document.hash}>
-                    <td className="my-documents__mono" title={document.hash}>
-                      {shortHex(document.hash)}
-                    </td>
-                    <td className="my-documents__mono" title={document.ownerAddress ?? undefined}>
-                      {shortHex(document.ownerAddress)}
-                    </td>
-                    <td>{documentTypeLabel(document.documentType)}</td>
-                    <td>{documentStatusLabel(document.status)}</td>
-                    <td>{new Date(document.issuedAt).toLocaleString('pl-PL')}</td>
-                    <td>
-                      {revoked ? (
-                        <span>—</span>
-                      ) : (
-                        <button
-                          type="button"
-                          className="btn"
-                          disabled={revokingHash === document.hash}
-                          onClick={() => void handleRevoke(document.hash)}
-                        >
-                          {revokingHash === document.hash ? 'Unieważnianie…' : 'Unieważnij'}
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      ) : null}
-    </section>
+        {!loading && !error && documents.length > 0 ? (
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[48rem] text-left text-sm">
+              <thead>
+                <tr className="border-b border-hairline text-neutral-500">
+                  <th className="py-2 pr-3 font-medium">Hash</th>
+                  <th className="py-2 pr-3 font-medium">Właściciel</th>
+                  <th className="py-2 pr-3 font-medium">Typ</th>
+                  <th className="py-2 pr-3 font-medium">Status</th>
+                  <th className="py-2 pr-3 font-medium">Data</th>
+                  <th className="py-2 font-medium">Akcja</th>
+                </tr>
+              </thead>
+              <tbody>
+                {documents.map(document => {
+                  const revoked = document.status === DOCUMENT_STATUS.Revoked;
+                  return (
+                    <tr key={document.hash} className="border-b border-hairline last:border-0">
+                      <td className="py-3 pr-3 font-mono text-xs" title={document.hash}>
+                        {shortHex(document.hash)}
+                      </td>
+                      <td className="py-3 pr-3 font-mono text-xs" title={document.ownerAddress ?? undefined}>
+                        {shortHex(document.ownerAddress)}
+                      </td>
+                      <td className="py-3 pr-3">
+                        {document.title?.trim()
+                          ? `${documentTypeLabel(document.documentType)} · ${document.title.trim()}`
+                          : documentTypeLabel(document.documentType)}
+                      </td>
+                      <td className="py-3 pr-3">{documentStatusLabel(document.status)}</td>
+                      <td className="py-3 pr-3">
+                        {formatDocumentPeriod(document.periodStart, document.expiresAt, document.issuedAt)}
+                      </td>
+                      <td className="py-3">
+                        {revoked ? (
+                          <span className="text-neutral-400">—</span>
+                        ) : (
+                          <button
+                            type="button"
+                            className={`${buttonDark} !px-3 !py-2 text-xs`}
+                            disabled={revokingHash === document.hash}
+                            onClick={() => void handleRevoke(document.hash)}
+                          >
+                            {revokingHash === document.hash ? 'Unieważnianie…' : 'Unieważnij'}
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        ) : null}
+      </AppCard>
+    </div>
   );
 };
 

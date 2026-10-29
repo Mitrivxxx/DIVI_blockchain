@@ -93,7 +93,7 @@ const RegisterPage = () => {
         setJwt(loginBody.token);
       }
 
-      navigate("/app/dashboard", { replace: true });
+      navigate("/", { replace: true });
     } catch (registerError) {
       setError(registerError instanceof Error ? registerError.message : "Nie udało się utworzyć konta.");
     } finally {
@@ -143,7 +143,7 @@ const RegisterPage = () => {
       }
 
       localStorage.setItem(EMAIL_LOGIN_STORAGE_KEY, "1");
-      navigate("/app/dashboard", { replace: true });
+      navigate("/", { replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Błąd podczas logowania przez Google.");
     } finally {
