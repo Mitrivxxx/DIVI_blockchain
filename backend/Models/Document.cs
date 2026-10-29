@@ -51,7 +51,7 @@ namespace backend.Models
 
         public DateTimeOffset? ExpiresAt { get; set; }
 
-        /// <summary>Education: degree / field of study (tytuł/kierunek). Optional for other types.</summary>
+        /// <summary>Education: degree/field; Experience: job title (stanowisko). Null for PDF types.</summary>
         [MaxLength(256)]
         public string? Title { get; set; }
 

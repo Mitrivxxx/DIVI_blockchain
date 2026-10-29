@@ -1,11 +1,13 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { fetchIssuedByMe, revokeDocument } from '../documents/api/documentsApi';
+import { openDocumentPdfInNewTab } from '../profile/api/profileApi';
 import type { DocumentListItem } from '@/types/documents';
 import {
   DOCUMENT_STATUS,
   documentStatusLabel,
   documentTypeLabel,
   formatDocumentPeriod,
+  hasDocumentPdfFile,
   shortHex,
 } from '@/types/documents';
 import { AppCard, buttonDark } from '@/shared/ui';
@@ -16,6 +18,8 @@ const IssuedDocuments: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [revokingHash, setRevokingHash] = useState<string | null>(null);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
+  const [openingPdfHash, setOpeningPdfHash] = useState<string | null>(null);
+  const [pdfError, setPdfError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -34,6 +38,18 @@ const IssuedDocuments: React.FC = () => {
   useEffect(() => {
     void load();
   }, [load]);
+
+  const handleOpenPdf = async (hash: string) => {
+    try {
+      setPdfError(null);
+      setOpeningPdfHash(hash);
+      await openDocumentPdfInNewTab(hash);
+    } catch (err) {
+      setPdfError(err instanceof Error ? err.message : 'Nie udało się otworzyć PDF.');
+    } finally {
+      setOpeningPdfHash(null);
+    }
+  };
 
   const handleRevoke = async (hash: string) => {
     const confirmed = window.confirm(
@@ -76,6 +92,7 @@ const IssuedDocuments: React.FC = () => {
         {loading ? <p className="text-sm text-neutral-500">Ładowanie...</p> : null}
         {!loading && error ? <p className="text-sm text-red-600">{error}</p> : null}
         {actionMessage ? <p className="mb-4 text-sm text-neutral-700">{actionMessage}</p> : null}
+        {pdfError ? <p className="mb-4 text-sm text-red-600">{pdfError}</p> : null}
         {!loading && !error && documents.length === 0 ? (
           <p className="text-sm text-neutral-500">Brak wystawionych dokumentów.</p>
         ) : null}
@@ -90,6 +107,7 @@ const IssuedDocuments: React.FC = () => {
                   <th className="py-2 pr-3 font-medium">Typ</th>
                   <th className="py-2 pr-3 font-medium">Status</th>
                   <th className="py-2 pr-3 font-medium">Data</th>
+                  <th className="py-2 pr-3 font-medium">PDF</th>
                   <th className="py-2 font-medium">Akcja</th>
                 </tr>
               </thead>
@@ -112,6 +130,20 @@ const IssuedDocuments: React.FC = () => {
                       <td className="py-3 pr-3">{documentStatusLabel(document.status)}</td>
                       <td className="py-3 pr-3">
                         {formatDocumentPeriod(document.periodStart, document.expiresAt, document.issuedAt)}
+                      </td>
+                      <td className="py-3 pr-3">
+                        {hasDocumentPdfFile(document.cid) ? (
+                          <button
+                            type="button"
+                            className="underline disabled:opacity-50"
+                            disabled={openingPdfHash === document.hash}
+                            onClick={() => void handleOpenPdf(document.hash)}
+                          >
+                            {openingPdfHash === document.hash ? 'Otwieranie…' : 'Pokaż dokument'}
+                          </button>
+                        ) : (
+                          '—'
+                        )}
                       </td>
                       <td className="py-3">
                         {revoked ? (

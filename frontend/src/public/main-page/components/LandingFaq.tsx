@@ -27,6 +27,11 @@ const FAQ = [
       "Tylko instytucje z rolą wystawcy. Rolę przyznaje administrator po akceptacji wniosku — wtedy adres portfela instytucji zostaje dopisany do smart kontraktu.",
   },
   {
+    question: "Czym jest profil i jak pokazać swoje osiągnięcia?",
+    answer:
+      "Po zalogowaniu masz portfel credentials w pięciu sekcjach (wykształcenie, doświadczenie, licencje, rekomendacje, wyróżnienia). Każdy dokument możesz ustawić jako prywatny, udostępnić linkiem albo opublikować na profilu /u/… — widoczne są tylko potwierdzone wpisy.",
+  },
+  {
     question: "Na jakiej sieci działa DIVI?",
     answer: "Obecnie na sieci testowej Ethereum Sepolia. Każdą transakcję można podejrzeć w eksploratorze Etherscan.",
   },

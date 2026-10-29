@@ -35,7 +35,7 @@ REST API: auth (email / Web3 / Google), document upload + verification, profiles
 - `Program.cs` — entry
 - `Extensions/ServiceCollectionExtensions.cs` — DI
 - `Extensions/ApplicationBuilderExtensions.cs` — middleware
-- `Services/Documents/DocumentService.cs` — upload: PDF → Pinata → chain, or Education/Experience metadata (`periodFrom`/`periodTo`, Education also requires `title` = tytuł/kierunek, synthetic `meta:` CID, no Pinata)
+- `Services/Documents/DocumentService.cs` — upload: PDF → Pinata → chain, or Education/Experience metadata (`periodFrom`/`periodTo` + required `title`: Education=tytuł/kierunek, Experience=stanowisko; synthetic `meta:` CID, no Pinata)
 - `Services/Documents/DocumentTypeCatalog.cs` — DocumentType 0–4; `IsMetadataOnly` for Education/Experience
 - `Services/DocumentVerification/DocumentVerificationService.cs` — verify (DB tx metadata, event-scan fallback)
 - `Models/Document.cs` — off-chain document metadata (`Documents` table, PK = hash; `Visibility` + `ShareToken`)
@@ -72,7 +72,7 @@ REST API: auth (email / Web3 / Google), document upload + verification, profiles
 - Revoke: `DELETE /api/documents/{hash}/revoke` (`issuer` only if `IssuedByMemberId` matches; `admin`/`owner` any) → on-chain `revokeDocument` → DB `Status=2`. Verify returns `IsAuthentic` / `IsRevoked` / `Status`.
 - Credential wallet: `GET /api/profiles/me/credentials` returns `{ sections: [{ documentType, label, items }] }` — always 5 type sections. Owner + public/share items include `IssuerDisplayName` + `IssuerLogoUrl` (IssuerProfile.LogoUrl, else issuing Member.AvatarUrl). `PATCH .../visibility` returns a single item. Public portfolio/share still omit CID.
 - Network directory: `GET /api/profiles` (`[Authorize]`) lists all Members (every role; optional `limit`, default 200). Member search: `GET /api/profiles/search?q=` (`[Authorize]`, min 2 chars) matches EthereumAddress / FirstName / LastName (members with an address only); returns `MemberSearchResultDto` (no email). Public card: `GET /api/profiles/{address}` (no email).
-- Activity feed: `DocumentActivities` logged on issue/revoke; `GET /api/profiles/me/activity` (member actions + owned/issued docs). Fallback synthetic `Issued` from `Documents.TxHash`/`BlockNumber` when no activity row yet.
+- Activity feed: `DocumentActivities` logged on issue/revoke; `GET /api/profiles/me/activity` (member actions + owned/issued docs). Fallback synthetic `Issued` from `Documents.TxHash`/`BlockNumber` when no activity row yet. Activity `Cid` is null for metadata-only (`meta:`) docs so UI hides PDF preview.
 
 ## Assumptions (auth / members)
 

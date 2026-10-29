@@ -32,13 +32,13 @@ UI for login, document issuing/verification, and profile / issuer-role managemen
 - Moja sieć `/network`: `GET /api/profiles` — all members/roles; cards link to `/u/:address` when ETH address exists.
 - Public member page: `/u/:ethereumAddress` (`PublicProfile.tsx`) — same five credential type sections as `/profile` (`CredentialTypeSections` readOnly; empty sections show „Brak dokumentów”; public/Confirmed items only).
 - Own `/profile` public/private toggle (local UI): public → Profil + Instytucja (form) + Dokumenty + Historia; private → only Profil + Instytucja card (`IssuerInstitutionCard`).
-- Documents list DTO: `src/types/documents.ts` (`DOCUMENT_TYPE_SECTIONS`, `isMetadataDocumentType`, `formatDocumentPeriod`). APIs: `features/documents/api/documentsApi.ts`.
-- Upload form order: type → owner → PDF **or** period dates (Education/Experience hide file picker). Education also requires **Tytuł / kierunek studiów** (`title`).
+- Documents list DTO: `src/types/documents.ts` (`DOCUMENT_TYPE_SECTIONS`, `isMetadataDocumentType`, `hasDocumentPdfFile`, `formatDocumentPeriod`). APIs: `features/documents/api/documentsApi.ts`. PDF preview: `openDocumentPdfInNewTab` (`GET /api/documents/{hash}/file`) — shown as **Pokaż dokument** on profile credentials, Moje dokumenty, Wystawione, Historia (only when CID is a real IPFS file, not `meta:`).
+- Upload form order: type → owner → PDF **or** period dates (Education/Experience hide file picker). Metadata types also require `title`: Education → **Tytuł / kierunek**, Experience → **Stanowisko**.
 - Profile (when public): **Profil** → **Instytucja** (issuer+) → **Dokumenty** (LinkedIn-style rows with issuer logo/avatar) → **Historia**. `avatarUrl` is a public MinIO object URL. Session restore via `POST /Auth/refresh`.
 - Verify (app + public shared): `isAuthentic` / `isRevoked` / `status`.
 - State: Context + local hooks (no Redux/Zustand).
 - Styles: authenticated shell + landing use Tailwind v4 (`.landing` / `.app-shell` scoped reset in `styles/tailwind.css`). Tokens: `brand`/`brand-pink`, `canvas`, `hairline`, `shadow-soft`, Figtree. Shared primitives: `src/shared/ui` (`LogoLink`, `Container`, `buttonDark`/`buttonLight`, `GradientButton`, `AppCard`, `MissingBackendNote`).
-- Public landing: OriginX-style sections under `src/public/main-page/`. Landing `./ui` re-exports `@/shared/ui`.
+- Public landing: OriginX-style sections under `src/public/main-page/` (incl. `#profiles` — credential wallet / public `/u/…` + share visibility). Landing `./ui` re-exports `@/shared/ui`. Header/footer anchors: verify, how-it-works, issuers, profiles, faq.
 - **Style skill:** `.cursor/skills/divi-landing-style/` applies to landing **and** `app-shell`.
 - `src/shared/verify` (landing hero); app uses `features/Verify`.
 - New authenticated page: feature folder → route in `App.tsx` under `MainLayout` → optional entry in `navigation/routes.ts` / `AppHeader`.

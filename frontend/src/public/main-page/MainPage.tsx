@@ -7,6 +7,7 @@ import { LandingHero } from "./components/LandingHero";
 import { LandingStack } from "./components/LandingStack";
 import { LandingHowItWorks } from "./components/LandingHowItWorks";
 import { LandingIssuers } from "./components/LandingIssuers";
+import { LandingProfiles } from "./components/LandingProfiles";
 import { LandingFeatures } from "./components/LandingFeatures";
 import { LandingUseCases } from "./components/LandingUseCases";
 import { LandingFaq } from "./components/LandingFaq";
@@ -44,6 +45,7 @@ const PublicPage = () => {
         <LandingStack />
         <LandingHowItWorks />
         <LandingIssuers />
+        <LandingProfiles />
         <LandingFeatures />
         <LandingUseCases />
         <LandingFaq />

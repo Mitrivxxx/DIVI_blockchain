@@ -57,6 +57,14 @@ export const isMetadataDocumentType = (apiValue: string | null | undefined): boo
 export const isEducationDocumentType = (apiValue: string | null | undefined): boolean =>
   apiValue === 'Education';
 
+/** Experience requires job title (stanowisko) on upload. */
+export const isExperienceDocumentType = (apiValue: string | null | undefined): boolean =>
+  apiValue === 'Experience';
+
+/** Education + Experience both send a free-text `title` with period dates. */
+export const isTitledMetadataDocumentType = (apiValue: string | null | undefined): boolean =>
+  isEducationDocumentType(apiValue) || isExperienceDocumentType(apiValue);
+
 export const documentTypeLabel = (documentType: number | null | undefined): string => {
   const section = DOCUMENT_TYPE_SECTIONS.find(s => s.id === documentType);
   return section?.label ?? '—';
@@ -94,4 +102,11 @@ export const formatIssuerLabel = (
   const name = displayName?.trim();
   if (name) return name;
   return shortHex(address);
+};
+
+/** True when CID points to an IPFS PDF (not Education/Experience metadata). */
+export const hasDocumentPdfFile = (cid: string | null | undefined): boolean => {
+  const value = cid?.trim();
+  if (!value) return false;
+  return !value.toLowerCase().startsWith('meta:');
 };

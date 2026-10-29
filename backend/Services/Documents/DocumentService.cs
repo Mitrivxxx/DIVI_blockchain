@@ -133,24 +133,23 @@ namespace backend.Services.Documents
                 };
             }
 
-            string? normalizedTitle = null;
-            if (documentTypeValue == 0)
+            if (!TryNormalizeMetadataTitle(
+                    documentTypeValue,
+                    title,
+                    out var normalizedTitle,
+                    out var titleError))
             {
-                if (!TryNormalizeEducationTitle(title, out normalizedTitle, out var titleError))
+                return new UploadResultDto
                 {
-                    return new UploadResultDto
-                    {
-                        Hash = string.Empty,
-                        Cid = string.Empty,
-                        Message = titleError
-                    };
-                }
+                    Hash = string.Empty,
+                    Cid = string.Empty,
+                    Message = titleError
+                };
             }
 
             var typeKey = DocumentTypeCatalog.All.First(t => t.Id == documentTypeValue).ApiValue;
-            var payload = documentTypeValue == 0
-                ? $"{typeKey}|{normalizedOwner}|{normalizedTitle}|{start:yyyy-MM-dd}|{end:yyyy-MM-dd}"
-                : $"{typeKey}|{normalizedOwner}|{start:yyyy-MM-dd}|{end:yyyy-MM-dd}";
+            var payload =
+                $"{typeKey}|{normalizedOwner}|{normalizedTitle}|{start:yyyy-MM-dd}|{end:yyyy-MM-dd}";
             using var sha256 = SHA256.Create();
             var hashBytes = sha256.ComputeHash(System.Text.Encoding.UTF8.GetBytes(payload));
             var hash = "0x" + Convert.ToHexString(hashBytes).ToLowerInvariant();
@@ -769,7 +768,9 @@ namespace backend.Services.Documents
             return true;
         }
 
-        private static bool TryNormalizeEducationTitle(
+        /// <summary>Education (0): degree/field; Experience (1): job title. Required for both metadata types.</summary>
+        private static bool TryNormalizeMetadataTitle(
+            byte documentTypeValue,
             string? title,
             out string normalized,
             out string error)
@@ -777,9 +778,21 @@ namespace backend.Services.Documents
             normalized = string.Empty;
             error = string.Empty;
 
+            var fieldLabel = documentTypeValue switch
+            {
+                0 => "tytuł/kierunek studiów",
+                1 => "stanowisko",
+                _ => "tytuł",
+            };
+
             if (string.IsNullOrWhiteSpace(title))
             {
-                error = "Dla Wykształcenia wymagany jest tytuł/kierunek studiów.";
+                error = documentTypeValue switch
+                {
+                    0 => "Dla Wykształcenia wymagany jest tytuł/kierunek studiów.",
+                    1 => "Dla Doświadczenia wymagane jest stanowisko.",
+                    _ => $"Wymagane pole: {fieldLabel}.",
+                };
                 return false;
             }
 
@@ -789,7 +802,7 @@ namespace backend.Services.Documents
 
             if (normalized.Length > 256)
             {
-                error = "Tytuł/kierunek studiów może mieć maksymalnie 256 znaków.";
+                error = $"{char.ToUpperInvariant(fieldLabel[0])}{fieldLabel[1..]} może mieć maksymalnie 256 znaków.";
                 return false;
             }
 

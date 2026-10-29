@@ -1,12 +1,17 @@
 import React, { useEffect, useState } from "react";
 import { useWeb3Auth } from "../../service/web3/useWeb3Auth";
-import { fetchOwnerCertificatesApi, fetchProfileApi } from "./profile/api/profileApi";
+import {
+  fetchOwnerCertificatesApi,
+  fetchProfileApi,
+  openDocumentPdfInNewTab,
+} from "./profile/api/profileApi";
 import type { OwnerCertificate } from "./profile/types";
 import {
   documentStatusLabel,
   documentTypeLabel,
   formatDocumentPeriod,
   formatIssuerLabel,
+  hasDocumentPdfFile,
   shortHex,
 } from "@/types/documents";
 import { AppCard } from "@/shared/ui";
@@ -17,6 +22,8 @@ const MyDocuments: React.FC = () => {
   const [documents, setDocuments] = useState<OwnerCertificate[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [openingPdfHash, setOpeningPdfHash] = useState<string | null>(null);
+  const [pdfError, setPdfError] = useState<string | null>(null);
 
   useEffect(() => {
     const resolveAddress = async () => {
@@ -56,6 +63,18 @@ const MyDocuments: React.FC = () => {
     void loadDocuments();
   }, [ownerAddress]);
 
+  const handleOpenPdf = async (hash: string) => {
+    try {
+      setPdfError(null);
+      setOpeningPdfHash(hash);
+      await openDocumentPdfInNewTab(hash);
+    } catch (err) {
+      setPdfError(err instanceof Error ? err.message : "Nie udało się otworzyć PDF.");
+    } finally {
+      setOpeningPdfHash(null);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -68,6 +87,7 @@ const MyDocuments: React.FC = () => {
       <AppCard>
         {loading ? <p className="text-sm text-neutral-500">Ładowanie dokumentów...</p> : null}
         {!loading && error ? <p className="text-sm text-red-600">{error}</p> : null}
+        {pdfError ? <p className="mb-4 text-sm text-red-600">{pdfError}</p> : null}
         {!loading && !error && !ownerAddress ? (
           <p className="text-sm text-neutral-500">Brak powiązanego adresu portfela.</p>
         ) : null}
@@ -84,7 +104,8 @@ const MyDocuments: React.FC = () => {
                   <th className="py-2 pr-3 font-medium">Issuer</th>
                   <th className="py-2 pr-3 font-medium">Typ</th>
                   <th className="py-2 pr-3 font-medium">Status</th>
-                  <th className="py-2 font-medium">Issued at</th>
+                  <th className="py-2 pr-3 font-medium">Issued at</th>
+                  <th className="py-2 font-medium">PDF</th>
                 </tr>
               </thead>
               <tbody>
@@ -98,8 +119,22 @@ const MyDocuments: React.FC = () => {
                     </td>
                     <td className="py-3 pr-3">{documentTypeLabel(document.documentType)}</td>
                     <td className="py-3 pr-3">{documentStatusLabel(document.status)}</td>
-                    <td className="py-3">
+                    <td className="py-3 pr-3">
                       {formatDocumentPeriod(document.periodStart, document.expiresAt, document.issuedAt)}
+                    </td>
+                    <td className="py-3">
+                      {hasDocumentPdfFile(document.cid) ? (
+                        <button
+                          type="button"
+                          className="underline disabled:opacity-50"
+                          disabled={openingPdfHash === document.hash}
+                          onClick={() => void handleOpenPdf(document.hash)}
+                        >
+                          {openingPdfHash === document.hash ? "Otwieranie…" : "Pokaż dokument"}
+                        </button>
+                      ) : (
+                        "—"
+                      )}
                     </td>
                   </tr>
                 ))}

@@ -120,7 +120,7 @@ IssuerProfile — 1:1 with Member (institution identity, off-chain)
 
 Document — off-chain mirror of issued docs (PK = Hash)
  Cid, IssuerAddress (on-chain/hot-wallet), OwnerAddress, IssuedByMemberId?, DocumentType,
- TxHash, BlockNumber, Status, IssuedAt, PeriodStart?, ExpiresAt?, Title? (Education: degree/field),
+ TxHash, BlockNumber, Status, IssuedAt, PeriodStart?, ExpiresAt?, Title? (Education degree/field; Experience job title),
  Visibility (private|unlisted|public), ShareToken? (for unlisted share links)
 
 DocumentActivity — audit log (issue / revoke)
@@ -141,7 +141,7 @@ BlacklistedToken — invalidated JWT after logout (Jti + ExpiryDate)
 ### 2. Document upload (issuer role required)
 - Form order: documentType → owner → PDF **or** period dates (Education/Experience: no PDF)
 - PDF types: SHA-256 → Pinata → `issueDocument()` → `Documents` row (max 5 MB PDF)
-- Education/Experience: hash of `type|owner|from|to` (Education: `type|owner|title|from|to`), CID `meta:{hash}`, `PeriodStart`/`ExpiresAt`, Education stores `Title` (tytuł/kierunek), no Pinata
+- Education/Experience: hash of `type|owner|title|from|to`, CID `meta:{hash}`, `PeriodStart`/`ExpiresAt`, `Title` (Education: tytuł/kierunek; Experience: stanowisko), no Pinata
 - Lists (`/api/documents/owner/...`, `/issuer/...`, `/issued-by-me`) read from PostgreSQL
 - PDF preview: `GET /api/documents/{hash}/file` (not for metadata-only docs)
 

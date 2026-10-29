@@ -4,7 +4,7 @@ import ProfileTabContent from "./components/ProfileTabContent";
 import CredentialTypeSections from "./components/CredentialTypeSections";
 import { useProfile } from "./hooks/useProfile";
 import type { ProfileProps } from "./types";
-import { shortHex } from "@/types/documents";
+import { hasDocumentPdfFile, shortHex } from "@/types/documents";
 import IssuerInstitutionForm from "./components/IssuerInstitutionForm";
 import IssuerInstitutionCard from "./components/IssuerInstitutionCard";
 import { openDocumentPdfInNewTab } from "./api/profileApi";
@@ -279,14 +279,14 @@ const Profile: React.FC<ProfileProps> = ({ userRole, walletAddress }) => {
                             {item.fromFallback ? "Documents" : "Activity"}
                           </td>
                           <td className="py-3">
-                            {item.cid ? (
+                            {hasDocumentPdfFile(item.cid) ? (
                               <button
                                 type="button"
                                 className="underline disabled:opacity-50"
                                 disabled={openingPdfHash === item.hash}
                                 onClick={() => void handleOpenPdf(item.hash)}
                               >
-                                {openingPdfHash === item.hash ? "Otwieranie…" : "Zobacz"}
+                                {openingPdfHash === item.hash ? "Otwieranie…" : "Pokaż dokument"}
                               </button>
                             ) : (
                               "—"

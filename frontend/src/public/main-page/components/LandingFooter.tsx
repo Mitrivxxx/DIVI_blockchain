@@ -22,6 +22,7 @@ export const LandingFooter = () => (
             <li><a href="#verify" className={linkClass}>Weryfikacja PDF</a></li>
             <li><a href="#how-it-works" className={linkClass}>Jak to działa</a></li>
             <li><a href="#issuers" className={linkClass}>Dla wystawców</a></li>
+            <li><a href="#profiles" className={linkClass}>Profile i osiągnięcia</a></li>
             <li><a href="#faq" className={linkClass}>FAQ</a></li>
           </ul>
         </div>

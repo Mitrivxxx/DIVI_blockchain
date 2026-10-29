@@ -81,9 +81,11 @@ public class DocumentController : ControllerBase
                 return BadRequest("periodFrom and periodTo are required for Education/Experience");
             }
 
-            if (documentTypeValue == 0 && string.IsNullOrWhiteSpace(title))
+            if (string.IsNullOrWhiteSpace(title))
             {
-                return BadRequest("title (tytuł/kierunek studiów) is required for Education");
+                return BadRequest(documentTypeValue == 0
+                    ? "title (tytuł/kierunek studiów) is required for Education"
+                    : "title (stanowisko) is required for Experience");
             }
         }
         else

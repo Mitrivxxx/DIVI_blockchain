@@ -6,6 +6,7 @@ const NAV_ITEMS = [
   { href: "#verify", label: "Weryfikacja" },
   { href: "#how-it-works", label: "Jak to działa" },
   { href: "#issuers", label: "Dla wystawców" },
+  { href: "#profiles", label: "Profile" },
   { href: "#faq", label: "FAQ" },
 ];
 

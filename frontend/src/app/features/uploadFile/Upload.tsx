@@ -12,7 +12,9 @@ import { AppCard, buttonDark } from '@/shared/ui';
 import {
   DOCUMENT_TYPE_SECTIONS,
   isEducationDocumentType,
+  isExperienceDocumentType,
   isMetadataDocumentType,
+  isTitledMetadataDocumentType,
 } from '@/types/documents';
 
 const documentTypeOptions = DOCUMENT_TYPE_SECTIONS.map(section => ({
@@ -37,12 +39,14 @@ const Upload = () => {
 
   const metadataMode = isMetadataDocumentType(documentType);
   const educationMode = isEducationDocumentType(documentType);
+  const experienceMode = isExperienceDocumentType(documentType);
+  const titledMetadataMode = isTitledMetadataDocumentType(documentType);
 
   const handleDocumentTypeChange = (value: string) => {
     setDocumentType(value);
     if (isMetadataDocumentType(value)) {
       setFile(null);
-      if (!isEducationDocumentType(value)) {
+      if (!isTitledMetadataDocumentType(value)) {
         setTitle('');
       }
     } else {
@@ -70,9 +74,11 @@ const Upload = () => {
     }
 
     if (metadataMode) {
-      if (educationMode && !title.trim()) {
+      if (titledMetadataMode && !title.trim()) {
         setType('error');
-        return setStatus('Podaj tytuł/kierunek studiów');
+        return setStatus(
+          educationMode ? 'Podaj tytuł/kierunek studiów' : 'Podaj stanowisko',
+        );
       }
       if (!periodFrom || !periodTo) {
         setType('error');
@@ -97,7 +103,7 @@ const Upload = () => {
         file: metadataMode ? null : file,
         periodFrom: metadataMode ? periodFrom : undefined,
         periodTo: metadataMode ? periodTo : undefined,
-        title: educationMode ? title.trim() : undefined,
+        title: titledMetadataMode ? title.trim() : undefined,
       });
 
       setHashResult({ hash, cid });
@@ -169,6 +175,19 @@ const Upload = () => {
                     value={title}
                     onChange={e => setTitle(e.target.value)}
                     placeholder="np. Licencjat, Informatyka"
+                    maxLength={256}
+                    className={fieldClass}
+                  />
+                </label>
+              ) : null}
+              {experienceMode ? (
+                <label className="block text-sm font-medium text-neutral-800">
+                  Stanowisko
+                  <input
+                    type="text"
+                    value={title}
+                    onChange={e => setTitle(e.target.value)}
+                    placeholder="np. Junior Backend Developer"
                     maxLength={256}
                     className={fieldClass}
                   />

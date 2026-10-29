@@ -71,7 +71,7 @@ namespace backend.Services.Activity
                 StringComparer.OrdinalIgnoreCase);
             var cidByHash = relatedDocs.ToDictionary(
                 d => d.Hash,
-                d => string.IsNullOrWhiteSpace(d.Cid) ? null : d.Cid,
+                d => PreviewableCid(d.Cid),
                 StringComparer.OrdinalIgnoreCase);
 
             var logged = await _db.DocumentActivities.AsNoTracking()
@@ -130,13 +130,24 @@ namespace backend.Services.Activity
                     Timestamp = doc.IssuedAt,
                     OwnerAddress = doc.OwnerAddress,
                     FromFallback = true,
-                    Cid = string.IsNullOrWhiteSpace(doc.Cid) ? null : doc.Cid,
+                    Cid = PreviewableCid(doc.Cid),
                 });
             }
 
             return items
                 .OrderByDescending(i => i.Timestamp)
                 .ToList();
+        }
+
+        /// <summary>IPFS CID suitable for PDF preview; null for missing or metadata-only (meta:) docs.</summary>
+        private static string? PreviewableCid(string? cid)
+        {
+            if (string.IsNullOrWhiteSpace(cid))
+            {
+                return null;
+            }
+
+            return cid.StartsWith("meta:", StringComparison.OrdinalIgnoreCase) ? null : cid;
         }
 
         private static string ActivityTypeToString(byte activityType) => activityType switch

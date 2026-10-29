@@ -1,11 +1,12 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { resolveAvatarSrc } from "../api/profileApi";
+import { openDocumentPdfInNewTab, resolveAvatarSrc } from "../api/profileApi";
 import type { CredentialItem, CredentialSection, CredentialVisibility } from "../types";
 import {
   documentStatusLabel,
   formatDocumentPeriod,
   formatIssuerLabel,
+  hasDocumentPdfFile,
   shortHex,
 } from "@/types/documents";
 import { AppCard } from "@/shared/ui";
@@ -20,6 +21,7 @@ export type CredentialDisplayItem = {
   periodStart?: string | null;
   expiresAt?: string | null;
   title?: string | null;
+  cid?: string | null;
   issuerAddress: string;
   issuerDisplayName?: string | null;
   issuerLogoUrl?: string | null;
@@ -87,12 +89,26 @@ const CredentialEntry: React.FC<{
   readOnly: boolean;
   busy: boolean;
   copiedShareFor: string | null;
+  openingPdf: boolean;
+  pdfError: string | null;
+  onOpenPdf?: (hash: string) => void;
   onCopyShare?: (hash: string, sharePath: string) => void;
   onVisibilityChange?: (hash: string, visibility: CredentialVisibility) => void;
-}> = ({ credential, readOnly, busy, copiedShareFor, onCopyShare, onVisibilityChange }) => {
+}> = ({
+  credential,
+  readOnly,
+  busy,
+  copiedShareFor,
+  openingPdf,
+  pdfError,
+  onOpenPdf,
+  onCopyShare,
+  onVisibilityChange,
+}) => {
   const sharePath = credential.shareToken ? `/share/${credential.shareToken}` : null;
   const institution = formatIssuerLabel(credential.issuerDisplayName, credential.issuerAddress);
   const title = credential.title?.trim();
+  const canOpenPdf = Boolean(onOpenPdf) && hasDocumentPdfFile(credential.cid);
   const issuedLabel = credential.periodStart
     ? formatDocumentPeriod(credential.periodStart, credential.expiresAt)
     : formatIssuedMonthYear(credential.issuedAt);
@@ -118,42 +134,56 @@ const CredentialEntry: React.FC<{
           Hash: {shortHex(credential.hash)}
         </p>
 
-        {!readOnly && credential.visibility && onVisibilityChange ? (
-          <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-neutral-600">
-            <label className="inline-flex items-center gap-1.5">
-              <span className="text-neutral-400">Widoczność</span>
-              <select
-                value={credential.visibility}
-                disabled={busy}
-                className="rounded border border-hairline bg-white px-2 py-1"
-                onChange={event => {
-                  onVisibilityChange(credential.hash, event.target.value as CredentialVisibility);
-                }}
-              >
-                {VISIBILITY_OPTIONS.map(option => (
-                  <option key={option} value={option}>
-                    {option}
-                  </option>
-                ))}
-              </select>
-            </label>
+        <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-neutral-600">
+          {canOpenPdf ? (
+            <button
+              type="button"
+              className="font-medium underline disabled:opacity-50"
+              disabled={openingPdf}
+              onClick={() => onOpenPdf?.(credential.hash)}
+            >
+              {openingPdf ? "Otwieranie…" : "Pokaż dokument"}
+            </button>
+          ) : null}
 
-            {sharePath && onCopyShare ? (
-              <span className="inline-flex items-center gap-2">
-                <Link to={sharePath} className="font-medium underline">
-                  open
-                </Link>
-                <button
-                  type="button"
-                  className="font-medium underline"
-                  onClick={() => onCopyShare(credential.hash, sharePath)}
+          {!readOnly && credential.visibility && onVisibilityChange ? (
+            <>
+              <label className="inline-flex items-center gap-1.5">
+                <span className="text-neutral-400">Widoczność</span>
+                <select
+                  value={credential.visibility}
+                  disabled={busy}
+                  className="rounded border border-hairline bg-white px-2 py-1"
+                  onChange={event => {
+                    onVisibilityChange(credential.hash, event.target.value as CredentialVisibility);
+                  }}
                 >
-                  {copiedShareFor === credential.hash ? "copied" : "copy"}
-                </button>
-              </span>
-            ) : null}
-          </div>
-        ) : null}
+                  {VISIBILITY_OPTIONS.map(option => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              {sharePath && onCopyShare ? (
+                <span className="inline-flex items-center gap-2">
+                  <Link to={sharePath} className="font-medium underline">
+                    open
+                  </Link>
+                  <button
+                    type="button"
+                    className="font-medium underline"
+                    onClick={() => onCopyShare(credential.hash, sharePath)}
+                  >
+                    {copiedShareFor === credential.hash ? "copied" : "copy"}
+                  </button>
+                </span>
+              ) : null}
+            </>
+          ) : null}
+        </div>
+        {pdfError ? <p className="mt-2 text-xs text-red-600">{pdfError}</p> : null}
       </div>
     </article>
   );
@@ -169,6 +199,28 @@ const CredentialTypeSections: React.FC<CredentialTypeSectionsProps> = ({
   onCopyShare,
   onVisibilityChange,
 }) => {
+  const [openingPdfHash, setOpeningPdfHash] = useState<string | null>(null);
+  const [pdfErrors, setPdfErrors] = useState<Record<string, string>>({});
+
+  const handleOpenPdf = async (hash: string) => {
+    try {
+      setPdfErrors(prev => {
+        const next = { ...prev };
+        delete next[hash];
+        return next;
+      });
+      setOpeningPdfHash(hash);
+      await openDocumentPdfInNewTab(hash);
+    } catch (err) {
+      setPdfErrors(prev => ({
+        ...prev,
+        [hash]: err instanceof Error ? err.message : "Nie udało się otworzyć PDF.",
+      }));
+    } finally {
+      setOpeningPdfHash(null);
+    }
+  };
+
   if (loading) {
     return <p className="text-sm text-neutral-500">Ładowanie credentials...</p>;
   }
@@ -202,6 +254,9 @@ const CredentialTypeSections: React.FC<CredentialTypeSectionsProps> = ({
                   readOnly={readOnly}
                   busy={visibilityUpdatingHash === credential.hash}
                   copiedShareFor={copiedShareFor}
+                  openingPdf={openingPdfHash === credential.hash}
+                  pdfError={pdfErrors[credential.hash] ?? null}
+                  onOpenPdf={readOnly ? undefined : hash => void handleOpenPdf(hash)}
                   onCopyShare={onCopyShare}
                   onVisibilityChange={onVisibilityChange}
                 />
