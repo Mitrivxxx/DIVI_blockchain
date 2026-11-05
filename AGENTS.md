@@ -34,7 +34,8 @@ UI visual system: skill [`.cursor/skills/frontend-development/`](.cursor/skills/
 aspire/DIVI.AppHost  → orchestrates postgres + backend + frontend (loads root .env.example)
 frontend/ (React 19 + Vite 7 + TypeScript)
  ↕ HTTP/REST (proxy /api → backend)
-backend/  (ASP.NET Core .NET 10 / net10.0 + EF Core 8 pkgs + PostgreSQL 16)
+backend/  (ASP.NET Core .NET 10 modular monolith — Modules: Identity, Members, Issuers, Documents;
+           EF Core 8 pkgs + PostgreSQL 16, single AppDbContext)
  ↕ Nethereum RPC
 blockchain/ (Solidity 0.8.28 + Hardhat 3, Sepolia)
 ```
@@ -47,19 +48,21 @@ Stack/routing/styling/DI details: layer `*/AGENTS.md` + matching `.cursor/rules/
 | Purpose | File |
 | ------- | ---- |
 | Backend entry | `backend/Program.cs` |
-| DI registration | `backend/Extensions/ServiceCollectionExtensions.cs` |
-| Middleware pipeline | `backend/Extensions/ApplicationBuilderExtensions.cs` |
-| DB context | `backend/Data/AppDbContext.cs` |
+| Host composition / DI | `backend/Host/ServiceCollectionExtensions.cs` |
+| Middleware pipeline | `backend/Host/ApplicationBuilderExtensions.cs` |
+| Module registration | `backend/Modules/{Module}/{Module}Module.cs` |
+| DB context | `backend/Infrastructure/Persistence/AppDbContext.cs` |
 | Config options | `backend/Infrastructure/Configuration/*.cs` |
-| Document upload | `backend/Services/Documents/DocumentService.cs` |
-| Credential wallet | `backend/Services/Credentials/CredentialWalletService.cs` |
-| Document activity | `backend/Services/Activity/DocumentActivityService.cs` |
-| Issuer institution profile | `backend/Services/Issuers/IssuerProfileService.cs` |
-| Document verification | `backend/Services/DocumentVerification/DocumentVerificationService.cs` |
-| Profile avatars (MinIO) | `backend/Infrastructure/Minio/`, `backend/Services/GetProfile/` |
-| Blockchain interaction | `backend/Services/Blockchain/BlockchainService*.cs` |
-| JWT + auth | `backend/Services/Auth/JwtService.cs`, `AuthService.cs` |
-| Issuer workflow | `backend/Services/Issuers/IssuerApplicationService.cs` |
+| Document upload | `backend/Modules/Documents/Application/DocumentService.cs` |
+| Credential wallet | `backend/Modules/Documents/Application/CredentialWalletService.cs` |
+| Document activity | `backend/Modules/Documents/Application/DocumentActivityService.cs` |
+| Document verification | `backend/Modules/Documents/Application/DocumentVerificationService.cs` |
+| Issuer institution profile | `backend/Modules/Issuers/Application/IssuerProfileService.cs` |
+| Issuer workflow | `backend/Modules/Issuers/Application/IssuerApplicationService.cs` |
+| Profile avatars (MinIO) | `backend/Infrastructure/Minio/`, `backend/Modules/Members/Application/` |
+| JWT + auth | `backend/Modules/Identity/Application/JwtService.cs`, `AuthService.cs` |
+| Blockchain interaction | `backend/Infrastructure/Blockchain/BlockchainService*.cs` |
+| Backend API tests | `tests/backend.Tests/` (factory + fakes in `Infrastructure/`) |
 | Smart contract | `blockchain/contracts/DocumentIssuer.sol` |
 | Solidity types | `blockchain/contracts/DocumentTypes.sol` |
 | Frontend entry | `frontend/src/app/frontend.tsx` |
@@ -123,7 +126,8 @@ Follow `.cursor/rules/{frontend,backend,blockchain}.mdc` for the layer you edit,
 
 ## Running tests
 
-No formal test suite / test projects. Manual checks via Swagger (dev) or frontend.  
+Backend: `dotnet test tests/backend.Tests` — HTTP contract tests (xUnit + `WebApplicationFactory`, EF InMemory, fake blockchain/Pinata/MinIO; no Docker or network). Details: [`backend/AGENTS.md`](backend/AGENTS.md).  
+Frontend / blockchain: no test suite — manual checks via Swagger (dev) or UI.  
 Per `task-verification.mdc`: always report what you built/verified and what you did **not** test.
 
 ## Aspire (preferred local run)

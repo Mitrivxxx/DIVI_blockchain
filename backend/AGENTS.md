@@ -5,20 +5,38 @@ Short API-layer context. Broader project overview: `../AGENTS.md`.
 
 ## Role
 
-REST API: auth (email / Web3 / Google), document upload + verification, profiles, issuer applications. PostgreSQL (EF Core 8 packages on TFM `net10.0`) + Nethereum (Sepolia) + Pinata (IPFS) + MinIO (avatars).
+REST API: auth (email / Web3 / Google), document upload + verification, profiles, issuer applications. PostgreSQL (EF Core 8 packages on TFM `net10.0`) + Nethereum (Sepolia) + Pinata (IPFS) + MinIO (avatars). Built as a **modular monolith** (modules: Identity, Members, Issuers, Documents).
 
-## Structure (map)
+## Structure (map) — modular monolith
 
-| Folder | Contents |
-| ------ | -------- |
-| `Controllers/` | Endpoints (`/Auth`, `/api/...`) |
-| `Services/` | Business logic (Auth, Documents, Blockchain, Issuers, …) |
-| `Models/` + `Data/` | EF entities + `AppDbContext` |
-| `DTOs/` | Request/response contracts |
-| `Extensions/` | DI + pipeline |
-| `Infrastructure/` | Config, Pinata, MinIO, Google, Swagger, contract ABI |
-| `Migrations/` | EF Core (PostgreSQL) |
-| `Utils/` | Argon2, helpers |
+One `backend.csproj`, one process, one `AppDbContext`. HTTP contract is module-agnostic.
+
+```
+backend/
+  Program.cs
+  Host/                 # AddModules(), pipeline, CORS, JWT wiring, Swagger, HealthController
+  BuildingBlocks/       # shared kernel: claims helpers, role constants, PasswordHasher, StringToBytes32
+  Infrastructure/
+    Persistence/        # AppDbContext, DatabaseInitializerHostedService, Migrations/
+    Blockchain/         # IBlockchainService + BlockchainService* (Nethereum adapter)
+    Contracts/          # DocumentIssuer.abi.json
+    Pinata/ Minio/ Google/ Configuration/ Logging/ Swagger/
+  Modules/
+    Identity/ Members/ Issuers/ Documents/
+```
+
+Per module: `Api/` (controllers) · `Application/` (services, internal) · `Contracts/` (public interfaces + DTOs) · `Domain/` (entities) · `Persistence/` (`IEntityTypeConfiguration`) · `{Module}Module.cs` (`Add{Module}Module()`).
+
+## Modules
+
+| Module | Owns (tables) | Api | Public contracts (used by others) |
+| ------ | ------------- | --- | --------------------------------- |
+| Identity | `Members` (entity owner), `MemberRoles`, `Nonces`, `BlacklistedTokens` | `/Auth/*`, `/api/user-role` | member lookup by id/ETH address, role checks |
+| Members | profile/avatar fields on `Member` (via Identity contract) | `/api/GetProfile/*`, `/api/profiles` directory/search/public card | member display (name, avatar) |
+| Issuers | `IssuerApplications`, `IssuerProfiles` | `/api/issuer*`, `/api/admins` | `IIssuerLookup` (display name, logo) |
+| Documents | `Documents`, `DocumentActivities` | `/api/documents/*`, `/api/share/*`, `/api/profiles/*/credentials`, `/api/profiles/me/activity` | document status lookup |
+
+Allowed dependencies: Documents → Issuers/Identity contracts; Issuers → Identity/Members contracts; Members → Identity contracts. Blockchain/Pinata/MinIO are infrastructure, not modules. `NonceCleanupService` belongs to Identity. `GetProfileController` uses `api/[controller]` — keep the class name (or an explicit route) when moving it.
 
 ## Runtime assumptions
 
@@ -32,16 +50,16 @@ REST API: auth (email / Web3 / Google), document upload + verification, profiles
 ## Key files
 
 - `Program.cs` — entry
-- `Extensions/ServiceCollectionExtensions.cs` — DI
-- `Extensions/ApplicationBuilderExtensions.cs` — middleware
-- `Services/Documents/DocumentService.cs` — PDF → Pinata → chain, or Education/Experience metadata (`title` + period; `meta:` CID)
-- `Services/Documents/DocumentTypeCatalog.cs` — types 0–4; `IsMetadataOnly`
-- `Services/DocumentVerification/DocumentVerificationService.cs`
-- `Services/Credentials/CredentialWalletService.cs` / `Services/Activity/DocumentActivityService.cs`
-- `Services/Blockchain/BlockchainService*.cs` — Nethereum partial
-- `Services/GetProfile/` + `Infrastructure/Minio/` — avatars → MinIO `divi-avatars`
-- `Services/Auth/`, `Services/Issuers/`, `Services/Admins/`
-- `Controllers/ProfilesController.cs`, `ShareController.cs`, `IssuerProfileController.cs`, `AdminController.cs`
+- `Host/ServiceCollectionExtensions.cs` — infrastructure + `AddModules()`
+- `Host/ApplicationBuilderExtensions.cs` — middleware
+- `Infrastructure/Persistence/AppDbContext.cs` — single context; applies module configurations
+- `Modules/Identity/Application/` — `AuthService`, `JwtService`, `GoogleUserService`, `UserRoleService`, `NonceCleanupService`
+- `Modules/Members/Application/GetProfileService.cs` + `Infrastructure/Minio/` — avatars → MinIO `divi-avatars`
+- `Modules/Issuers/Application/` — `IssuerApplicationService`, `IssuerProfileService`, `AdminManagementService`
+- `Modules/Documents/Application/DocumentService.cs` — PDF → Pinata → chain, or Education/Experience metadata (`title` + period; `meta:` CID)
+- `Modules/Documents/Domain/DocumentTypeCatalog.cs` — types 0–4; `IsMetadataOnly`
+- `Modules/Documents/Application/` — `DocumentVerificationService`, `CredentialWalletService`, `DocumentActivityService`
+- `Infrastructure/Blockchain/BlockchainService*.cs` — Nethereum partial
 
 ## Roles (DB / JWT)
 
@@ -56,13 +74,13 @@ Refresh token reloads role from DB (not stale access claims).
 
 ## Business flows (backend detail)
 
-### Auth
+### Auth (Identity)
 - Email: `POST /Auth/register` → `POST /Auth/login` → JWT cookies. Email unique (nullable OK for Web3-only); register stores lowercase; `409` if taken.
 - Web3: `POST /Auth/nonce` → MetaMask sign → `POST /Auth/verify` → JWT; auto-create Member if missing.
 - Google: `POST /Auth/google` (ID token) → verify → JWT; auto-create if missing.
 - `POST /Auth/refresh` (AllowAnonymous) renews cookies + returns `{ token }` for SPA restore.
 
-### Document issue / list / revoke
+### Document issue / list / revoke (Documents)
 - Issuer(+): form type → owner → PDF **or** period (Education/Experience: no PDF; require `title`).
 - PDF: SHA-256 → Pinata → `issueDocument()` → `Documents` row (max 5 MB).
 - Metadata types: hash `type|owner|title|from|to`, CID `meta:{hash}`, `PeriodStart`/`ExpiresAt`/`Title`; no Pinata.
@@ -71,18 +89,18 @@ Refresh token reloads role from DB (not stale access claims).
 - PDF file: `GET /api/documents/{hash}/file` (owner / issuing member / admin|owner); not for `meta:`.
 - Revoke: `DELETE /api/documents/{hash}/revoke` (issuer if `IssuedByMemberId` matches; admin/owner any) → on-chain + DB Status=Revoked + activity row.
 
-### Verify
+### Verify (Documents)
 - PDF → SHA-256 → DB/chain status → tx metadata from `Documents` (event-scan fallback).
 - Returns `IsAuthentic` (Confirmed), `IsRevoked`, `Status`, blockchain fields.
 - DTOs expose `IssuedByMemberId` + `IssuerDisplayName` (IssuerProfile); hot-wallet stays `IssuerAddress`.
 
-### Issuer application / institution / admins
+### Issuer application / institution / admins (Issuers)
 - User applies → admin/owner approve/reject.
 - Approve: on-chain `addIssuer` + `MemberRoleId = issuer` + upsert `IssuerProfile` (applicant must already be Member with that ETH).
 - Institution: `GET/PATCH /api/issuer/profile` (`issuer,admin,owner`).
 - Owner: `POST/DELETE /api/admins` (DB + `addAdmin`/`removeAdmin`).
 
-### Credentials / share / network / activity
+### Credentials / share / network / activity (Documents; directory/search/public card in Members)
 - `GET /api/profiles/me/credentials` → `{ sections: [...] }` (always 5 types); `PATCH .../visibility` (`private`|`unlisted`|`public`).
 - Unlisted → `ShareToken`; `GET /api/share/{token}` (Confirmed only, no CID).
 - Public: `GET /api/profiles/{address}/credentials` (Confirmed + public, no CID).
@@ -90,11 +108,21 @@ Refresh token reloads role from DB (not stale access claims).
 - Credential items: `IssuerDisplayName` + `IssuerLogoUrl` (profile LogoUrl else member AvatarUrl).
 - Activity: `GET /api/profiles/me/activity`; fallback synthetic Issued from `Documents` when no row; `Cid` null for `meta:`.
 
-### Profile / avatar
+### Profile / avatar (Members)
 - Name/email/bio via `GetProfile` PATCH endpoints.
 - Avatar: JPEG/PNG/WebP ≤2 MB → MinIO; store URL only on `Member.AvatarUrl`.
 
+## Tests (`tests/backend.Tests`)
+
+- Run: `dotnet test tests/backend.Tests` (~5 s). Safety net for refactors: asserts the **HTTP contract** (routes, status codes, cookies, camelCase JSON) via raw `JsonElement`, not backend DTO classes.
+- `Infrastructure/DiviApiFactory.cs` boots real `Program` (env `Testing`) with EF InMemory (seed via `EnsureCreated`), removes `DatabaseInitializerHostedService` / `NonceCleanupService`, and swaps `IBlockchainService`, `IMinioObjectStorage`, Pinata HTTP handler for fakes. Only `tests/backend.Tests/Infrastructure/` references backend types — update its usings when namespaces move.
+- Auth helpers: real Web3 sign-in (`LoginWithWalletAsync`, Nethereum key) or minted JWT (`CreateClientAs(memberId, roleId)`); seeded owner via `GetSeededOwnerIdAsync`.
+- Not covered: PostgreSQL specifics (unique indexes, filters, migrations), Google login, real chain/Pinata/MinIO, PDF download from IPFS gateway.
+- `KnownIssues.cs` skips document current bugs (refresh token).
+
 ## Known debt
+
+- `/Auth/refresh` always 401: `JwtService.ValidateRefreshToken` reads `sub`, but `JwtSecurityTokenHandler` maps it to `ClaimTypes.NameIdentifier`. Tests skipped via `KnownIssues.RefreshTokenSubClaim`.
 
 - Some areas may still use `Console.WriteLine` — prefer Serilog when touching them.
 - After contract redeploy: update `Blockchain__ContractAddress` / `BLOCKCHAIN_CONTRACT_ADDRESS` in `.env`.

@@ -71,3 +71,5 @@ static void ApplyDatabaseEnvAliases(ConfigurationManager configuration)
 	SetIfPresent(configuration, "Database:Username", "DB_USER");
 	SetIfPresent(configuration, "Database:Password", "DB_PASSWORD");
 }
+
+public partial class Program { }

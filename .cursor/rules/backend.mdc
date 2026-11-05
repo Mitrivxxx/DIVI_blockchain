@@ -1,5 +1,5 @@
 ---
-description: DIVI backend hard conventions (ASP.NET Core net10.0)
+description: DIVI backend hard conventions (ASP.NET Core net10.0, modular monolith)
 globs: backend/**/*.{cs,csproj,json}
 alwaysApply: false
 ---
@@ -8,16 +8,22 @@ alwaysApply: false
 
 **TFM:** `net10.0` (see `backend/backend.csproj`). Do not invent another .NET version. Context: `backend/AGENTS.md`.
 
+**Architecture:** modular monolith — one `backend.csproj`, one process, one `AppDbContext`. Modules: `Identity`, `Members`, `Issuers`, `Documents`.
+
 ## Must
 
-- Pattern: **controller → service**; EF Core in services; **no** repository layer.
-- Namespace `backend.*`. New service → register in `AddApplication()` (`Extensions/ServiceCollectionExtensions.cs`).
-- Auth routes under `/Auth`; everything else under `/api/...`.
+- Feature code lives in `Modules/{Module}/` with `Api/` (controllers), `Application/` (services, internal), `Contracts/` (public interfaces + DTOs), `Domain/` (entities), `Persistence/` (`IEntityTypeConfiguration`), and `{Module}Module.cs`.
+- Cross-module calls **only** via the other module's `Contracts/`. Never reference another module's `Application/`, `Domain/` or `Persistence/`.
+- Pattern: **controller → module service**; EF Core in services via shared `AppDbContext`; **no** repository layer.
+- New service → register in that module's `Add{Module}Module()`; `Host/` only composes modules.
+- New entity → `Modules/X/Domain/` + config in `Modules/X/Persistence/` + `DbSet` in `Infrastructure/Persistence/AppDbContext.cs` + EF migration (`dotnet ef migrations add … -p backend`).
+- External systems (Nethereum, Pinata, MinIO, Google) only through `Infrastructure/*` adapters; shared helpers in `BuildingBlocks/`.
+- Namespaces: `backend.Modules.{Module}.*`, `backend.Infrastructure.*`, `backend.BuildingBlocks.*`, `backend.Host.*`.
+- Auth routes under `/Auth`; everything else under `/api/...`. Do not change HTTP contracts as part of refactors.
 - Prefer **Serilog**; do not add new `Console.WriteLine`.
-- New entity: `Models/` + `DbSet` + EF migration (`dotnet ef migrations add … -p backend`).
 - Never commit `.env`. Env via root `.env.example` / `.env` (DotNetEnv).
-- After contract ABI change: sync `Infrastructure/Contracts/DocumentIssuer.abi.json` + `IBlockchainService` / `BlockchainService*`.
+- After contract ABI change: sync `Infrastructure/Contracts/DocumentIssuer.abi.json` + `Infrastructure/Blockchain/IBlockchainService` / `BlockchainService*`.
 
 ## Do not duplicate here
 
-JWT details, roles, endpoint catalogs, and business flows live in `backend/AGENTS.md` only.
+JWT details, roles, module ownership, endpoint catalogs, and business flows live in `backend/AGENTS.md` only.

@@ -43,7 +43,7 @@ After deploy: copy ABI → `backend/Infrastructure/Contracts/DocumentIssuer.abi.
 - Status: Pending / Confirmed / **Revoked**. `exists` stays true after revoke; `verifyDocument` = exists && Confirmed.
 - `revokeDocument(hash)` — document issuer, admin, or owner; emits `DocumentRevoked`.
 - Events: `DocumentIssued`, `DocumentRevoked`, `IssuerAdded` / `IssuerRemoved`, `AdminAdded` / `AdminRemoved`.
-- After contract change: **compile → copy ABI** to `backend/Infrastructure/Contracts/DocumentIssuer.abi.json` → update `IBlockchainService` / `BlockchainService*` → **redeploy** and update contract address in env.
+- After contract change: **compile → copy ABI** to `backend/Infrastructure/Contracts/DocumentIssuer.abi.json` → update `backend/Infrastructure/Blockchain/IBlockchainService` / `BlockchainService*` → **redeploy** and update contract address in env.
 
 ## Local node
 
