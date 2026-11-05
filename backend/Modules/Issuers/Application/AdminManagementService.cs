@@ -1,23 +1,18 @@
-using backend.Infrastructure.Persistence;
+using backend.BuildingBlocks;
 using backend.Infrastructure.Blockchain;
-using backend.Modules.Members.Domain;
-using Microsoft.EntityFrameworkCore;
+using backend.Modules.Members.Contracts;
 using Serilog;
 
 namespace backend.Modules.Issuers.Application
 {
 	public class AdminManagementService : IAdminManagementService
 	{
-		private const int AdminRoleId = 1;
-		private const int UserRoleId = 3;
-		private const int OwnerRoleId = 4;
-
-		private readonly AppDbContext _db;
+		private readonly IMemberDirectory _members;
 		private readonly IBlockchainService _blockchainService;
 
-		public AdminManagementService(AppDbContext db, IBlockchainService blockchainService)
+		public AdminManagementService(IMemberDirectory members, IBlockchainService blockchainService)
 		{
-			_db = db;
+			_members = members;
 			_blockchainService = blockchainService;
 		}
 
@@ -29,13 +24,13 @@ namespace backend.Modules.Issuers.Application
 				return (false, "Ethereum address is required.");
 			}
 
-			var member = await FindMemberByAddressAsync(normalized);
+			var member = await _members.FindByEthereumAddressAsync(normalized);
 			if (member is null)
 			{
 				return (false, "No Member found for this Ethereum address.");
 			}
 
-			if (member.MemberRoleId == OwnerRoleId)
+			if (member.MemberRoleId == MemberRoles.OwnerId)
 			{
 				return (false, "Owner cannot be assigned the admin role.");
 			}
@@ -50,8 +45,7 @@ namespace backend.Modules.Issuers.Application
 				return (false, $"Blockchain error: {ex.Message}");
 			}
 
-			member.MemberRoleId = AdminRoleId;
-			await _db.SaveChangesAsync();
+			await _members.SetRoleAsync(member.Id, MemberRoles.AdminId);
 			return (true, null);
 		}
 
@@ -63,13 +57,13 @@ namespace backend.Modules.Issuers.Application
 				return (false, "Ethereum address is required.");
 			}
 
-			var member = await FindMemberByAddressAsync(normalized);
+			var member = await _members.FindByEthereumAddressAsync(normalized);
 			if (member is null)
 			{
 				return (false, "No Member found for this Ethereum address.");
 			}
 
-			if (member.MemberRoleId == OwnerRoleId)
+			if (member.MemberRoleId == MemberRoles.OwnerId)
 			{
 				return (false, "Cannot remove owner.");
 			}
@@ -84,17 +78,8 @@ namespace backend.Modules.Issuers.Application
 				return (false, $"Blockchain error: {ex.Message}");
 			}
 
-			member.MemberRoleId = UserRoleId;
-			await _db.SaveChangesAsync();
+			await _members.SetRoleAsync(member.Id, MemberRoles.UserId);
 			return (true, null);
-		}
-
-		private Task<Member?> FindMemberByAddressAsync(string ethereumAddress)
-		{
-			var lower = ethereumAddress.ToLowerInvariant();
-			return _db.Members.FirstOrDefaultAsync(m =>
-				m.EthereumAddress != null &&
-				m.EthereumAddress.ToLower() == lower);
 		}
 	}
 }

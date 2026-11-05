@@ -11,9 +11,18 @@ namespace backend.Modules.Members.Persistence;
 /// One-shot: if Members still has AvatarData, upload bytes to MinIO and set AvatarUrl
 /// before the EF migration drops those columns.
 /// </summary>
-public static class AvatarBlobToMinioMigrator
+public sealed class AvatarBlobToMinioMigrator : IPreMigrationStep
 {
-    public static async Task MigrateIfNeededAsync(IServiceProvider services, CancellationToken cancellationToken)
+    private readonly IServiceProvider _services;
+
+    public AvatarBlobToMinioMigrator(IServiceProvider services)
+    {
+        _services = services;
+    }
+
+    public Task RunAsync(CancellationToken cancellationToken) => MigrateIfNeededAsync(_services, cancellationToken);
+
+    private static async Task MigrateIfNeededAsync(IServiceProvider services, CancellationToken cancellationToken)
     {
         await using var scope = services.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();

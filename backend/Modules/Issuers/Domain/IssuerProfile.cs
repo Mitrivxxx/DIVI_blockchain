@@ -1,6 +1,4 @@
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-using backend.Modules.Members.Domain;
 
 namespace backend.Modules.Issuers.Domain
 {
@@ -12,9 +10,6 @@ namespace backend.Modules.Issuers.Domain
     {
         [Key]
         public int MemberId { get; set; }
-
-        [ForeignKey(nameof(MemberId))]
-        public Member Member { get; set; } = null!;
 
         [Required]
         [MaxLength(255)]

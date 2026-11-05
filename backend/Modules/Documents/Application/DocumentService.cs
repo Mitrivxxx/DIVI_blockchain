@@ -4,7 +4,8 @@ using backend.Infrastructure.Blockchain;
 using backend.Modules.Documents.Contracts;
 using backend.Infrastructure.Pinata;
 using backend.Modules.Documents.Domain;
-using backend.Modules.Issuers.Application;
+using backend.Modules.Issuers.Contracts;
+using backend.Modules.Members.Contracts;
 using Microsoft.EntityFrameworkCore;
 using Nethereum.Util;
 
@@ -18,7 +19,8 @@ namespace backend.Modules.Documents.Application
         private readonly PinataClient _pinataClient;
         private readonly IBlockchainService _blockchainService;
         private readonly IDocumentActivityService _activityService;
-        private readonly IIssuerProfileService _issuerProfileService;
+        private readonly IIssuerDirectory _issuers;
+        private readonly IMemberDirectory _members;
         private readonly AppDbContext _db;
         private readonly ILogger<DocumentService> _logger;
 
@@ -26,14 +28,16 @@ namespace backend.Modules.Documents.Application
             PinataClient pinataClient,
             IBlockchainService blockchainService,
             IDocumentActivityService activityService,
-            IIssuerProfileService issuerProfileService,
+            IIssuerDirectory issuers,
+            IMemberDirectory members,
             AppDbContext db,
             ILogger<DocumentService> logger)
         {
             _pinataClient = pinataClient;
             _blockchainService = blockchainService;
             _activityService = activityService;
-            _issuerProfileService = issuerProfileService;
+            _issuers = issuers;
+            _members = members;
             _db = db;
             _logger = logger;
         }
@@ -598,8 +602,7 @@ namespace backend.Modules.Documents.Application
             var isOwner = false;
             if (memberId is not null)
             {
-                var member = await _db.Members.AsNoTracking()
-                    .FirstOrDefaultAsync(m => m.Id == memberId.Value);
+                var member = await _members.FindByIdAsync(memberId.Value);
                 if (member?.EthereumAddress is not null
                     && string.Equals(
                         member.EthereumAddress.Trim(),
@@ -629,7 +632,7 @@ namespace backend.Modules.Documents.Application
 
         private async Task<IReadOnlyList<DocumentListItemDto>> MapListItemsAsync(IReadOnlyList<Document> rows)
         {
-            var names = await _issuerProfileService.ResolveDisplayNamesAsync(
+            var names = await _issuers.ResolveDisplayNamesAsync(
                 rows.Where(d => d.IssuedByMemberId.HasValue).Select(d => d.IssuedByMemberId!.Value));
 
             return rows.Select(d => ToListItem(d, names)).ToList();

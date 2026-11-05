@@ -1,6 +1,7 @@
 using backend.Infrastructure.Persistence;
 using backend.Modules.Issuers.Contracts;
 using backend.Modules.Issuers.Domain;
+using backend.Modules.Members.Contracts;
 using Microsoft.EntityFrameworkCore;
 
 namespace backend.Modules.Issuers.Application
@@ -8,11 +9,13 @@ namespace backend.Modules.Issuers.Application
     public class IssuerProfileService : IIssuerProfileService
     {
         private readonly AppDbContext _db;
+        private readonly IMemberDirectory _members;
         private readonly ILogger<IssuerProfileService> _logger;
 
-        public IssuerProfileService(AppDbContext db, ILogger<IssuerProfileService> logger)
+        public IssuerProfileService(AppDbContext db, IMemberDirectory members, ILogger<IssuerProfileService> logger)
         {
             _db = db;
+            _members = members;
             _logger = logger;
         }
 
@@ -140,63 +143,9 @@ namespace backend.Modules.Issuers.Application
             return (ToDto(profile), 200, null);
         }
 
-        public async Task<IReadOnlyDictionary<int, string?>> ResolveDisplayNamesAsync(IEnumerable<int> memberIds)
-        {
-            var ids = memberIds.Where(id => id > 0).Distinct().ToList();
-            if (ids.Count == 0)
-            {
-                return new Dictionary<int, string?>();
-            }
-
-            var profiles = await _db.IssuerProfiles.AsNoTracking()
-                .Where(p => ids.Contains(p.MemberId))
-                .Select(p => new { p.MemberId, p.InstitutionName })
-                .ToListAsync();
-
-            var result = profiles.ToDictionary(
-                p => p.MemberId,
-                p => string.IsNullOrWhiteSpace(p.InstitutionName) ? null : p.InstitutionName.Trim());
-
-            var missing = ids.Where(id => !result.ContainsKey(id) || result[id] is null).ToList();
-            if (missing.Count > 0)
-            {
-                var members = await _db.Members.AsNoTracking()
-                    .Where(m => missing.Contains(m.Id))
-                    .Select(m => new { m.Id, m.FirstName, m.LastName })
-                    .ToListAsync();
-
-                foreach (var m in members)
-                {
-                    var display = FormatPersonName(m.FirstName, m.LastName);
-                    if (!string.IsNullOrWhiteSpace(display))
-                    {
-                        result[m.Id] = display;
-                    }
-                    else if (!result.ContainsKey(m.Id))
-                    {
-                        result[m.Id] = null;
-                    }
-                }
-            }
-
-            return result;
-        }
-
-        public async Task<string?> ResolveDisplayNameAsync(int? memberId)
-        {
-            if (memberId is null or <= 0)
-            {
-                return null;
-            }
-
-            var map = await ResolveDisplayNamesAsync(new[] { memberId.Value });
-            return map.TryGetValue(memberId.Value, out var name) ? name : null;
-        }
-
         private async Task<IssuerProfile?> TryLazySeedFromApprovedApplicationAsync(int memberId, bool track = false)
         {
-            var memberQuery = track ? _db.Members.AsQueryable() : _db.Members.AsNoTracking();
-            var member = await memberQuery.FirstOrDefaultAsync(m => m.Id == memberId);
+            var member = await _members.FindByIdAsync(memberId);
             if (member?.EthereumAddress is null || string.IsNullOrWhiteSpace(member.EthereumAddress))
             {
                 return null;
@@ -233,14 +182,6 @@ namespace backend.Modules.Issuers.Application
             TaxId = p.TaxId,
             UpdatedAt = p.UpdatedAt,
         };
-
-        private static string? FormatPersonName(string? first, string? last)
-        {
-            var parts = new[] { first?.Trim(), last?.Trim() }
-                .Where(p => !string.IsNullOrWhiteSpace(p));
-            var name = string.Join(' ', parts);
-            return string.IsNullOrWhiteSpace(name) ? null : name;
-        }
 
         private static string? Truncate(string? value, int max)
         {

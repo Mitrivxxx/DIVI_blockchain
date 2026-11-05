@@ -1,6 +1,7 @@
 using backend.Infrastructure.Persistence;
 using backend.Modules.Documents.Contracts;
 using backend.Modules.Documents.Domain;
+using backend.Modules.Members.Contracts;
 using Microsoft.EntityFrameworkCore;
 
 namespace backend.Modules.Documents.Application
@@ -11,11 +12,13 @@ namespace backend.Modules.Documents.Application
         public const byte ActivityRevoked = 1;
 
         private readonly AppDbContext _db;
+        private readonly IMemberDirectory _members;
         private readonly ILogger<DocumentActivityService> _logger;
 
-        public DocumentActivityService(AppDbContext db, ILogger<DocumentActivityService> logger)
+        public DocumentActivityService(AppDbContext db, IMemberDirectory members, ILogger<DocumentActivityService> logger)
         {
             _db = db;
+            _members = members;
             _logger = logger;
         }
 
@@ -53,9 +56,7 @@ namespace backend.Modules.Documents.Application
 
         public async Task<IReadOnlyList<DocumentActivityItemDto>> GetMyActivityAsync(int memberId)
         {
-            var member = await _db.Members.AsNoTracking()
-                .FirstOrDefaultAsync(m => m.Id == memberId);
-
+            var member = await _members.FindByIdAsync(memberId);
             var address = member?.EthereumAddress?.Trim().ToLowerInvariant();
 
             var relatedDocs = await _db.Documents.AsNoTracking()

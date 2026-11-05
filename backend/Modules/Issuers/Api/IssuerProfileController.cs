@@ -1,5 +1,4 @@
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
+using backend.BuildingBlocks;
 using backend.Modules.Issuers.Contracts;
 using backend.Modules.Issuers.Application;
 using Microsoft.AspNetCore.Authorization;
@@ -55,12 +54,6 @@ namespace backend.Modules.Issuers.Api
             return Ok(profile);
         }
 
-        private int GetCurrentMemberId()
-        {
-            var memberId = User.FindFirstValue(ClaimTypes.NameIdentifier)
-                ?? User.FindFirstValue(JwtRegisteredClaimNames.Sub);
-
-            return int.TryParse(memberId, out var id) ? id : 0;
-        }
+        private int GetCurrentMemberId() => User.GetMemberId() ?? 0;
     }
 }

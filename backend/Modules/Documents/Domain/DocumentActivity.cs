@@ -1,6 +1,4 @@
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-using backend.Modules.Members.Domain;
 
 namespace backend.Modules.Documents.Domain
 {
@@ -26,9 +24,6 @@ namespace backend.Modules.Documents.Domain
 
         /// <summary>Member who performed the action (issuer/admin/owner), if known.</summary>
         public int? MemberId { get; set; }
-
-        [ForeignKey(nameof(MemberId))]
-        public Member? Member { get; set; }
 
         public DateTimeOffset CreatedAt { get; set; }
     }

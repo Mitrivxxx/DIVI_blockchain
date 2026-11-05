@@ -8,7 +8,5 @@ namespace backend.Modules.Issuers.Application
         Task<(IssuerProfileDto? Profile, int StatusCode, string? Error)> UpdateMyProfileAsync(
             int memberId,
             UpdateIssuerProfileDto dto);
-        Task<IReadOnlyDictionary<int, string?>> ResolveDisplayNamesAsync(IEnumerable<int> memberIds);
-        Task<string?> ResolveDisplayNameAsync(int? memberId);
     }
 }

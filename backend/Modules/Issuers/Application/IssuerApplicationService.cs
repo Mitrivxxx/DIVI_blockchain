@@ -1,8 +1,9 @@
+using backend.BuildingBlocks;
 using backend.Infrastructure.Persistence;
 using backend.Infrastructure.Blockchain;
 using backend.Modules.Issuers.Contracts;
-using backend.Modules.Members.Domain;
 using backend.Modules.Issuers.Domain;
+using backend.Modules.Members.Contracts;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 
@@ -10,20 +11,21 @@ namespace backend.Modules.Issuers.Application
 {
 	public class IssuerApplicationService : IIssuerApplicationService
 	 {
-        private const int IssuerRoleId = 2;
-
         private readonly AppDbContext _db;
         private readonly IBlockchainService _blockchainService;
         private readonly IIssuerProfileService _issuerProfileService;
+        private readonly IMemberDirectory _members;
 
         public IssuerApplicationService(
             AppDbContext db,
             IBlockchainService blockchainService,
-            IIssuerProfileService issuerProfileService)
+            IIssuerProfileService issuerProfileService,
+            IMemberDirectory members)
         {
             _db = db;
             _blockchainService = blockchainService;
             _issuerProfileService = issuerProfileService;
+            _members = members;
         }
 
         public async Task<IssuerApplication> CreateIssuerAsync(CreateIssuerApplicationDto dto)
@@ -75,16 +77,11 @@ namespace backend.Modules.Issuers.Application
                 return (false, "Invalid status. Use Approved or Rejected.");
             }
 
-            Member? approvedMember = null;
+            MemberAccount? approvedMember = null;
 
             if (newStatus == IssuerApplicationStatus.Approved)
             {
-                var normalizedAddress = entity.EthereumAddress.Trim().ToLowerInvariant();
-                var member = await _db.Members
-                    .FirstOrDefaultAsync(m =>
-                        m.EthereumAddress != null &&
-                        m.EthereumAddress.ToLower() == normalizedAddress);
-
+                var member = await _members.FindByEthereumAddressAsync(entity.EthereumAddress);
                 if (member is null)
                 {
                     return (false, "No Member found for this Ethereum address. The applicant must register/login with that wallet first.");
@@ -100,11 +97,16 @@ namespace backend.Modules.Issuers.Application
                     return (false, $"Blockchain error: {ex.Message}");
                 }
 
-                member.MemberRoleId = IssuerRoleId;
                 approvedMember = member;
             }
 
+            // Members and IssuerApplications share the scoped AppDbContext, so SetRoleAsync
+            // commits the status change in the same SaveChanges.
             entity.Status = newStatus;
+            if (approvedMember is not null)
+            {
+                await _members.SetRoleAsync(approvedMember.Id, MemberRoles.IssuerId);
+            }
             await _db.SaveChangesAsync();
 
             if (approvedMember is not null)

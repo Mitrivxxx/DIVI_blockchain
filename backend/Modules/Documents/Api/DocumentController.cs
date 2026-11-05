@@ -1,4 +1,4 @@
-using System.IdentityModel.Tokens.Jwt;
+using backend.BuildingBlocks;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -245,10 +245,5 @@ public class DocumentController : ControllerBase
         return Ok(result);
     }
 
-    private int? TryGetMemberId()
-    {
-        var raw = User.FindFirstValue(ClaimTypes.NameIdentifier)
-            ?? User.FindFirstValue(JwtRegisteredClaimNames.Sub);
-        return int.TryParse(raw, out var id) ? id : null;
-    }
+    private int? TryGetMemberId() => User.GetMemberId();
 }

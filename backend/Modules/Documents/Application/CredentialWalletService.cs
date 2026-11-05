@@ -1,7 +1,8 @@
 using backend.Infrastructure.Persistence;
 using backend.Modules.Documents.Contracts;
 using backend.Modules.Documents.Domain;
-using backend.Modules.Issuers.Application;
+using backend.Modules.Issuers.Contracts;
+using backend.Modules.Members.Contracts;
 using Microsoft.EntityFrameworkCore;
 
 namespace backend.Modules.Documents.Application
@@ -14,23 +15,25 @@ namespace backend.Modules.Documents.Application
         public const byte StatusConfirmed = 1;
 
         private readonly AppDbContext _db;
-        private readonly IIssuerProfileService _issuerProfileService;
+        private readonly IIssuerDirectory _issuers;
+        private readonly IMemberDirectory _members;
         private readonly ILogger<CredentialWalletService> _logger;
 
         public CredentialWalletService(
             AppDbContext db,
-            IIssuerProfileService issuerProfileService,
+            IIssuerDirectory issuers,
+            IMemberDirectory members,
             ILogger<CredentialWalletService> logger)
         {
             _db = db;
-            _issuerProfileService = issuerProfileService;
+            _issuers = issuers;
+            _members = members;
             _logger = logger;
         }
 
         public async Task<CredentialWalletDto> GetMyCredentialsAsync(int memberId)
         {
-            var member = await _db.Members.AsNoTracking()
-                .FirstOrDefaultAsync(m => m.Id == memberId);
+            var member = await _members.FindByIdAsync(memberId);
 
             if (member?.EthereumAddress is null || string.IsNullOrWhiteSpace(member.EthereumAddress))
             {
@@ -44,8 +47,8 @@ namespace backend.Modules.Documents.Application
                 .ToListAsync();
 
             var memberIds = docs.Where(d => d.IssuedByMemberId.HasValue).Select(d => d.IssuedByMemberId!.Value);
-            var names = await _issuerProfileService.ResolveDisplayNamesAsync(memberIds);
-            var logos = await ResolveLogoUrlsAsync(memberIds);
+            var names = await _issuers.ResolveDisplayNamesAsync(memberIds);
+            var logos = await _issuers.ResolveLogoUrlsAsync(memberIds);
 
             var items = docs.Select(d => ToOwnerItem(d, names, logos)).ToList();
             return GroupOwnerWallet(items);
@@ -61,8 +64,7 @@ namespace backend.Modules.Documents.Application
                 return (null, 400, "visibility must be private, unlisted, or public");
             }
 
-            var member = await _db.Members.AsNoTracking()
-                .FirstOrDefaultAsync(m => m.Id == memberId);
+            var member = await _members.FindByIdAsync(memberId);
 
             if (member?.EthereumAddress is null || string.IsNullOrWhiteSpace(member.EthereumAddress))
             {
@@ -107,8 +109,8 @@ namespace backend.Modules.Documents.Application
                 VisibilityToString(doc.Visibility),
                 memberId);
 
-            var displayName = await _issuerProfileService.ResolveDisplayNameAsync(doc.IssuedByMemberId);
-            var logoUrl = await ResolveLogoUrlAsync(doc.IssuedByMemberId);
+            var displayName = await _issuers.ResolveDisplayNameAsync(doc.IssuedByMemberId);
+            var logoUrl = await _issuers.ResolveLogoUrlAsync(doc.IssuedByMemberId);
             return (ToOwnerItem(doc, displayName, logoUrl), 200, null);
         }
 
@@ -131,8 +133,8 @@ namespace backend.Modules.Documents.Application
                 return null;
             }
 
-            var displayName = await _issuerProfileService.ResolveDisplayNameAsync(doc.IssuedByMemberId);
-            var logoUrl = await ResolveLogoUrlAsync(doc.IssuedByMemberId);
+            var displayName = await _issuers.ResolveDisplayNameAsync(doc.IssuedByMemberId);
+            var logoUrl = await _issuers.ResolveLogoUrlAsync(doc.IssuedByMemberId);
             return ToPublicItem(doc, displayName, logoUrl);
         }
 
@@ -153,8 +155,8 @@ namespace backend.Modules.Documents.Application
                 .ToListAsync();
 
             var memberIds = docs.Where(d => d.IssuedByMemberId.HasValue).Select(d => d.IssuedByMemberId!.Value);
-            var names = await _issuerProfileService.ResolveDisplayNamesAsync(memberIds);
-            var logos = await ResolveLogoUrlsAsync(memberIds);
+            var names = await _issuers.ResolveDisplayNamesAsync(memberIds);
+            var logos = await _issuers.ResolveLogoUrlsAsync(memberIds);
 
             var items = docs.Select(d => ToPublicItem(d, names, logos)).ToList();
             return GroupPublicWallet(items);
@@ -229,69 +231,6 @@ namespace backend.Modules.Documents.Application
             VisibilityPublic => "public",
             _ => "private",
         };
-
-        /// <summary>
-        /// Prefer institution LogoUrl; fall back to the issuing member's AvatarUrl (profile photo).
-        /// </summary>
-        private async Task<IReadOnlyDictionary<int, string?>> ResolveLogoUrlsAsync(IEnumerable<int> memberIds)
-        {
-            var ids = memberIds.Where(id => id > 0).Distinct().ToList();
-            if (ids.Count == 0)
-            {
-                return new Dictionary<int, string?>();
-            }
-
-            var logos = await _db.IssuerProfiles.AsNoTracking()
-                .Where(p => ids.Contains(p.MemberId))
-                .Select(p => new { p.MemberId, p.LogoUrl })
-                .ToListAsync();
-
-            var logoByMember = logos.ToDictionary(
-                r => r.MemberId,
-                r => string.IsNullOrWhiteSpace(r.LogoUrl) ? null : r.LogoUrl.Trim());
-
-            var missingIds = ids.Where(id => !logoByMember.TryGetValue(id, out var url) || string.IsNullOrWhiteSpace(url))
-                .ToList();
-
-            if (missingIds.Count > 0)
-            {
-                var avatars = await _db.Members.AsNoTracking()
-                    .Where(m => missingIds.Contains(m.Id))
-                    .Select(m => new { m.Id, m.AvatarUrl })
-                    .ToListAsync();
-
-                foreach (var row in avatars)
-                {
-                    if (string.IsNullOrWhiteSpace(row.AvatarUrl))
-                    {
-                        continue;
-                    }
-
-                    logoByMember[row.Id] = row.AvatarUrl.Trim();
-                }
-            }
-
-            foreach (var id in ids)
-            {
-                if (!logoByMember.ContainsKey(id))
-                {
-                    logoByMember[id] = null;
-                }
-            }
-
-            return logoByMember;
-        }
-
-        private async Task<string?> ResolveLogoUrlAsync(int? memberId)
-        {
-            if (memberId is not int id || id <= 0)
-            {
-                return null;
-            }
-
-            var map = await ResolveLogoUrlsAsync(new[] { id });
-            return map.TryGetValue(id, out var url) ? url : null;
-        }
 
         private static CredentialItemDto ToOwnerItem(
             Document d,

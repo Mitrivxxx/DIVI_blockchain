@@ -13,7 +13,7 @@ ApplyDatabaseEnvAliases(builder.Configuration);
 Log.Logger = LoggingConfiguration.CreateLogger(builder.Environment);
 builder.Host.UseSerilog();
 
-builder.Services.AddApplication();
+builder.Services.AddModules();
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddPresentation();
 

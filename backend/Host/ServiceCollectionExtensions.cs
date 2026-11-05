@@ -4,11 +4,13 @@ using backend.Infrastructure.Persistence;
 using backend.Infrastructure.Configuration;
 using backend.Infrastructure.Minio;
 using backend.Infrastructure.Swagger;
-using backend.Modules.Issuers.Application;
-using backend.Modules.Identity.Application;
 using backend.Infrastructure.Blockchain;
-using backend.Modules.Documents.Application;
-using backend.Modules.Members.Application;
+using backend.Infrastructure.Google;
+using backend.Modules.Documents;
+using backend.Modules.Identity;
+using backend.Modules.Identity.Contracts;
+using backend.Modules.Issuers;
+using backend.Modules.Members;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
@@ -20,23 +22,12 @@ namespace backend.Host;
 
 public static class ServiceCollectionExtensions
 {
-    public static IServiceCollection AddApplication(this IServiceCollection services)
+    public static IServiceCollection AddModules(this IServiceCollection services)
     {
-        services.AddScoped<IDocumentService, DocumentService>();
-        services.AddScoped<IDocumentActivityService, DocumentActivityService>();
-        services.AddScoped<IDocumentVerification, DocumentVerificationService>();
-        services.AddScoped<IBlockchainService, BlockchainService>();
-        services.AddScoped<IUserRoleService, UserRoleService>();
-        services.AddScoped<IIssuerApplicationService, IssuerApplicationService>();
-        services.AddScoped<IIssuerProfileService, IssuerProfileService>();
-        services.AddScoped<IAdminManagementService, AdminManagementService>();
-        services.AddScoped<IAuthService, AuthService>();
-        services.AddScoped<IJwtService, JwtService>();
-        services.AddScoped<IGetProfileService, GetProfileService>();
-        services.AddScoped<ICredentialWalletService, CredentialWalletService>();
-        services.AddScoped<UserService>();
-        services.AddHostedService<DatabaseInitializerHostedService>();
-        services.AddHostedService<NonceCleanupService>();
+        services.AddIdentityModule();
+        services.AddMembersModule();
+        services.AddIssuersModule();
+        services.AddDocumentsModule();
 
         return services;
     }
@@ -166,9 +157,9 @@ public static class ServiceCollectionExtensions
                 },
                 OnTokenValidated = async context =>
                 {
-                    var dbContext = context.HttpContext.RequestServices.GetRequiredService<AppDbContext>();
+                    var blacklist = context.HttpContext.RequestServices.GetRequiredService<ITokenBlacklist>();
                     var jti = context.Principal?.FindFirst(JwtRegisteredClaimNames.Jti)?.Value;
-                    if (!string.IsNullOrEmpty(jti) && await dbContext.BlacklistedTokens.AnyAsync(b => b.Jti == jti))
+                    if (!string.IsNullOrEmpty(jti) && await blacklist.IsRevokedAsync(jti))
                     {
                         context.Fail("Token is blacklisted");
                     }
@@ -177,7 +168,9 @@ public static class ServiceCollectionExtensions
         });
 
         services.AddHttpClient<PinataClient>();
-        services.AddScoped<backend.Infrastructure.Google.GoogleAuthService>();
+        services.AddScoped<GoogleAuthService>();
+        services.AddScoped<IBlockchainService, BlockchainService>();
+        services.AddHostedService<DatabaseInitializerHostedService>();
 
         return services;
     }

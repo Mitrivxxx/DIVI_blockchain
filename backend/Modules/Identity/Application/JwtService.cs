@@ -6,20 +6,11 @@ namespace backend.Modules.Identity.Application
 {
     public class JwtService : IJwtService
     {
-        private readonly IUserRoleService _userRoleService;
         private readonly IConfiguration _configuration;
 
-        public JwtService(IUserRoleService userRoleService, IConfiguration configuration)
+        public JwtService(IConfiguration configuration)
         {
-            _userRoleService = userRoleService;
             _configuration = configuration;
-        }
-
-        // ENTRY POINT (login)
-        public string GenerateToken(string address)
-        {
-            var role = _userRoleService.GetUserRole(address);
-            return GenerateAccessToken(address, role);
         }
 
         // ACCESS TOKEN (krótki)

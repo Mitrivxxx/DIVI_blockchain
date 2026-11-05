@@ -1,4 +1,4 @@
-using System.Security.Claims;
+using backend.BuildingBlocks;
 using backend.Modules.Members.Contracts;
 using backend.Modules.Members.Application;
 using Microsoft.AspNetCore.Authorization;
@@ -277,19 +277,7 @@ namespace backend.Modules.Members.Api
             return NoContent();
         }
 
-        private int GetCurrentMemberId()
-        {
-            var memberId = User.FindFirstValue(ClaimTypes.NameIdentifier)
-                ?? User.FindFirstValue("nameid")
-                ?? User.FindFirstValue("sub");
-
-            if (int.TryParse(memberId, out var id))
-            {
-                return id;
-            }
-
-            return 0;
-        }
+        private int GetCurrentMemberId() => User.GetMemberId() ?? 0;
 
         /// <summary>
         /// Prefer single Name; otherwise FirstName (+ optional LastName).

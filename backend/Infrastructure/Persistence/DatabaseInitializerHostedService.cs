@@ -1,6 +1,5 @@
 using backend.Host;
 using backend.Infrastructure.Minio;
-using backend.Modules.Members.Persistence;
 using Microsoft.EntityFrameworkCore;
 
 namespace backend.Infrastructure.Persistence;
@@ -26,14 +25,16 @@ public sealed class DatabaseInitializerHostedService : IHostedService
         var connectionString = ServiceCollectionExtensions.ResolvePostgresConnectionString(_configuration, _serviceProvider);
         await PostgresDatabaseInitializer.EnsureDatabaseExistsAsync(connectionString, cancellationToken);
 
-        // Move legacy AvatarData → MinIO while columns still exist, then EF drops them.
-        try
+        foreach (var step in _serviceProvider.GetServices<IPreMigrationStep>())
         {
-            await AvatarBlobToMinioMigrator.MigrateIfNeededAsync(_serviceProvider, cancellationToken);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogWarning(ex, "Avatar MinIO pre-migration skipped or failed (MinIO may be unavailable).");
+            try
+            {
+                await step.RunAsync(cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Pre-migration step {Step} skipped or failed.", step.GetType().Name);
+            }
         }
 
         using var scope = _serviceProvider.CreateScope();

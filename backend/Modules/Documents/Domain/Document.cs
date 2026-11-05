@@ -1,6 +1,4 @@
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-using backend.Modules.Members.Domain;
 
 namespace backend.Modules.Documents.Domain
 {
@@ -29,9 +27,6 @@ namespace backend.Modules.Documents.Domain
 
         /// <summary>Member who triggered upload via API (JWT), if known.</summary>
         public int? IssuedByMemberId { get; set; }
-
-        [ForeignKey(nameof(IssuedByMemberId))]
-        public Member? IssuedByMember { get; set; }
 
         /// <summary>0–4 matching DocumentTypes.DocumentType on-chain (Education, Experience, LicensesAndCertificates, Recommendation, HonorsAndAwards).</summary>
         public byte DocumentType { get; set; }

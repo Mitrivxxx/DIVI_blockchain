@@ -1,8 +1,4 @@
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
 using backend.Modules.Members.Contracts;
-using backend.Modules.Documents.Contracts;
-using backend.Modules.Documents.Application;
 using backend.Modules.Members.Application;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -13,21 +9,11 @@ namespace backend.Modules.Members.Api
     [Route("api/profiles")]
     public class ProfilesController : ControllerBase
     {
-        private readonly ICredentialWalletService _credentials;
-        private readonly IDocumentActivityService _activity;
         private readonly IGetProfileService _profiles;
-        private readonly ILogger<ProfilesController> _logger;
 
-        public ProfilesController(
-            ICredentialWalletService credentials,
-            IDocumentActivityService activity,
-            IGetProfileService profiles,
-            ILogger<ProfilesController> logger)
+        public ProfilesController(IGetProfileService profiles)
         {
-            _credentials = credentials;
-            _activity = activity;
             _profiles = profiles;
-            _logger = logger;
         }
 
         /// <summary>
@@ -82,90 +68,6 @@ namespace backend.Modules.Members.Api
                 profile.AvatarUrl,
                 profile.CreatedAt,
             });
-        }
-
-        [HttpGet("me/credentials")]
-        [Authorize]
-        public async Task<IActionResult> GetMyCredentials()
-        {
-            var memberId = GetCurrentMemberId();
-            if (memberId == 0)
-            {
-                return Unauthorized();
-            }
-
-            var items = await _credentials.GetMyCredentialsAsync(memberId);
-            return Ok(items);
-        }
-
-        [HttpPatch("me/credentials/{hash}/visibility")]
-        [Authorize]
-        public async Task<IActionResult> UpdateCredentialVisibility(
-            string hash,
-            [FromBody] UpdateCredentialVisibilityDto dto)
-        {
-            var memberId = GetCurrentMemberId();
-            if (memberId == 0)
-            {
-                return Unauthorized();
-            }
-
-            if (dto is null || string.IsNullOrWhiteSpace(dto.Visibility))
-            {
-                return BadRequest(new { error = "visibility is required" });
-            }
-
-            var (item, statusCode, error) = await _credentials.UpdateVisibilityAsync(
-                memberId,
-                hash,
-                dto.Visibility);
-
-            if (statusCode != 200)
-            {
-                _logger.LogInformation(
-                    "Visibility update failed for member {MemberId} hash {Hash}: {Error}",
-                    memberId,
-                    hash,
-                    error);
-                return StatusCode(statusCode, new { error });
-            }
-
-            return Ok(item);
-        }
-
-        [HttpGet("me/activity")]
-        [Authorize]
-        public async Task<IActionResult> GetMyActivity()
-        {
-            var memberId = GetCurrentMemberId();
-            if (memberId == 0)
-            {
-                return Unauthorized();
-            }
-
-            var items = await _activity.GetMyActivityAsync(memberId);
-            return Ok(items);
-        }
-
-        [HttpGet("{ethereumAddress}/credentials")]
-        [AllowAnonymous]
-        public async Task<IActionResult> GetPublicCredentials(string ethereumAddress)
-        {
-            var items = await _credentials.GetPublicCredentialsByAddressAsync(ethereumAddress);
-            return Ok(items);
-        }
-
-        private int GetCurrentMemberId()
-        {
-            var memberId = User.FindFirstValue(ClaimTypes.NameIdentifier)
-                ?? User.FindFirstValue(JwtRegisteredClaimNames.Sub);
-
-            if (int.TryParse(memberId, out var id))
-            {
-                return id;
-            }
-
-            return 0;
         }
     }
 }

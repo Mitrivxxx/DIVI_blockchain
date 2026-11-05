@@ -4,7 +4,7 @@ using backend.Modules.Identity.Application;
 using backend.Infrastructure.Persistence;
 using backend.Modules.Identity.Contracts;
 using backend.Modules.Identity.Domain;
-using backend.Modules.Members.Domain;
+using backend.Modules.Members.Contracts;
 using Microsoft.EntityFrameworkCore;
 using System.IdentityModel.Tokens.Jwt;
 using Microsoft.AspNetCore.Authorization;
@@ -22,14 +22,22 @@ namespace backend.Modules.Identity.Api
         private readonly AppDbContext _context;
         private readonly GoogleAuthService _googleAuth;
         private readonly UserService _userService;
+        private readonly IMemberDirectory _members;
 
-        public AuthController(IAuthService authService, IJwtService jwtService, AppDbContext context, GoogleAuthService googleAuth, UserService userService)
+        public AuthController(
+            IAuthService authService,
+            IJwtService jwtService,
+            AppDbContext context,
+            GoogleAuthService googleAuth,
+            UserService userService,
+            IMemberDirectory members)
         {
             _authService = authService;
             _jwtService = jwtService;
             _context = context;
             _googleAuth = googleAuth;
             _userService = userService;
+            _members = members;
         }
 
         [AllowAnonymous]
@@ -68,30 +76,20 @@ namespace backend.Modules.Identity.Api
 
             var normalizedEmail = dto.Email.Trim().ToLowerInvariant();
 
-            var emailTaken = await _context.Members
-                .AsNoTracking()
-                .AnyAsync(m => m.Email != null && m.Email.ToLower() == normalizedEmail);
-
-            if (emailTaken)
+            if (await _members.FindByEmailAsync(normalizedEmail) is not null)
             {
                 Log.Warning("[AuthController] Register rejected: email already registered");
                 return Conflict("Email already registered.");
             }
 
-            var member = new Member
-            {
-                Email = normalizedEmail,
-                Password = PasswordHasher.HashPassword(dto.Password),
-                EthereumAddress = null,
-                MemberRoleId = 3,
-                CreatedAt = DateTime.UtcNow,
-                Role = null!
-            };
-
-            _context.Members.Add(member);
+            MemberAccount member;
             try
             {
-                await _context.SaveChangesAsync();
+                member = await _members.CreateAsync(new NewMemberAccount
+                {
+                    Email = normalizedEmail,
+                    PasswordHash = PasswordHasher.HashPassword(dto.Password),
+                });
             }
             catch (DbUpdateException ex)
             {
@@ -120,24 +118,20 @@ namespace backend.Modules.Identity.Api
             if (string.IsNullOrWhiteSpace(dto.Password))
                 return BadRequest("Password required");
 
-            var normalizedEmail = dto.Email.Trim().ToLowerInvariant();
-            var member = await _context.Members
-                .AsNoTracking()
-                .Include(m => m.Role)
-                .FirstOrDefaultAsync(m => m.Email != null && m.Email.ToLower() == normalizedEmail);
-
-            if (member is null || string.IsNullOrWhiteSpace(member.Password))
+            var found = await _members.FindWithPasswordHashByEmailAsync(dto.Email);
+            if (found is not { } login || string.IsNullOrWhiteSpace(login.PasswordHash))
             {
                 return Unauthorized("Nieprawidlowy email lub haslo.");
             }
 
-            var isPasswordValid = PasswordHasher.VerifyPassword(dto.Password, member.Password);
+            var isPasswordValid = PasswordHasher.VerifyPassword(dto.Password, login.PasswordHash);
             if (!isPasswordValid)
             {
                 return Unauthorized("Nieprawidlowy email lub haslo.");
             }
 
-            var accessToken = _jwtService.GenerateAccessToken(member.Id.ToString(), member.Role?.Name ?? "user");
+            var member = login.Account;
+            var accessToken = _jwtService.GenerateAccessToken(member.Id.ToString(), member.RoleName);
             var refreshToken = _jwtService.GenerateRefreshToken(member.Id.ToString());
 
             SetTokenCookies(accessToken, refreshToken);
@@ -162,14 +156,10 @@ namespace backend.Modules.Identity.Api
             if (userIdStr == null || !int.TryParse(userIdStr, out var userId))
                 return Unauthorized("Invalid refresh token");
 
-            var member = await _context.Members
-                .AsNoTracking()
-                .Include(m => m.Role)
-                .FirstOrDefaultAsync(m => m.Id == userId);
-
+            var member = await _members.FindByIdAsync(userId);
             if (member == null) return Unauthorized("User not found");
 
-            var newAccessToken = _jwtService.GenerateAccessToken(member.Id.ToString(), member.Role?.Name ?? "user");
+            var newAccessToken = _jwtService.GenerateAccessToken(member.Id.ToString(), member.RoleName);
             var newRefreshToken = _jwtService.GenerateRefreshToken(member.Id.ToString());
 
             SetTokenCookies(newAccessToken, newRefreshToken);
@@ -258,26 +248,14 @@ namespace backend.Modules.Identity.Api
             storedNonce.IsUsed = false;
             await _context.SaveChangesAsync();
 
-            var member = await _context.Members
-                .Include(m => m.Role)
-                .FirstOrDefaultAsync(m => m.EthereumAddress != null && m.EthereumAddress.ToLower() == dto.Address.ToLower());
-
+            var member = await _members.FindByEthereumAddressAsync(dto.Address);
             if (member == null)
             {
-                member = new Member
-                {
-                    EthereumAddress = dto.Address.ToLower(),
-                    MemberRoleId = 3,
-                    CreatedAt = DateTime.UtcNow,
-                    Role = null!
-                };
-                _context.Members.Add(member);
-                await _context.SaveChangesAsync();
-                await _context.Entry(member).Reference(m => m.Role).LoadAsync();
+                member = await _members.CreateAsync(new NewMemberAccount { EthereumAddress = dto.Address.ToLower() });
                 Log.Information("[AuthController] Created member for Web3 address {Address}", dto.Address);
             }
 
-            var accessToken = _jwtService.GenerateAccessToken(member.Id.ToString(), member.Role?.Name ?? "user");
+            var accessToken = _jwtService.GenerateAccessToken(member.Id.ToString(), member.RoleName);
             var refreshToken = _jwtService.GenerateRefreshToken(member.Id.ToString());
 
             SetTokenCookies(accessToken, refreshToken);
@@ -292,7 +270,7 @@ namespace backend.Modules.Identity.Api
             var payload = await _googleAuth.VerifyAsync(request.IdToken);
             var user = await _userService.GetOrCreateGoogleUser(payload);
 
-            var accessToken = _jwtService.GenerateAccessToken(user.Id.ToString(), user.Role?.Name ?? "user");
+            var accessToken = _jwtService.GenerateAccessToken(user.Id.ToString(), user.RoleName);
             var refreshToken = _jwtService.GenerateRefreshToken(user.Id.ToString());
 
             SetTokenCookies(accessToken, refreshToken);
