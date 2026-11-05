@@ -15,9 +15,9 @@ One `backend.csproj`, one process, one `AppDbContext`. HTTP contract is module-a
 backend/
   Program.cs
   Host/                 # AddModules(), pipeline, CORS, JWT wiring, Swagger, HealthController
-  BuildingBlocks/       # shared kernel: claims helpers, role constants, PasswordHasher, StringToBytes32
+  BuildingBlocks/       # MemberRoles (ids/names), ClaimsPrincipal.GetMemberId()
   Infrastructure/
-    Persistence/        # AppDbContext, DatabaseInitializerHostedService, Migrations/
+    Persistence/        # AppDbContext, DatabaseInitializerHostedService, IPreMigrationStep, Migrations/
     Blockchain/         # IBlockchainService + BlockchainService* (Nethereum adapter)
     Contracts/          # DocumentIssuer.abi.json
     Pinata/ Minio/ Google/ Configuration/ Logging/ Swagger/
@@ -31,12 +31,12 @@ Per module: `Api/` (controllers) · `Application/` (services, internal) · `Cont
 
 | Module | Owns (tables) | Api | Public contracts (used by others) |
 | ------ | ------------- | --- | --------------------------------- |
-| Identity | `Members` (entity owner), `MemberRoles`, `Nonces`, `BlacklistedTokens` | `/Auth/*`, `/api/user-role` | member lookup by id/ETH address, role checks |
-| Members | profile/avatar fields on `Member` (via Identity contract) | `/api/GetProfile/*`, `/api/profiles` directory/search/public card | member display (name, avatar) |
-| Issuers | `IssuerApplications`, `IssuerProfiles` | `/api/issuer*`, `/api/admins` | `IIssuerLookup` (display name, logo) |
-| Documents | `Documents`, `DocumentActivities` | `/api/documents/*`, `/api/share/*`, `/api/profiles/*/credentials`, `/api/profiles/me/activity` | document status lookup |
+| Identity | `Nonces`, `BlacklistedTokens` | `/Auth/*`, `/api/user-role` | `ITokenBlacklist` (JWT `OnTokenValidated` in Host) |
+| Members | `Members`, `MemberRoles` | `/api/GetProfile/*`, `/api/profiles` directory/search/public card | `IMemberDirectory` (`MemberAccount` lookups by id/email/ETH/GoogleSub, create, set role) |
+| Issuers | `IssuerApplications`, `IssuerProfiles` | `/api/issuer*`, `/api/admins` | `IIssuerDirectory` (display name, logo with avatar fallback) |
+| Documents | `Documents`, `DocumentActivities` | `/api/documents/*`, `/api/share/*`, `/api/profiles/me/credentials*`, `/api/profiles/{address}/credentials`, `/api/profiles/me/activity` (`CredentialWalletController`) | — |
 
-Allowed dependencies: Documents → Issuers/Identity contracts; Issuers → Identity/Members contracts; Members → Identity contracts. Blockchain/Pinata/MinIO are infrastructure, not modules. `NonceCleanupService` belongs to Identity. `GetProfileController` uses `api/[controller]` — keep the class name (or an explicit route) when moving it.
+Dependencies (contracts only): Identity → Members; Issuers → Members; Documents → Members, Issuers. Members depends on no module. A module only touches its own `DbSet`s. Cross-module FKs to `Members` (`Documents.IssuedByMemberId`, `DocumentActivities.MemberId`, `IssuerProfiles.MemberId`) are id-only and configured in `AppDbContext`. `MemberDirectory.SetRoleAsync` saves the shared scoped `AppDbContext`, so caller changes pending in the same request are committed with it (issuer approval relies on this). Members registers `AvatarBlobToMinioMigrator` as an `IPreMigrationStep`. `GetProfileController` uses `api/[controller]` — keep the class name (or an explicit route).
 
 ## Runtime assumptions
 
@@ -52,10 +52,13 @@ Allowed dependencies: Documents → Issuers/Identity contracts; Issuers → Iden
 - `Program.cs` — entry
 - `Host/ServiceCollectionExtensions.cs` — infrastructure + `AddModules()`
 - `Host/ApplicationBuilderExtensions.cs` — middleware
-- `Infrastructure/Persistence/AppDbContext.cs` — single context; applies module configurations
-- `Modules/Identity/Application/` — `AuthService`, `JwtService`, `GoogleUserService`, `UserRoleService`, `NonceCleanupService`
+- `Infrastructure/Persistence/AppDbContext.cs` — single context; applies module configurations + cross-module FKs
+- `Infrastructure/Persistence/Migrations/` — EF migrations (`-o Infrastructure/Persistence/Migrations`)
+- `Modules/{Module}/{Module}Module.cs` — module DI
+- `Modules/Identity/Application/` — `AuthService`, `JwtService`, `GoogleUserService` (`UserService`), `TokenBlacklist`, `NonceCleanupService`
+- `Modules/Members/Application/MemberDirectory.cs` — `IMemberDirectory` implementation
 - `Modules/Members/Application/GetProfileService.cs` + `Infrastructure/Minio/` — avatars → MinIO `divi-avatars`
-- `Modules/Issuers/Application/` — `IssuerApplicationService`, `IssuerProfileService`, `AdminManagementService`
+- `Modules/Issuers/Application/` — `IssuerApplicationService`, `IssuerProfileService`, `IssuerDirectory`, `AdminManagementService`
 - `Modules/Documents/Application/DocumentService.cs` — PDF → Pinata → chain, or Education/Experience metadata (`title` + period; `meta:` CID)
 - `Modules/Documents/Domain/DocumentTypeCatalog.cs` — types 0–4; `IsMetadataOnly`
 - `Modules/Documents/Application/` — `DocumentVerificationService`, `CredentialWalletService`, `DocumentActivityService`
@@ -118,11 +121,8 @@ Refresh token reloads role from DB (not stale access claims).
 - `Infrastructure/DiviApiFactory.cs` boots real `Program` (env `Testing`) with EF InMemory (seed via `EnsureCreated`), removes `DatabaseInitializerHostedService` / `NonceCleanupService`, and swaps `IBlockchainService`, `IMinioObjectStorage`, Pinata HTTP handler for fakes. Only `tests/backend.Tests/Infrastructure/` references backend types — update its usings when namespaces move.
 - Auth helpers: real Web3 sign-in (`LoginWithWalletAsync`, Nethereum key) or minted JWT (`CreateClientAs(memberId, roleId)`); seeded owner via `GetSeededOwnerIdAsync`.
 - Not covered: PostgreSQL specifics (unique indexes, filters, migrations), Google login, real chain/Pinata/MinIO, PDF download from IPFS gateway.
-- `KnownIssues.cs` skips document current bugs (refresh token).
 
 ## Known debt
-
-- `/Auth/refresh` always 401: `JwtService.ValidateRefreshToken` reads `sub`, but `JwtSecurityTokenHandler` maps it to `ClaimTypes.NameIdentifier`. Tests skipped via `KnownIssues.RefreshTokenSubClaim`.
 
 - Some areas may still use `Console.WriteLine` — prefer Serilog when touching them.
 - After contract redeploy: update `Blockchain__ContractAddress` / `BLOCKCHAIN_CONTRACT_ADDRESS` in `.env`.

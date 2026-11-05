@@ -16,8 +16,9 @@ alwaysApply: false
 - Cross-module calls **only** via the other module's `Contracts/`. Never reference another module's `Application/`, `Domain/` or `Persistence/`.
 - Pattern: **controller → module service**; EF Core in services via shared `AppDbContext`; **no** repository layer.
 - New service → register in that module's `Add{Module}Module()`; `Host/` only composes modules.
-- New entity → `Modules/X/Domain/` + config in `Modules/X/Persistence/` + `DbSet` in `Infrastructure/Persistence/AppDbContext.cs` + EF migration (`dotnet ef migrations add … -p backend`).
-- External systems (Nethereum, Pinata, MinIO, Google) only through `Infrastructure/*` adapters; shared helpers in `BuildingBlocks/`.
+- New entity → `Modules/X/Domain/` + `IEntityTypeConfiguration` in `Modules/X/Persistence/` (picked up by `ApplyConfigurationsFromAssembly`) + `DbSet` in `Infrastructure/Persistence/AppDbContext.cs` + EF migration (`dotnet ef migrations add <Name> -p backend -o Infrastructure/Persistence/Migrations`).
+- No navigation properties across modules: store the id only (e.g. `MemberId`); configure the FK in `AppDbContext.OnModelCreating` with `HasOne<T>()` without a navigation.
+- External systems (Nethereum, Pinata, MinIO, Google) only through `Infrastructure/*` adapters; `BuildingBlocks/` holds only module-agnostic helpers (`MemberRoles` ids/names, `ClaimsPrincipal.GetMemberId()`).
 - Namespaces: `backend.Modules.{Module}.*`, `backend.Infrastructure.*`, `backend.BuildingBlocks.*`, `backend.Host.*`.
 - Auth routes under `/Auth`; everything else under `/api/...`. Do not change HTTP contracts as part of refactors.
 - Prefer **Serilog**; do not add new `Console.WriteLine`.
