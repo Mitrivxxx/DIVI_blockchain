@@ -1,30 +1,23 @@
 ---
-description: DIVI backend conventions (ASP.NET Core .NET 8 + EF Core + Nethereum)
+description: DIVI backend hard conventions (ASP.NET Core net10.0)
 globs: backend/**/*.{cs,csproj,json}
 alwaysApply: false
 ---
 
 # Backend
 
-Stack: ASP.NET Core .NET 8, EF Core 8, PostgreSQL, Nethereum, Pinata (docs), MinIO (avatars). Namespace `backend.*`. Details: `backend/AGENTS.md`.
+**TFM:** `net10.0` (see `backend/backend.csproj`). Do not invent another .NET version. Context: `backend/AGENTS.md`.
 
-## Structure
+## Must
 
-- Pattern: **controller → service** (EF Core in services; no separate repository layer).
-- New service: interface + impl under `Services/…`, register in `Extensions/ServiceCollectionExtensions.cs` → `AddApplication()`.
-- DI split: `AddApplication` (services) / `AddInfrastructure` (DB, CORS, JWT, Pinata, MinIO) / `AddPresentation` (controllers, Swagger).
-- Pipeline: `Extensions/ApplicationBuilderExtensions.cs`.
-- Routing: `[Route]` attributes. Auth under `/Auth`, rest under `/api/...`.
+- Pattern: **controller → service**; EF Core in services; **no** repository layer.
+- Namespace `backend.*`. New service → register in `AddApplication()` (`Extensions/ServiceCollectionExtensions.cs`).
+- Auth routes under `/Auth`; everything else under `/api/...`.
+- Prefer **Serilog**; do not add new `Console.WriteLine`.
+- New entity: `Models/` + `DbSet` + EF migration (`dotnet ef migrations add … -p backend`).
+- Never commit `.env`. Env via root `.env.example` / `.env` (DotNetEnv).
+- After contract ABI change: sync `Infrastructure/Contracts/DocumentIssuer.abi.json` + `IBlockchainService` / `BlockchainService*`.
 
-## Auth / security
+## Do not duplicate here
 
-- JWT: access (~15 min) + refresh in httpOnly cookies; blacklist via `BlacklistedTokens` (`OnTokenValidated`).
-- Token source: `Authorization: Bearer` first, else cookie `access_token`.
-- Passwords: Argon2 (`Utils/PasswordHasher.cs`). Prefer Serilog over `Console.WriteLine`.
-
-## Data / integrations
-
-- New table: `Models/` + `DbSet` in `AppDbContext` + migration (`dotnet ef migrations add … -p backend`).
-- Env: root `.env.example` (fallback `.env`) via DotNetEnv; `DB_*` → `Database:*`. Do not commit `.env`.
-- Contract ABI: `Infrastructure/Contracts/DocumentIssuer.abi.json` (copied to output). After redeploy: update contract address in env + keep `IBlockchainService` / `BlockchainService*` in sync.
-- Roles (JWT `ClaimTypes.Role`): owner → admin → issuer → user.
+JWT details, roles, endpoint catalogs, and business flows live in `backend/AGENTS.md` only.

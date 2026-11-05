@@ -8,9 +8,10 @@ alwaysApply: true
 After every completed task (feature, bugfix, refactor, API/contract change):
 
 1. Update the relevant layer file — briefly, only assumptions that actually changed:
-   - `backend/AGENTS.md`
+   - `backend/AGENTS.md` (detailed backend flows live **only** here)
    - `frontend/AGENTS.md`
    - `blockchain/AGENTS.md`
-2. If architecture, business flow, or the key-file map changed — update root `AGENTS.md` too.
-3. Write in **English**. Keep it short (bullets / 1–2 sentences). Do not duplicate README.
+2. If cross-layer architecture or the key-file map changed — update root `AGENTS.md` too (keep root overview-level; do not paste endpoint catalogs).
+3. Write in **English**. Keep it short (bullets / 1–2 sentences). Do not duplicate README or layer rules (`.cursor/rules/*.mdc`).
 4. Do not add long changelog sections — keep files as the current project state.
+5. Complete [`.cursor/rules/task-verification.mdc`](task-verification.mdc) before calling the task done.

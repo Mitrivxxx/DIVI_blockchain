@@ -1,0 +1,39 @@
+---
+description: Mandatory verification before marking any coding task complete
+alwaysApply: true
+---
+
+# Task verification (required)
+
+Do **not** treat a task as done until you finish this checklist for the layers you touched. If a step cannot run, say so explicitly (command + reason) — do not silently skip.
+
+## 1. Build
+
+- **Backend / Aspire** (`backend/**`, `aspire/**`): `dotnet build` on the affected project or `DIVI.sln` — must succeed.
+- **Frontend** (`frontend/**`): `npm run build` in `frontend/` — must succeed.
+- **Blockchain** (`blockchain/contracts/**` or ABI sync): `npm run compile` in `blockchain/` — must succeed.
+
+## 2. Migrations
+
+If you changed EF models / `AppDbContext` / migrations:
+
+- Confirm a migration was added when the schema changed (`dotnet ef migrations add … -p backend`), or state why none is needed.
+- Do not leave model/DB drift undocumented.
+
+## 3. Tests
+
+- There is **no formal test suite** in this repo today.
+- You must still state what you verified (build, manual/Swagger notes, smoke paths) and what you **did not** test.
+- Never claim “tests passed” unless you actually ran them.
+
+## 4. Diff review
+
+- Skim your own diff: no secrets (`.env`, keys), no unrelated drive-by edits, no leftover debug noise.
+- Update the relevant `AGENTS.md` / root map if assumptions, flows, or key files changed (see `agents-md-maintenance`).
+
+## 5. Final report
+
+In the closing reply, include briefly:
+
+- what was verified (commands + outcome)
+- what was **not** verified / residual risk

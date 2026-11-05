@@ -8,11 +8,11 @@ DIVI is a fullstack app for issuing and verifying documents (diplomas, certifica
 
 | Layer | File | Contents |
 | ----- | ---- | -------- |
-| Backend | [`backend/AGENTS.md`](backend/AGENTS.md) | API, DI, auth, services, debt |
+| Backend | [`backend/AGENTS.md`](backend/AGENTS.md) | API, auth, services, **detailed backend flows**, debt |
 | Frontend | [`frontend/AGENTS.md`](frontend/AGENTS.md) | SPA, routing, features, Web3 UI |
 | Blockchain | [`blockchain/AGENTS.md`](blockchain/AGENTS.md) | Contract, Hardhat, ABI sync |
 
-**AI duty:** after every completed task, update the relevant `AGENTS.md` (and this file if architecture/flow changes). Keep descriptions short. Write AGENTS files in English.
+**AI duty:** after every completed task, update the relevant `AGENTS.md` (and this file if architecture/flow **map** changes). Keep descriptions short. Write AGENTS files in English.
 
 ## Cursor project rules (hard conventions)
 
@@ -24,6 +24,7 @@ Layer rules load via globs (not always-on). Do not duplicate their checklists he
 | Backend | [`.cursor/rules/backend.mdc`](.cursor/rules/backend.mdc) | `backend/**/*.{cs,csproj,json}` |
 | Blockchain | [`.cursor/rules/blockchain.mdc`](.cursor/rules/blockchain.mdc) | `blockchain/**/*.{sol,js,ts,json}` |
 | AGENTS hygiene | [`.cursor/rules/agents-md-maintenance.mdc`](.cursor/rules/agents-md-maintenance.mdc) | alwaysApply |
+| Task verification | [`.cursor/rules/task-verification.mdc`](.cursor/rules/task-verification.mdc) | alwaysApply |
 
 UI visual system: skill [`.cursor/skills/frontend-development/`](.cursor/skills/frontend-development/).
 
@@ -33,12 +34,13 @@ UI visual system: skill [`.cursor/skills/frontend-development/`](.cursor/skills/
 aspire/DIVI.AppHost  → orchestrates postgres + backend + frontend (loads root .env.example)
 frontend/ (React 19 + Vite 7 + TypeScript)
  ↕ HTTP/REST (proxy /api → backend)
-backend/  (ASP.NET Core .NET 8 + EF Core 8 + PostgreSQL 16)
+backend/  (ASP.NET Core .NET 10 / net10.0 + EF Core 8 pkgs + PostgreSQL 16)
  ↕ Nethereum RPC
 blockchain/ (Solidity 0.8.28 + Hardhat 3, Sepolia)
 ```
 
-Stack/routing/styling/DI details: layer `*/AGENTS.md` + matching `.cursor/rules/*.mdc`.
+Stack/routing/styling/DI details: layer `*/AGENTS.md` + matching `.cursor/rules/*.mdc`.  
+**Backend endpoint & flow detail:** [`backend/AGENTS.md`](backend/AGENTS.md) only — not duplicated below.
 
 ## Key files — navigation map
 
@@ -72,80 +74,33 @@ Stack/routing/styling/DI details: layer `*/AGENTS.md` + matching `.cursor/rules/
 | Aspire defaults | `aspire/DIVI.ServiceDefaults/` |
 | Env vars | `.env` (gitignored), `.env.example` (Aspire + shared config; committed test values) |
 
-## Data models — relationships
+## Data models — relationships (overview)
 
 ```
 MemberRole (1) ←——— (*) Member
    Id: 1=admin, 2=issuer, 3=user, 4=owner
 
-Member — main user entity
- ├── may have EthereumAddress (Web3 login)
- ├── may have Email + Password (classic login)
- ├── may have GoogleSub (Google login)
- ├── AvatarUrl → public MinIO object URL (bucket `divi-avatars`; no blob columns)
- └── may have any one or a combination of the above
-
-IssuerApplication — issuer role application (separate table)
-   Status: Pending → Approved/Rejected
-   On approve (admin or owner): addIssuer(ethereumAddress) + Member.MemberRoleId = issuer
-     + upsert IssuerProfile (InstitutionName, Description from application)
-   Applicant must already exist as Member with that EthereumAddress
-
-IssuerProfile — 1:1 with Member (institution identity, off-chain)
-   InstitutionName, Description?, LogoUrl?, WebsiteUrl?, Country?, TaxId?
-
-Document — off-chain mirror of issued docs (PK = Hash)
- Cid, IssuerAddress (on-chain/hot-wallet), OwnerAddress, IssuedByMemberId?, DocumentType,
- TxHash, BlockNumber, Status, IssuedAt, PeriodStart?, ExpiresAt?, Title? (Education degree/field; Experience job title),
- Visibility (private|unlisted|public), ShareToken? (for unlisted share links)
-
-DocumentActivity — audit log (issue / revoke)
-   DocumentHash, ActivityType (Issued|Revoked), TxHash?, BlockNumber?, MemberId?, CreatedAt
-
-Nonce — one-time Web3 sign-in nonce (TTL 5 min, cleanup via background job)
-
-BlacklistedToken — invalidated JWT after logout (Jti + ExpiryDate)
+Member — Email? / Password? / EthereumAddress? / GoogleSub? / AvatarUrl (MinIO)
+IssuerApplication — Pending → Approved/Rejected → addIssuer + role issuer + IssuerProfile
+IssuerProfile — 1:1 Member (InstitutionName, Description?, LogoUrl?, WebsiteUrl?, Country?, TaxId?)
+Document — PK=Hash; Cid, IssuerAddress, OwnerAddress, IssuedByMemberId?, type, tx, status, visibility, ShareToken?
+DocumentActivity — Issued|Revoked audit
+Nonce — Web3 sign-in (TTL 5 min)
+BlacklistedToken — logout JTI blacklist
 ```
 
-## Business flows — main processes
+Full field/API semantics: [`backend/AGENTS.md`](backend/AGENTS.md).
 
-### 1. Registration and login
-- **Email**: POST `/Auth/register` → POST `/Auth/login` → JWT in cookies
-- **Web3**: POST `/Auth/nonce` → user signs nonce in MetaMask → POST `/Auth/verify` → JWT in cookies. Auto-creates Member if missing
-- **Google**: POST `/Auth/google` with ID token → Google API verify → auto-creates Member if missing
+## Business flows — overview
 
-### 2. Document upload (issuer role required)
-- Form order: documentType → owner → PDF **or** period dates (Education/Experience: no PDF)
-- PDF types: SHA-256 → Pinata → `issueDocument()` → `Documents` row (max 5 MB PDF)
-- Education/Experience: hash of `type|owner|title|from|to`, CID `meta:{hash}`, `PeriodStart`/`ExpiresAt`, `Title` (Education: tytuł/kierunek; Experience: stanowisko), no Pinata
-- Lists (`/api/documents/owner/...`, `/issuer/...`, `/issued-by-me`) read from PostgreSQL
-- PDF preview: `GET /api/documents/{hash}/file` (not for metadata-only docs)
+Cross-layer summaries only. **Endpoint-level detail → [`backend/AGENTS.md`](backend/AGENTS.md).**
 
-### 3. Document verification (public)
-- Frontend sends PDF
-- Backend: SHA-256 → resolve status (DB / chain) → tx metadata from `Documents` (fallback: event scan for legacy)
-- Return `IsAuthentic` (Confirmed), `IsRevoked`, `Status`, + blockchain data
-- Revoke: `DELETE /api/documents/{hash}/revoke` (issuer of that upload / admin / owner) → on-chain + DB Status=Revoked
-
-### 4. Issuer role application
-- User (`Roles = user`) submits form (institution, ETH address, email, description)
-- Admin or owner sees pending list → approve/reject
-- Approve: backend calls `addIssuer()` on contract, sets `MemberRoleId = issuer`, seeds `IssuerProfile`, updates application status
-- Issuer updates institution via `GET/PATCH /api/issuer/profile` (logo URL, website, country, NIP/KRS)
-- Document/verify/credential DTOs: `IssuerDisplayName` from profile (+ `IssuedByMemberId`); credential `IssuerLogoUrl` = institution LogoUrl or issuing member AvatarUrl; `IssuerAddress` remains hot-wallet
-- Owner manages admins via `POST/DELETE /api/admins` (DB + on-chain `addAdmin`/`removeAdmin`)
-
-### 5. Credential wallet / portfolio
-- Owner: `GET /api/profiles/me/credentials` → `{ sections: [{ documentType, label, items }] }` (always 5 type sections); `PATCH .../visibility` (`private`|`unlisted`|`public`)
-- Unlisted → `ShareToken`; public share `GET /api/share/{token}` (Confirmed only, no CID)
-- Public portfolio: `GET /api/profiles/{ethereumAddress}/credentials` (same section shape; Confirmed + public, no CID)
-- Network directory: `GET /api/profiles` (auth) → Moja sieć lists all members/roles; Member search: `GET /api/profiles/search?q=` (auth; name or ETH address) → header dropdown; public card `GET /api/profiles/{address}`; UI `/u/:address`
-- Frontend: profile Certyfikat tab shows sections stacked; `/share/:token`
-
-### 6. Document activity / transaction history
-- On issue and revoke: append `DocumentActivities` row (hash, type, txHash, block?, memberId, timestamp)
-- `GET /api/profiles/me/activity` — DB feed for member (actions + owned/issued docs); fallback Issued from `Documents` when no activity row
-- Frontend: profile Transactions tab
+1. **Auth** — email register/login, Web3 nonce+sign, or Google ID token → JWT cookies.
+2. **Issue document** — issuer uploads PDF (Pinata + chain) or Education/Experience metadata (`meta:` CID) → `Documents` + activity.
+3. **Verify / revoke** — hash PDF → authenticity/revocation; revoke updates chain + DB.
+4. **Become issuer** — user applies → admin/owner approve → on-chain `addIssuer` + DB role + `IssuerProfile`.
+5. **Credential wallet** — visibility private/unlisted/public; share token; public `/u/:address` + `/share/:token`.
+6. **Activity** — issue/revoke history on profile Transactions tab.
 
 ## Ports and URLs
 
@@ -160,21 +115,16 @@ BlacklistedToken — invalidated JWT after logout (Jti + ExpiryDate)
 
 ## Tips for AI
 
-Follow the matching `.cursor/rules/{frontend,backend,blockchain}.mdc` when editing that layer. Quick pointers:
+Follow `.cursor/rules/{frontend,backend,blockchain}.mdc` for the layer you edit, and **always** `.cursor/rules/task-verification.mdc` before finishing.
 
-- **New endpoint:** DTO → service (+ `AddApplication`) → controller (`/Auth` or `/api/...`). See `backend.mdc`.
-- **New table:** Model → `DbSet` → migration (`dotnet ef migrations add … -p backend`).
-- **New FE feature:** `features/<name>/` → `App.tsx` + `routes.ts` / header; Tailwind + `@/shared/ui`. See `frontend.mdc` + skill.
-- **Contract change:** compile → copy ABI → `IBlockchainService*` → env address. See `blockchain.mdc`.
-
-### Notes
-- Root `.env` — do NOT commit. Prefer `.env.example` for shared/Aspire config.
-- Frontend reads `VITE_` / `PORT` from process env (Aspire) or parent-dir env files.
-- `Member.Email` is unique (nullable for Web3-only); register normalizes to lowercase.
+- **New endpoint / table / contract change:** see the matching layer rule + layer `AGENTS.md`.
+- Root `.env` — do NOT commit. Prefer `.env.example`.
+- Frontend env: `VITE_` / `PORT` from process env (Aspire) or parent-dir env files.
 
 ## Running tests
 
-No formal test suite. No test projects in the solution. Manual testing via Swagger (dev) or frontend.
+No formal test suite / test projects. Manual checks via Swagger (dev) or frontend.  
+Per `task-verification.mdc`: always report what you built/verified and what you did **not** test.
 
 ## Aspire (preferred local run)
 

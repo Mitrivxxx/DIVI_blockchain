@@ -7,7 +7,7 @@ System do wystawiania, przechowywania i weryfikacji dokumentów (dyplomy, certyf
 ```
 ┌─────────────┐       ┌──────────────┐       ┌──────────────────┐
 │  Frontend    │──────▶│  Backend API │──────▶│  PostgreSQL 16   │
-│  React 19   │  HTTP │  .NET 8      │  EF   │  (dane użytk.)   │
+│  React 19   │  HTTP │  .NET 10     │  EF   │  (dane użytk.)   │
 │  Vite 7     │       │  Kestrel     │       └──────────────────┘
 └─────────────┘       │              │
                       │              │──────▶ Ethereum Sepolia
@@ -24,7 +24,7 @@ Trzeci komponent to **smart contract** `DocumentIssuer` (Solidity 0.8.28, Hardha
 | Warstwa      | Technologia                                              |
 | ------------ | -------------------------------------------------------- |
 | Frontend     | React 19, TypeScript, Vite 7, React Router 7, SCSS, ethers.js 6 |
-| Backend      | .NET 8 (ASP.NET Core), EF Core 8, Nethereum 5.8, Serilog |
+| Backend      | .NET 10 (ASP.NET Core, TFM net10.0), EF Core 8 pkgs, Nethereum 5.8, Serilog |
 | Baza danych  | PostgreSQL 16                                            |
 | Blockchain   | Solidity 0.8.28, Hardhat 3, sieć Sepolia                |
 | IPFS         | Pinata Cloud API                                         |
