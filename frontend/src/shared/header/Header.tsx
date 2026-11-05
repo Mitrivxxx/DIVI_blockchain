@@ -6,8 +6,6 @@ import user from "../../assets/icons/user.svg";
 import logo from "../../assets/icons/divi_icon_demo.png";
 import { useIsAuthenticated } from "../../service/auth/useIsAuthenticated";
 
-import "./Header.scss";
-
 type HeaderProps = {
   showBell?: boolean;
   showUser?: boolean;

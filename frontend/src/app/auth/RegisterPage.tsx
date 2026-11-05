@@ -6,7 +6,8 @@ import { API_URL } from "../../types/api";
 import logo from "../../assets/icons/divi_icon_demo.png";
 import metamaskIcon from "../../assets/icons/Metamask.svg";
 import googleIcon from "../../assets/icons/google.svg";
-import "./RegisterPage.scss";
+import "./AuthPage.css";
+import "./RegisterPage.css";
 
 const RegisterPage = () => {
   const navigate = useNavigate();

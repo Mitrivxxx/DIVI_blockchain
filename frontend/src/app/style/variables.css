@@ -1,0 +1,36 @@
+:root {
+  --font-main: "DM Sans", sans-serif;
+  --font-sans: var(--font-main);
+  --font-mono: "DM Mono", monospace;
+
+  --purple-light: #eeedfe;
+  --purple-mid: #afa9ec;
+  --purple: #534ab7;
+  --purple-dark: #3c3489;
+
+  --green-light: #eaf3de;
+  --green: #639922;
+  --green-dark: #3b6d11;
+
+  --red-light: #fff5f5;
+  --red-mid: #feb2b2;
+  --red: #e5484d;
+  --red-dark: #c53030;
+
+  --bg-main: #f7f6f3;
+  --bg-subtle: #faf9f7;
+  --bg-card: #ffffff;
+  --border: #e5e3dc;
+
+  --text-main: #1a1a1a;
+  --text-muted: #888780;
+  --text-link: #534ab7;
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-pill: 20px;
+  --transition: 0.18s ease;
+
+  --primary: var(--purple);
+  --primary-dark: var(--purple-dark);
+}

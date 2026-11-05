@@ -1,0 +1,28 @@
+---
+description: DIVI frontend conventions (React 19 + Vite + Tailwind app-shell/landing)
+globs: frontend/**/*.{ts,tsx,css}
+alwaysApply: false
+
+---
+
+# Frontend
+
+Stack: React 19, Vite 7, TypeScript, React Router 7, Axios, ethers.js 6. Alias `@` → `frontend/src/`. Details: `frontend/AGENTS.md`.
+
+## Structure
+
+- Features live in `frontend/src/app/features/<name>/` with `hooks/`, `components/`, `api/` + main component.
+- New authenticated page: feature folder → route in `App.tsx` under `MainLayout` → path/nav in `navigation/routes.ts` / `AppHeader` if needed.
+- No Redux/Zustand — Context (`Web3AuthContext`) + local hooks.
+
+## UI
+
+- Landing (`.landing`) and app shell (`.app-shell`): Tailwind v4 only; tokens from `styles/tailwind.css`; reuse `@/shared/ui`.
+- Auth pages (`/login`, `/register`, `/auth`): keep existing auth CSS — do not rewrite to Tailwind unless asked. No new SCSS.
+- Missing backend/blockchain gaps: `MissingBackendNote` — do not fake APIs.
+- Visual system for the whole frontend UI: follow skill `.cursor/skills/frontend-development/` (do not invent parallel button/heading systems).
+
+## API / copy
+
+- Call backend via feature `api/` helpers; proxy `/api` and `/Auth` in dev.
+- User-facing UI copy: Polish. Honest product claims only (SHA-256, Sepolia, IPFS/Pinata, PDF ≤ 5 MB).

@@ -1,6 +1,6 @@
 # Frontend AGENTS — React 19 + Vite 7
 
-Short SPA context. Broader project overview: `../AGENTS.md`.
+Short SPA context. Broader project overview: `../AGENTS.md`. Hard conventions: `.cursor/rules/frontend.mdc`. UI skill: `.cursor/skills/frontend-development/`.
 
 ## Role
 
@@ -17,14 +17,14 @@ UI for login, document issuing/verification, and profile / issuer-role managemen
 | `service/` | `Web3AuthContext`, JWT helpers |
 | `shared/` | Shared UI (`shared/ui`, Verify, Header, Notify) |
 | `public/` | Marketing landing (unauthenticated) at `/public` |
-| `styles/` | Tailwind theme + auth SCSS globals |
+| `styles/` | Tailwind theme + auth CSS globals |
 | `types/` | API types |
 
 ## Assumptions
 
 - Alias `@` → `src/`. Bundler: Vite 7, port **3000**, proxy `/api` → backend.
 - Routing: React Router 7. Marketing `/public`, auth `/auth|/login|/register`, authenticated app at `/` (+ `/network`, `/institutions`, `/verify`, `/profile`, …). Legacy `/app/:path` redirects to new paths. `/share/:token` public credential smoke page.
-- Mount: always `#root`; Tailwind always loaded. Auth pages keep SCSS.
+- Mount: always `#root`; Tailwind always loaded. Auth pages keep plain CSS (`auth/*.css` + `app/style/`).
 - Primary header nav: Strona główna `/`, Moja sieć `/network`, Instytucje `/institutions`. Header `app-search` searches members via `GET /api/profiles/search?q=` (name or ETH); results open `/u/:ethereumAddress` (own address → `/profile`).
 - Profile dropdown: Wyświetl profil, Zweryfikuj teraz, Moje dokumenty; user → **Chcę być issuerem**; issuer/admin/owner → upload / issued (+ notify for admin/owner); Wyloguj → `/public`.
 - Guest on protected routes → `/public`. Post-login → `/`. Unknown shell paths redirect to `/`; `/u/:ethereumAddress` is a known shell path (`isKnownAppPath`).
@@ -39,7 +39,7 @@ UI for login, document issuing/verification, and profile / issuer-role managemen
 - State: Context + local hooks (no Redux/Zustand).
 - Styles: authenticated shell + landing use Tailwind v4 (`.landing` / `.app-shell` scoped reset in `styles/tailwind.css`). Tokens: `brand`/`brand-pink`, `canvas`, `hairline`, `shadow-soft`, Figtree. Shared primitives: `src/shared/ui` (`LogoLink`, `Container`, `buttonDark`/`buttonLight`, `GradientButton`, `AppCard`, `MissingBackendNote`).
 - Public landing: OriginX-style sections under `src/public/main-page/` (incl. `#profiles` — credential wallet / public `/u/…` + share visibility). Landing `./ui` re-exports `@/shared/ui`. Header/footer anchors: verify, how-it-works, issuers, profiles, faq.
-- **Style skill:** `.cursor/skills/divi-landing-style/` applies to landing **and** `app-shell`.
+- **Style skill:** `.cursor/skills/frontend-development/` applies to the whole frontend UI (landing, app-shell, features, shared) — not only `/public`.
 - `src/shared/verify` (landing hero); app uses `features/Verify`.
 - New authenticated page: feature folder → route in `App.tsx` under `MainLayout` → optional entry in `navigation/routes.ts` / `AppHeader`.
 

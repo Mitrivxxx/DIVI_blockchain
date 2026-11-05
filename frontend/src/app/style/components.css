@@ -1,17 +1,14 @@
-@use './variables' as *;
-
-
-// ===== CARD =====
+/* ===== CARD ===== */
 .card {
-  background: $bg-card;
+  background: var(--bg-card);
   border-radius: 20px;
-  border: 1px solid $border;
+  border: 1px solid var(--border);
   padding: 2rem;
   max-width: 600px;
   margin: 0 auto;
 }
 
-// ===== FORM =====
+/* ===== FORM ===== */
 .field {
   margin-bottom: 1.25rem;
 
@@ -19,45 +16,43 @@
     display: block;
     font-size: 12px;
     font-weight: 500;
-    color: $text-muted;
+    color: var(--text-muted);
     letter-spacing: 0.04em;
     text-transform: uppercase;
     margin-bottom: 6px;
   }
 }
 
-// ===== INPUTS =====
+/* ===== INPUTS ===== */
 input[type="text"],
 input[type="email"],
 input:not([type]),
 textarea,
 select {
-
-
   width: 100%;
-  border: 1px solid $border;
+  border: 1px solid var(--border);
   border-radius: 12px;
   padding: 10px 14px;
   font-size: 13px;
-  font-family: $font-mono;
+  font-family: var(--font-mono);
   color: #333;
-  background: #FAF9F7;
+  background: #faf9f7;
   outline: none;
   appearance: none;
   -webkit-appearance: none;
 
   &:focus {
-    border-color: #AFA9EC;
+    border-color: #afa9ec;
     background: #fff;
   }
 }
 
-// ===== SELECT =====
+/* ===== SELECT ===== */
 .select-wrap {
   position: relative;
 
   &::after {
-    content: '';
+    content: "";
     position: absolute;
     right: 14px;
     top: 50%;
@@ -69,20 +64,20 @@ select {
   }
 }
 
-// ===== FILE BOX =====
+/* ===== FILE BOX ===== */
 .file-box {
   display: flex;
   align-items: center;
   gap: 10px;
-  border: 1px solid $border;
+  border: 1px solid var(--border);
   border-radius: 12px;
   padding: 10px 14px;
-  background: #FAF9F7;
+  background: #faf9f7;
 
   .file-icon {
     width: 32px;
     height: 32px;
-    background: #EEEDFE;
+    background: #eeedfe;
     border-radius: 8px;
     display: flex;
     align-items: center;
@@ -98,52 +93,52 @@ select {
   .file-name {
     font-size: 13px;
     color: #444;
-    font-family: $font-mono;
+    font-family: var(--font-mono);
   }
 
   .file-change {
     margin-left: auto;
     font-size: 11px;
-    color: $primary;
+    color: var(--primary);
     cursor: pointer;
     font-weight: 500;
   }
 }
 
-// ===== BUTTON =====
+/* ===== BUTTON ===== */
 .btn {
   width: 100%;
   padding: 13px;
-  background: $primary;
+  background: var(--primary);
   color: #fff;
   border: none;
   border-radius: 12px;
   font-size: 14px;
   font-weight: 500;
-  font-family: $font-main;
+  font-family: var(--font-main);
   cursor: pointer;
   margin-top: 0.5rem;
   transition: background 0.15s;
   letter-spacing: 0.02em;
 
   &:hover {
-    background: $primary-dark;
+    background: var(--primary-dark);
   }
 }
 
-// ===== DIVIDER =====
+/* ===== DIVIDER ===== */
 .divider {
   height: 1px;
-  background: $border;
+  background: var(--border);
   margin: 1.5rem 0;
 }
 
-// ===== STATUS =====
+/* ===== STATUS ===== */
 .status-row {
   display: flex;
   align-items: center;
   gap: 8px;
-  background: #EAF3DE;
+  background: #eaf3de;
   border-radius: 10px;
   padding: 10px 14px;
   margin-bottom: 1rem;
@@ -157,22 +152,22 @@ select {
 
   .status-text {
     font-size: 12px;
-    color: #3B6D11;
+    color: #3b6d11;
     font-weight: 500;
   }
 }
 
-// ===== RESULT =====
+/* ===== RESULT ===== */
 .result-title {
   font-size: 11px;
   font-weight: 500;
-  color: $text-muted;
+  color: var(--text-muted);
   letter-spacing: 0.06em;
   text-transform: uppercase;
   margin-bottom: 1rem;
 }
 
-// ===== HASH =====
+/* ===== HASH ===== */
 .hash-row {
   display: flex;
   flex-direction: column;
@@ -181,20 +176,20 @@ select {
 
   .hash-label {
     font-size: 11px;
-    color: $text-muted;
+    color: var(--text-muted);
     text-transform: uppercase;
     letter-spacing: 0.04em;
   }
 
   .hash-value {
-    font-family: $font-mono;
+    font-family: var(--font-mono);
     font-size: 11px;
     color: #444441;
     word-break: break-all;
-    background: $bg-main;
+    background: var(--bg-main);
     border-radius: 8px;
     padding: 8px 10px;
-    border: 1px solid $border;
+    border: 1px solid var(--border);
   }
 
   .copy-icon {

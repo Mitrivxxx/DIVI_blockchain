@@ -1,0 +1,137 @@
+/* Validation Box Component */
+
+.validation-box {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-radius: var(--radius-md);
+  padding: 12px 16px;
+  margin-top: 1.5rem;
+  transition: all var(--transition);
+  animation: validation-slide-in 0.25s ease-out;
+}
+
+.validation-box-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: #fff;
+
+  svg {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+.validation-box-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.validation-box-title {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.validation-box-message {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  opacity: 0.85;
+}
+
+.validation-box.is-error {
+  background: var(--red-light);
+  border: 1px solid var(--red-mid);
+
+  .validation-box-icon {
+    box-shadow: 0 2px 8px rgba(229, 72, 77, 0.15);
+
+    svg {
+      stroke: var(--red);
+    }
+  }
+
+  .validation-box-title {
+    color: var(--red-dark);
+  }
+
+  .validation-box-message {
+    color: var(--red);
+  }
+}
+
+.validation-box.is-success {
+  background: var(--green-light);
+  border: 1px solid color-mix(in srgb, var(--green) 30%, #fff);
+
+  .validation-box-icon {
+    box-shadow: 0 2px 8px rgba(99, 153, 34, 0.15);
+
+    svg {
+      stroke: var(--green);
+    }
+  }
+
+  .validation-box-title {
+    color: var(--green-dark);
+  }
+
+  .validation-box-message {
+    color: var(--green);
+  }
+}
+
+@keyframes validation-slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Form Field States */
+
+.field.is-error {
+  label {
+    color: var(--red);
+  }
+
+  input,
+  select {
+    border-color: var(--red-mid);
+    background: var(--red-light);
+
+    &:focus {
+      border-color: var(--red);
+    }
+  }
+}
+
+.field.is-success {
+  input,
+  select,
+  textarea {
+    border-color: color-mix(in srgb, var(--green) 30%, #fff);
+    background: var(--green-light);
+  }
+}
+
+.error-message {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  color: var(--red);
+  margin-top: 4px;
+  animation: validation-slide-in 0.2s ease-out;
+}

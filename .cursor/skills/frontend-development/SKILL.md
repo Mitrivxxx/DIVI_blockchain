@@ -1,40 +1,41 @@
 ---
-name: divi-landing-style
+name: frontend-development
 description: >-
-  Keep DIVI public landing and authenticated app-shell Tailwind UI in the
-  OriginX-inspired stylistic system (Figtree, canvas #F5F5F5, coral→pink brand,
-  framed white cards, shadow-soft). Use when adding or editing landing sections,
-  MainPage, Landing*.tsx, src/shared/verify, app-shell (/), AppHeader, or
-  Tailwind on /public.
+  DIVI frontend UI system (React 19 + Vite + Tailwind v4): Figtree, canvas
+  #F5F5F5, coral→pink brand, framed white cards, shadow-soft, @/shared/ui.
+  Use when working anywhere under frontend/ — landing (/public), authenticated
+  app-shell (/), features, shared UI/verify, AppHeader, routing, or Tailwind
+  styling — not only marketing pages.
 ---
 
-# DIVI public landing + app-shell style
+# DIVI frontend development
 
-Source of truth: `frontend/src/public/main-page/` + `frontend/src/styles/tailwind.css` + `frontend/src/shared/ui`.
-Reuse primitives from `@/shared/ui` (landing `./ui` re-exports) — do not invent parallel button/heading systems.
+Source of truth: `frontend/src/styles/tailwind.css` + `frontend/src/shared/ui` (+ landing re-exports from `public/main-page/components/ui`).
+Reuse `@/shared/ui` — do not invent parallel button/heading/card systems.
 
 ## When this applies
 
-- New or changed sections on `/public` (`MainPage.tsx`, `Landing*.tsx`)
-- Authenticated shell (`.app-shell`): `AppHeader`, Home / Network / Institutions, feature pages
-- Tailwind work in `src/shared/verify`
-- Public marketing blocks that sit inside `.landing`
+- **Any** UI under `frontend/` (features, layout, shared, public landing, verify)
+- New routes / nav / AppHeader / feature folders
+- Tailwind tokens, spacing, typography, cards, CTAs
+- Polish user-facing copy in the product UI
 
-**Out of scope:** auth pages (`/login`, `/register`, `/auth`) SCSS — leave alone unless the user asks otherwise.
+**Out of scope unless the user asks:** rewrite of legacy auth pages (`/login`, `/register`, `/auth`) CSS — leave those files alone; do not add new SCSS.
 
 ## Hard rules
 
-1. **Shell:**  
+1. **Shells:**  
    - Landing: `className="landing min-h-screen bg-canvas font-sans text-neutral-900 antialiased"`.  
-   - App: `className="app-shell min-h-screen bg-canvas font-sans text-neutral-900 antialiased"`.
-2. **Tailwind only** for landing / app-shell / shared-verify — no new SCSS modules there.
+   - Authenticated app: `className="app-shell min-h-screen bg-canvas font-sans text-neutral-900 antialiased"`.
+2. **Tailwind only** for landing, app-shell, shared, and features — no new SCSS; no parallel CSS module systems for new UI.
 3. **Stay inside tokens** from `@theme` in `src/styles/tailwind.css`:  
    `brand`, `brand-pink`, `canvas`, `hairline`, `shadow-soft`, `font-sans` (Figtree), `font-mono`.
 4. **Reuse** `Container`, `SectionHeading`, `buttonDark`, `buttonLight`, `GradientButton`, `LogoLink`, `CheckIcon`, `AppCard`, `MissingBackendNote` from `@/shared/ui`.
-5. **One job per section:** one heading + short description, then content. No fake stats/testimonials.
-6. **Polish copy** for public UI; keep claims honest (SHA-256, Sepolia, IPFS/Pinata, issuer approval, revoke, PDF ≤ 5 MB).
+5. **One job per section/page block:** one heading + short description, then content. No fake stats/testimonials.
+6. **Polish copy** for user-facing UI; keep claims honest (SHA-256, Sepolia, IPFS/Pinata, issuer approval, revoke, PDF ≤ 5 MB).
 7. **Logo** is white line-art — always sit it on `bg-neutral-950` (see `LogoLink`), never bare on canvas.
 8. Gaps vs backend/blockchain: use red `MissingBackendNote` — do not fake working APIs.
+9. **Features:** `frontend/src/app/features/<name>/` with `hooks/`, `components/`, `api/` + main component; route in `App.tsx` under `MainLayout`; nav in `navigation/routes.ts` / `AppHeader` if needed.
 
 ## Visual system (do not drift)
 
@@ -61,10 +62,10 @@ Reuse primitives from `@/shared/ui` (landing `./ui` re-exports) — do not inven
 - Warm cream `#F4F1EA` + terracotta + display serif
 - Broadsheet / hairline newspaper layouts
 - Flat single-color hero with no atmosphere (prefer soft grid mask or brand blur like hero)
-- Cards in the hero that compete with `#verify` — verify stays the centerpiece on `/public`
-- New global preflight that breaks auth SCSS
+- On `/public`, cards in the hero that compete with `#verify` — verify stays the centerpiece
+- New global preflight that breaks auth CSS
 
-## New section checklist (landing)
+## New landing section checklist
 
 ```
 - [ ] File: frontend/src/public/main-page/components/LandingXxx.tsx
@@ -77,11 +78,20 @@ Reuse primitives from `@/shared/ui` (landing `./ui` re-exports) — do not inven
 - [ ] Desktop + ~390px: no horizontal overflow
 ```
 
+## New authenticated feature checklist
+
+```
+- [ ] Feature folder under frontend/src/app/features/<name>/
+- [ ] Route in App.tsx under MainLayout; path/nav in routes.ts / AppHeader if needed
+- [ ] Tailwind + AppCard / shared/ui; Polish copy
+- [ ] API helpers in feature api/; no fake backends (use MissingBackendNote)
+```
+
 ## Verify widget
 
-- Lives in landing hero framed card `#verify` on `/public`.
+- Landing hero framed card `#verify` on `/public`; app also has `features/Verify`.
 - Shared components under `src/shared/verify` stay Tailwind; errors = “BŁĄD WERYFIKACJI”.
 
-## After visual changes
+## After visual / FE structure changes
 
-Update `frontend/AGENTS.md` briefly if tokens, routes, or Tailwind rules change. Full class recipes: [recipes.md](recipes.md).
+Update `frontend/AGENTS.md` briefly (and root `AGENTS.md` if routing/architecture changes). Class recipes: [recipes.md](recipes.md).

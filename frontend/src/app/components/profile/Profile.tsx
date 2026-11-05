@@ -4,7 +4,6 @@ import ProfileTabContent from "./components/ProfileTabContent";
 import ProfileTabs from "./components/ProfileTabs";
 import { useProfile } from "./hooks/useProfile";
 import type { ProfileProps, ProfileTab } from "./types";
-import "./Profile.scss";
 
 const Profile: React.FC<ProfileProps> = ({ userRole, walletAddress }) => {
   const {

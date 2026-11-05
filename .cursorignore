@@ -1,0 +1,100 @@
+# DIVI — exclude from Cursor indexing / agent file access.
+# Syntax like .gitignore. Prefer ignoring build noise & secrets, not source or AGENTS.md.
+# Keep readable: .env.example, source, contracts, .cursor/rules|skills, README, AGENTS.md
+
+####################################
+# Secrets & local env
+####################################
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
+*.pem
+*.key
+.privateKey
+.privatekey
+wallet.json
+keystore/
+secrets.json
+
+####################################
+# Dependencies
+####################################
+**/node_modules/
+node_modules/
+
+####################################
+# Build / generated (.NET)
+####################################
+**/bin/
+**/obj/
+**/out/
+**/TestResults/
+**/coverage/
+**/*.nupkg
+**/packages/
+.nuget/
+
+####################################
+# Build / generated (frontend)
+####################################
+frontend/dist/
+frontend/out/
+**/*.tsbuildinfo
+.eslintcache
+.cache/
+
+####################################
+# Build / generated (blockchain / Hardhat)
+####################################
+blockchain/artifacts/
+blockchain/cache/
+blockchain/typechain/
+blockchain/typechain-types/
+blockchain/coverage/
+broadcast/
+
+####################################
+# Lockfiles (huge, low signal for the agent)
+####################################
+**/package-lock.json
+**/bun.lock
+**/bun.lockb
+**/yarn.lock
+**/pnpm-lock.yaml
+
+####################################
+# IDE / OS / logs
+####################################
+.idea/
+.vs/
+.vscode/
+*.user
+*.suo
+*.log
+*.tmp
+*.temp
+*.swp
+*.bak
+*.DS_Store
+Thumbs.db
+*.pid
+
+####################################
+# Local / personal (not product source)
+####################################
+dla_mnie/
+backend/Data/avatars/
+.ipfs/
+ipfs-data/
+ipfs-repo/
+ipfs-cache/
+
+####################################
+# Docker / local overrides
+####################################
+**/docker-compose.override.yml
+appsettings.Development.json
+appsettings.Local.json

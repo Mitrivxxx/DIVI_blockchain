@@ -5,7 +5,8 @@ import logo from "../../assets/icons/divi_icon_demo.png";
 import metamaskIcon from "../../assets/icons/Metamask.svg";
 import googleIcon from "../../assets/icons/google.svg";
 import { API_URL } from "@/types/api";
-import "./LoginPage.scss";
+import "./AuthPage.css";
+import "./LoginPage.css";
 import { useWeb3Auth } from "../../service/web3/useWeb3Auth";
 import { EMAIL_LOGIN_STORAGE_KEY } from "../../service/auth/constants";
 

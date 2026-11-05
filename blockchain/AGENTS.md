@@ -1,6 +1,6 @@
 # Blockchain AGENTS — Solidity + Hardhat 3
 
-Short on-chain layer context. Broader project overview: `../AGENTS.md`.
+Short on-chain layer context. Broader project overview: `../AGENTS.md`. Hard conventions: `.cursor/rules/blockchain.mdc`.
 
 ## Role
 

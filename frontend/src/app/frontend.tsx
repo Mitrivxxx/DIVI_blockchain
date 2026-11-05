@@ -4,8 +4,8 @@
 
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import "./style/global.scss";
-import "./index.scss";
+import "./style/global.css";
+import "./index.css";
 import "@/styles/tailwind.css";
 import App from "./App";
 

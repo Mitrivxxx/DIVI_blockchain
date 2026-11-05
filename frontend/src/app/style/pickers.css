@@ -1,0 +1,211 @@
+/* Label nad polem */
+
+.field-label {
+  display: block;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-muted);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+/* Wrapper — ukrywa natywny <input type="file"> */
+
+.file-picker {
+  position: relative;
+  cursor: pointer;
+
+  input[type="file"] {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+    z-index: 2;
+  }
+}
+
+/* Stan: PUSTY (brak pliku) */
+
+.file-picker__dropzone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  border: 1.5px dashed var(--border);
+  border-radius: var(--radius-md);
+  padding: 28px 20px;
+  background: var(--bg-subtle);
+
+  transition:
+    border-color var(--transition),
+    background var(--transition);
+}
+
+.file-picker__dropzone-icon {
+  width: 40px;
+  height: 40px;
+  background: var(--purple-light);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  svg {
+    width: 20px;
+    height: 20px;
+    stroke: var(--purple);
+  }
+}
+
+.file-picker__dropzone-title {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-main);
+  text-align: center;
+}
+
+.file-picker__dropzone-hint {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.file-picker__dropzone-btn {
+  margin-top: 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 14px;
+  background: var(--purple-light);
+  color: var(--purple);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: var(--radius-pill);
+  pointer-events: none;
+  transition:
+    background var(--transition),
+    color var(--transition);
+}
+
+.file-picker:hover .file-picker__dropzone {
+  border-color: var(--purple-mid);
+  background: color-mix(in srgb, var(--purple-light) 30%, var(--bg-subtle));
+
+  .file-picker__dropzone-btn {
+    background: var(--purple);
+    color: #fff;
+  }
+}
+
+.file-picker.is-dragging .file-picker__dropzone {
+  border-color: var(--purple);
+  border-style: solid;
+  background: color-mix(in srgb, var(--purple-light) 50%, #fff);
+}
+
+/* Stan: WYBRANY plik */
+
+.file-picker__selected {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  background: var(--bg-subtle);
+
+  transition: border-color var(--transition);
+}
+
+.file-picker__selected-icon {
+  width: 32px;
+  height: 32px;
+  background: var(--purple-light);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  svg {
+    width: 16px;
+    height: 16px;
+    stroke: var(--purple);
+  }
+}
+
+.file-picker__selected-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  flex: 1;
+  min-width: 0;
+}
+
+.file-picker__selected-name {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--text-main);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.file-picker__selected-size {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.file-picker__selected-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  background: var(--green-light);
+  color: var(--green-dark);
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 500;
+  border-radius: var(--radius-pill);
+  flex-shrink: 0;
+
+  &::before {
+    content: "";
+    display: inline-block;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--green);
+  }
+}
+
+.file-picker__selected-change {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-link);
+  flex-shrink: 0;
+  cursor: pointer;
+  transition: color var(--transition);
+  pointer-events: none;
+
+  &:hover {
+    color: var(--purple-dark);
+  }
+}
+
+.file-picker:hover .file-picker__selected {
+  border-color: var(--purple-mid);
+}

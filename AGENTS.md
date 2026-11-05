@@ -14,6 +14,19 @@ DIVI is a fullstack app for issuing and verifying documents (diplomas, certifica
 
 **AI duty:** after every completed task, update the relevant `AGENTS.md` (and this file if architecture/flow changes). Keep descriptions short. Write AGENTS files in English.
 
+## Cursor project rules (hard conventions)
+
+Layer rules load via globs (not always-on). Do not duplicate their checklists here.
+
+| Layer | Rule | Globs |
+| ----- | ---- | ----- |
+| Frontend | [`.cursor/rules/frontend.mdc`](.cursor/rules/frontend.mdc) | `frontend/**/*.{ts,tsx,css}` |
+| Backend | [`.cursor/rules/backend.mdc`](.cursor/rules/backend.mdc) | `backend/**/*.{cs,csproj,json}` |
+| Blockchain | [`.cursor/rules/blockchain.mdc`](.cursor/rules/blockchain.mdc) | `blockchain/**/*.{sol,js,ts,json}` |
+| AGENTS hygiene | [`.cursor/rules/agents-md-maintenance.mdc`](.cursor/rules/agents-md-maintenance.mdc) | alwaysApply |
+
+UI visual system: skill [`.cursor/skills/frontend-development/`](.cursor/skills/frontend-development/).
+
 ## Architecture — three independent layers
 
 ```
@@ -25,44 +38,7 @@ backend/  (ASP.NET Core .NET 8 + EF Core 8 + PostgreSQL 16)
 blockchain/ (Solidity 0.8.28 + Hardhat 3, Sepolia)
 ```
 
-## Code conventions
-
-### Backend (.NET 8)
-
-- **Language**: C# 12, nullable reference types on, implicit usings
-- **Pattern**: controller → service (EF Core used directly in services; no separate repo layer)
-- **DI**: `backend/Extensions/ServiceCollectionExtensions.cs` — `AddApplication()` (services), `AddInfrastructure()` (DB, CORS, JWT, Pinata, MinIO avatars), `AddPresentation()` (controllers, Swagger)
-- **Pipeline**: middleware in `backend/Extensions/ApplicationBuilderExtensions.cs`
-- **Routing**: `[Route]` attributes. Auth under `/Auth`, rest under `/api/...`
-- **Namespace**: `backend.*` (e.g. `backend.Controllers`, `backend.Services.Blockchain`)
-- **Logging**: Serilog (structured). Some code still uses `Console.WriteLine` — migrate to Serilog
-- **Passwords**: Argon2 via Konscious.Security.Cryptography (`backend/Utils/PasswordHasher.cs`)
-- **JWT**: access token (15 min) + refresh token in httpOnly cookies. Blacklisting via `BlacklistedTokens`, checked in `OnTokenValidated`
-- **Token from cookie OR header**: `OnMessageReceived` checks `Authorization: Bearer ...` first, then cookie `access_token`
-- **Env**: root `.env.example` (fallback `.env`) via `DotNetEnv` in `Program.cs`; `DB_*` → `Database:*`. Blockchain/Pinata/JWT/MinIO may live in appsettings OR env (env wins). Profile avatars use MinIO (`MINIO_*` / `Minio__*`); document files stay on Pinata/IPFS.
-- **Migrations**: EF Core, PostgreSQL. Seed: 4 roles (`admin`, `issuer`, `user`, `owner`) + one owner Member (address = contract deployer / `Blockchain__PrivateKey`)
-- **Smart contract ABI**: `backend/Infrastructure/Contracts/DocumentIssuer.abi.json`, copied to output directory
-- **App roles**: owner (superuser) → admin (approve issuer apps) → issuer (upload) → user (apply). JWT claim `ClaimTypes.Role`.
-
-### Frontend (React 19 + TypeScript)
-
-- **Bundler**: Vite 7, dev server port 3000 with proxy `/api` → backend
-- **Routing**: React Router 7. Marketing `/public`, auth `/auth|/login|/register`, authenticated app at `/` (`/network`, `/institutions`, `/verify`, `/profile`, `/u/:ethereumAddress`, …). Legacy `/app/*` redirects. `/share/:token` public share.
-- **App chrome**: `AppHeader` (logo, member search by name/ETH, primary nav, profile dropdown) — see `frontend/src/app/features/navigation/routes.ts`
-- **State**: no Redux/Zustand. React Context (`Web3AuthContext`) + local hooks
-- **Styling**: auth SCSS; landing (`.landing`) + app shell (`.app-shell`) use Tailwind v4 (shared `frontend/src/shared/ui`)
-- **Web3**: ethers.js 6 + MetaMask. Context in `src/service/Web3AuthContext.tsx`
-- **API**: Axios; base URL from `VITE_API_URL` or proxy. API files under feature `api/` folders
-- **Feature layout**: each feature folder has `hooks/`, `components/`, `api/` + main component (e.g. `Upload.tsx`, `Verify.tsx`, `Profile.tsx`)
-- **Alias**: `@` → `frontend/src/`
-
-### Blockchain (Solidity)
-
-- **Contract**: `DocumentIssuer.sol` + `DocumentTypes.sol` (library with enums and struct)
-- **Network**: Sepolia testnet (chainId 11155111). Hardhat also supports localhost (8545) and edr-simulated
-- **On-chain roles**: `owner` (deployer), `isAdmin` (owner-managed), `authorizedIssuers` (gates `issueDocument`; owner or admin manage via `addIssuer`/`removeIssuer`)
-- **Document struct**: `issuer`, `documentOwner`, `issuedAt`, `cid`, `documentType`, `exists`, `status`
-- **Document types (enum)**: Education(0), Experience(1), LicensesAndCertificates(2), Recommendation(3), HonorsAndAwards(4) — UI: Wykształcenie, Doświadczenie, Licencje i certyfikaty, Rekomendacja, Wyróżnienia i nagrody
+Stack/routing/styling/DI details: layer `*/AGENTS.md` + matching `.cursor/rules/*.mdc`.
 
 ## Key files — navigation map
 
@@ -184,37 +160,17 @@ BlacklistedToken — invalidated JWT after logout (Jti + ExpiryDate)
 
 ## Tips for AI
 
-### Adding a new endpoint
-1. Create DTO in `backend/DTOs/`
-2. Create service interface under the right `backend/Services/` folder
-3. Implement the service
-4. Register in `ServiceCollectionExtensions.cs` → `AddApplication()`
-5. Create controller in `backend/Controllers/` with `[Route]`, `[Authorize]` as needed
+Follow the matching `.cursor/rules/{frontend,backend,blockchain}.mdc` when editing that layer. Quick pointers:
 
-### Adding a new model/table
-1. Create class in `backend/Models/`
-2. Add `DbSet<T>` in `AppDbContext`
-3. Configure in `OnModelCreating` if needed
-4. Generate migration: `dotnet ef migrations add MigrationName -p backend`
-
-### Adding a new frontend feature
-1. Create folder under `frontend/src/app/features/featureName/`
-2. Add `hooks/`, `components/`, `api/`
-3. Register route in `frontend/src/app/App.tsx` under `MainLayout`; add path in `navigation/routes.ts` / header if needed
-4. Use Tailwind + `shared/ui` (`AppCard`, etc.) inside `.app-shell`
-
-### Working with blockchain
-- Contract ABI: `backend/Infrastructure/Contracts/DocumentIssuer.abi.json`
-- Nethereum service: `backend/Services/Blockchain/BlockchainService*.cs` (partial class)
-- New contract functions require ABI update + method on `IBlockchainService` + implementation
-- Local testing: Hardhat node (`docker compose --profile tools up`)
+- **New endpoint:** DTO → service (+ `AddApplication`) → controller (`/Auth` or `/api/...`). See `backend.mdc`.
+- **New table:** Model → `DbSet` → migration (`dotnet ef migrations add … -p backend`).
+- **New FE feature:** `features/<name>/` → `App.tsx` + `routes.ts` / header; Tailwind + `@/shared/ui`. See `frontend.mdc` + skill.
+- **Contract change:** compile → copy ABI → `IBlockchainService*` → env address. See `blockchain.mdc`.
 
 ### Notes
-- Root `.env` — do NOT commit (in `.gitignore`). Prefer `.env.example` for shared/Aspire config.
-- Backend loads `.env.example` (fallback `.env`) via `DotNetEnv` in `Program.cs`; maps `DB_*` → `Database:*`
-- Frontend reads `VITE_` / `PORT` from process env (Aspire) or parent-dir env files
-- After DocumentIssuer redeploy: update contract address in `.env` / `.env.example` (ABI already synced in repo)
-- `Member.Email` is unique (nullable for Web3-only); register normalizes to lowercase
+- Root `.env` — do NOT commit. Prefer `.env.example` for shared/Aspire config.
+- Frontend reads `VITE_` / `PORT` from process env (Aspire) or parent-dir env files.
+- `Member.Email` is unique (nullable for Web3-only); register normalizes to lowercase.
 
 ## Running tests
 

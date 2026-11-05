@@ -1,0 +1,30 @@
+---
+description: DIVI backend conventions (ASP.NET Core .NET 8 + EF Core + Nethereum)
+globs: backend/**/*.{cs,csproj,json}
+alwaysApply: false
+---
+
+# Backend
+
+Stack: ASP.NET Core .NET 8, EF Core 8, PostgreSQL, Nethereum, Pinata (docs), MinIO (avatars). Namespace `backend.*`. Details: `backend/AGENTS.md`.
+
+## Structure
+
+- Pattern: **controller → service** (EF Core in services; no separate repository layer).
+- New service: interface + impl under `Services/…`, register in `Extensions/ServiceCollectionExtensions.cs` → `AddApplication()`.
+- DI split: `AddApplication` (services) / `AddInfrastructure` (DB, CORS, JWT, Pinata, MinIO) / `AddPresentation` (controllers, Swagger).
+- Pipeline: `Extensions/ApplicationBuilderExtensions.cs`.
+- Routing: `[Route]` attributes. Auth under `/Auth`, rest under `/api/...`.
+
+## Auth / security
+
+- JWT: access (~15 min) + refresh in httpOnly cookies; blacklist via `BlacklistedTokens` (`OnTokenValidated`).
+- Token source: `Authorization: Bearer` first, else cookie `access_token`.
+- Passwords: Argon2 (`Utils/PasswordHasher.cs`). Prefer Serilog over `Console.WriteLine`.
+
+## Data / integrations
+
+- New table: `Models/` + `DbSet` in `AppDbContext` + migration (`dotnet ef migrations add … -p backend`).
+- Env: root `.env.example` (fallback `.env`) via DotNetEnv; `DB_*` → `Database:*`. Do not commit `.env`.
+- Contract ABI: `Infrastructure/Contracts/DocumentIssuer.abi.json` (copied to output). After redeploy: update contract address in env + keep `IBlockchainService` / `BlockchainService*` in sync.
+- Roles (JWT `ClaimTypes.Role`): owner → admin → issuer → user.

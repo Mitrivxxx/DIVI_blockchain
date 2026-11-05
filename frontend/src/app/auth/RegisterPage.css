@@ -1,5 +1,3 @@
-@use "./AuthPage.scss";
-
 .auth-login--register .card {
   max-width: 540px;
 }
@@ -35,7 +33,9 @@
   font-size: 15px;
   color: #111111;
   background: #ffffff;
-  transition: border-color 0.16s ease, box-shadow 0.16s ease;
+  transition:
+    border-color 0.16s ease,
+    box-shadow 0.16s ease;
 }
 
 .auth-login--register .register-form__input:focus {

@@ -1,11 +1,11 @@
-# Landing class recipes
+# Frontend class recipes
 
-Copy-paste patterns from the current public page. Prefer these over improvising.
+Copy-paste patterns for DIVI UI (landing **and** authenticated app). Prefer these over improvising. Import primitives from `@/shared/ui` (landing may use `./ui` re-exports).
 
 ## Buttons
 
 ```tsx
-import { buttonDark, buttonLight, GradientButton } from "./ui";
+import { buttonDark, buttonLight, GradientButton } from "@/shared/ui";
 
 <a href="#verify" className={buttonDark}>Zweryfikuj dokument</a>
 <a href="/auth" className={buttonLight}>Załóż konto</a>
@@ -17,11 +17,23 @@ Dark CTA on dark CTA band (e.g. `LandingCta`): white fill / ghost border — do 
 ## Section heading
 
 ```tsx
+import { SectionHeading } from "@/shared/ui";
+
 <SectionHeading title="…" description="…" />           // center
 <SectionHeading align="left" title="…" description="…" />
 ```
 
 Classes baked in: `text-3xl … sm:text-4xl lg:text-[44px] lg:leading-[1.15]`, description `mt-4 text-neutral-500`.
+
+## App card (authenticated pages)
+
+```tsx
+import { AppCard } from "@/shared/ui";
+
+<AppCard>…</AppCard>
+// or
+<div className="rounded-xl bg-white p-6 shadow-soft border border-hairline">…</div>
+```
 
 ## Feature grid card
 
@@ -72,7 +84,7 @@ Eyebrow badge (hero): same + `text-xs text-neutral-600 shadow-sm` and a brand gr
 </li>
 ```
 
-## Step number (issuers)
+## Step number
 
 ```tsx
 <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-linear-to-l from-brand to-brand-pink text-sm font-semibold text-white">
@@ -106,6 +118,8 @@ Inline SVG: `viewBox="0 0 24 24"`, `strokeWidth="1.6"`, `strokeLinecap="round"`,
 ## Reference files
 
 - Tokens / reset: `frontend/src/styles/tailwind.css`
-- Primitives: `frontend/src/public/main-page/components/ui.tsx`
-- Composition: `MainPage.tsx` + sibling `Landing*.tsx`
-- Verify UI: `frontend/src/shared/verify/`
+- Primitives: `frontend/src/shared/ui` (landing `./ui` re-exports the same)
+- App chrome: `frontend/src/app/layout/AppHeader.tsx`, `MainLayout.tsx`
+- Features: `frontend/src/app/features/`
+- Landing composition: `MainPage.tsx` + `Landing*.tsx`
+- Verify UI: `frontend/src/shared/verify/` + `features/Verify`

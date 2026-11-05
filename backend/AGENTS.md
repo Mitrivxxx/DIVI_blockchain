@@ -1,6 +1,6 @@
 # Backend AGENTS — ASP.NET Core .NET 8
 
-Short API-layer context. Broader project overview: `../AGENTS.md`.
+Short API-layer context. Broader project overview: `../AGENTS.md`. Hard conventions: `.cursor/rules/backend.mdc`.
 
 ## Role
 
