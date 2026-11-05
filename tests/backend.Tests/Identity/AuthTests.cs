@@ -69,7 +69,7 @@ public sealed class AuthTests : IClassFixture<DiviApiFactory>
         await login.AssertStatusAsync(HttpStatusCode.Unauthorized);
     }
 
-    [Fact(Skip = KnownIssues.RefreshTokenSubClaim)]
+    [Fact]
     public async Task Refresh_with_cookie_returns_new_access_token()
     {
         var client = _factory.CreateClient();

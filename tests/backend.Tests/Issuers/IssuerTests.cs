@@ -62,7 +62,7 @@ public sealed class IssuerTests : IClassFixture<DiviApiFactory>
         Assert.DoesNotContain(pendingAfter.EnumerateArray(), a => a.GetProperty("id").GetInt32() == applicationId);
     }
 
-    [Fact(Skip = KnownIssues.RefreshTokenSubClaim)]
+    [Fact]
     public async Task Refresh_after_approval_reloads_issuer_role_from_db()
     {
         var applicant = await _factory.LoginWithWalletAsync();

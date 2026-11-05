@@ -80,7 +80,8 @@ namespace backend.Services.Auth
             if (string.IsNullOrWhiteSpace(token))
                 return null;
 
-            var handler = new JwtSecurityTokenHandler();
+            // Keep raw claim names: the default inbound map renames "sub" to ClaimTypes.NameIdentifier.
+            var handler = new JwtSecurityTokenHandler { MapInboundClaims = false };
 
             try
             {
