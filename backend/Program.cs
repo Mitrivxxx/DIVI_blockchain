@@ -1,6 +1,6 @@
 using Serilog;
 using backend.Infrastructure.Logging;
-using backend.Extensions;
+using backend.Host;
 using DotNetEnv;
 
 LoadEnvFile();

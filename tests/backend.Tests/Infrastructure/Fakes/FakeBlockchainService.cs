@@ -1,6 +1,5 @@
 using System.Collections.Concurrent;
-using backend.DTOs;
-using backend.Services.Blockchain;
+using backend.Infrastructure.Blockchain;
 
 namespace backend.Tests.Infrastructure.Fakes;
 

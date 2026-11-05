@@ -1,9 +1,8 @@
-using backend.Data;
-using backend.Infrastructure;
-using backend.Infrastructure.Database;
+using backend.Infrastructure.Blockchain;
 using backend.Infrastructure.Minio;
-using backend.Services.BackgroundJobs;
-using backend.Services.Blockchain;
+using backend.Infrastructure.Persistence;
+using backend.Infrastructure.Pinata;
+using backend.Modules.Identity.Application;
 using backend.Tests.Infrastructure.Fakes;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;

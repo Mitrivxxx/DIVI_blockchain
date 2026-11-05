@@ -3,7 +3,7 @@ using System.Text.Json;
 using backend.Infrastructure.Configuration;
 using Microsoft.Extensions.Options;
 
-namespace backend.Infrastructure
+namespace backend.Infrastructure.Pinata
 {
     public class PinataClient
     {
