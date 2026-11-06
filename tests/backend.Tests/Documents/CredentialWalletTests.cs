@@ -78,6 +78,7 @@ public sealed class CredentialWalletTests : IClassFixture<DiviApiFactory>
         var item = Assert.Single(TestDocuments.AllSectionItems(await response.ReadJsonAsync()));
         Assert.Equal(hash, item.GetString("hash"));
         Assert.False(item.HasProperty("cid"));
+        Assert.True(item.GetProperty("hasPdfFile").GetBoolean());
 
         await (await issuer.DeleteAsync($"/api/documents/{hash}/revoke")).AssertStatusAsync(HttpStatusCode.NoContent);
 
@@ -115,4 +116,33 @@ public sealed class CredentialWalletTests : IClassFixture<DiviApiFactory>
             Assert.Contains("Revoked", types);
         }
     }
+
+    [Fact]
+    public async Task Public_activity_shows_only_public_documents_and_omits_cid()
+    {
+        var (_, owner, hash) = await IssueToNewOwnerAsync();
+        var anonymous = _factory.CreateClient();
+
+        var before = await anonymous.GetAsync($"/api/profiles/{owner.Address}/activity");
+        await before.AssertStatusAsync(HttpStatusCode.OK);
+        Assert.DoesNotContain(
+            (await before.ReadJsonAsync()).EnumerateArray(),
+            a => a.GetString("hash") == hash);
+
+        await (await SetVisibilityAsync(owner.Client, hash, "public")).AssertStatusAsync(HttpStatusCode.OK);
+
+        var after = await anonymous.GetAsync($"/api/profiles/{owner.Address}/activity");
+        await after.AssertStatusAsync(HttpStatusCode.OK);
+        var item = Assert.Single(
+            (await after.ReadJsonAsync()).EnumerateArray(),
+            a => a.GetString("hash") == hash);
+        Assert.Equal("Issued", item.GetString("activityType"));
+        if (item.TryGetProperty("cid", out var cidProp))
+        {
+            Assert.True(
+                cidProp.ValueKind == System.Text.Json.JsonValueKind.Null
+                || string.IsNullOrEmpty(cidProp.GetString()));
+        }
+    }
+
 }

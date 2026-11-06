@@ -14,6 +14,7 @@ namespace backend.Infrastructure.Persistence
         public DbSet<Nonce> Nonces { get; set; }
         public DbSet<Member> Members { get; set; }
         public DbSet<MemberRole> MemberRoles { get; set; }
+        public DbSet<MemberFollow> MemberFollows { get; set; }
         public DbSet<BlacklistedToken> BlacklistedTokens { get; set; }
         public DbSet<Document> Documents { get; set; }
         public DbSet<DocumentActivity> DocumentActivities { get; set; }

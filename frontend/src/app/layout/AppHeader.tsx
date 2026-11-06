@@ -161,7 +161,7 @@ const AppHeader: React.FC<AppHeaderProps> = ({
   };
 
   return (
-    <header className="sticky top-0 z-50 border-b border-neutral-200/70 bg-canvas/85 backdrop-blur-md">
+    <header className="sticky top-0 z-50 border-b border-neutral-200/70 bg-canvas/95 backdrop-blur-md">
       <Container className="flex h-[4.5rem] items-center gap-4 lg:gap-6">
         <div className="flex min-w-0 flex-1 items-center gap-3">
           <LogoLink to="/" />

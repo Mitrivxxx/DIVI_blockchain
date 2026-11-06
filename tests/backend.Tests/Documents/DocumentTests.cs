@@ -199,4 +199,27 @@ public sealed class DocumentTests : IClassFixture<DiviApiFactory>
         var response = await stranger.Client.GetAsync($"/api/documents/{hash}/file");
         await response.AssertStatusAsync(HttpStatusCode.Forbidden);
     }
+
+    [Fact]
+    public async Task Pdf_file_is_public_when_visibility_is_public()
+    {
+        var (issuer, _) = await NewIssuerAsync();
+        var owner = await _factory.LoginWithWalletAsync();
+        var hash = await TestDocuments.IssuePdfHashAsync(issuer, owner.Address);
+
+        var anonymous = _factory.CreateClient();
+        await (await anonymous.GetAsync($"/api/documents/{hash}/file")).AssertStatusAsync(HttpStatusCode.Forbidden);
+
+        await (await owner.Client.PatchAsJsonAsync(
+            $"/api/profiles/me/credentials/{hash}/visibility",
+            new { visibility = "public" })).AssertStatusAsync(HttpStatusCode.OK);
+
+        // Auth gate opens for public docs; Pinata gateway is not faked (real HTTP), so OK or 502 is fine.
+        var publicFile = await anonymous.GetAsync($"/api/documents/{hash}/file");
+        Assert.NotEqual(HttpStatusCode.Forbidden, publicFile.StatusCode);
+        Assert.NotEqual(HttpStatusCode.Unauthorized, publicFile.StatusCode);
+        Assert.True(
+            publicFile.StatusCode is HttpStatusCode.OK or HttpStatusCode.BadGateway,
+            $"Unexpected status {publicFile.StatusCode}");
+    }
 }

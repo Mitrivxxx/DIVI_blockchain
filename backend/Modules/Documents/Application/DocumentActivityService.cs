@@ -10,6 +10,7 @@ namespace backend.Modules.Documents.Application
     {
         public const byte ActivityIssued = 0;
         public const byte ActivityRevoked = 1;
+        private const byte VisibilityPublic = 2;
 
         private readonly AppDbContext _db;
         private readonly IMemberDirectory _members;
@@ -57,14 +58,47 @@ namespace backend.Modules.Documents.Application
         public async Task<IReadOnlyList<DocumentActivityItemDto>> GetMyActivityAsync(int memberId)
         {
             var member = await _members.FindByIdAsync(memberId);
-            var address = member?.EthereumAddress?.Trim().ToLowerInvariant();
+            return await BuildActivityAsync(
+                memberId,
+                member?.EthereumAddress,
+                publicOnly: false,
+                includeCid: true);
+        }
 
-            var relatedDocs = await _db.Documents.AsNoTracking()
+        public async Task<IReadOnlyList<DocumentActivityItemDto>> GetPublicActivityByAddressAsync(string ethereumAddress)
+        {
+            var member = await _members.FindByEthereumAddressAsync(ethereumAddress);
+            if (member is null)
+            {
+                return Array.Empty<DocumentActivityItemDto>();
+            }
+
+            return await BuildActivityAsync(
+                member.Id,
+                member.EthereumAddress,
+                publicOnly: true,
+                includeCid: false);
+        }
+
+        private async Task<IReadOnlyList<DocumentActivityItemDto>> BuildActivityAsync(
+            int memberId,
+            string? ethereumAddress,
+            bool publicOnly,
+            bool includeCid)
+        {
+            var address = ethereumAddress?.Trim().ToLowerInvariant();
+
+            var docsQuery = _db.Documents.AsNoTracking()
                 .Where(d =>
                     d.IssuedByMemberId == memberId
-                    || (address != null && d.OwnerAddress.ToLower() == address))
-                .ToListAsync();
+                    || (address != null && d.OwnerAddress.ToLower() == address));
 
+            if (publicOnly)
+            {
+                docsQuery = docsQuery.Where(d => d.Visibility == VisibilityPublic);
+            }
+
+            var relatedDocs = await docsQuery.ToListAsync();
             var relatedHashes = relatedDocs.Select(d => d.Hash).ToHashSet(StringComparer.OrdinalIgnoreCase);
             var ownerByHash = relatedDocs.ToDictionary(
                 d => d.Hash,
@@ -72,15 +106,26 @@ namespace backend.Modules.Documents.Application
                 StringComparer.OrdinalIgnoreCase);
             var cidByHash = relatedDocs.ToDictionary(
                 d => d.Hash,
-                d => PreviewableCid(d.Cid),
+                d => includeCid ? PreviewableCid(d.Cid) : null,
+                StringComparer.OrdinalIgnoreCase);
+            var hasPdfByHash = relatedDocs.ToDictionary(
+                d => d.Hash,
+                d => PreviewableCid(d.Cid) is not null,
                 StringComparer.OrdinalIgnoreCase);
 
-            var logged = await _db.DocumentActivities.AsNoTracking()
-                .Where(a =>
-                    a.MemberId == memberId
-                    || relatedHashes.Contains(a.DocumentHash))
-                .OrderByDescending(a => a.CreatedAt)
-                .ToListAsync();
+            var logged = publicOnly
+                ? relatedHashes.Count == 0
+                    ? new List<DocumentActivity>()
+                    : await _db.DocumentActivities.AsNoTracking()
+                        .Where(a => relatedHashes.Contains(a.DocumentHash))
+                        .OrderByDescending(a => a.CreatedAt)
+                        .ToListAsync()
+                : await _db.DocumentActivities.AsNoTracking()
+                    .Where(a =>
+                        a.MemberId == memberId
+                        || relatedHashes.Contains(a.DocumentHash))
+                    .OrderByDescending(a => a.CreatedAt)
+                    .ToListAsync();
 
             var items = new List<DocumentActivityItemDto>();
             var issuedLoggedHashes = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -94,6 +139,7 @@ namespace backend.Modules.Documents.Application
 
                 ownerByHash.TryGetValue(a.DocumentHash, out var owner);
                 cidByHash.TryGetValue(a.DocumentHash, out var cid);
+                hasPdfByHash.TryGetValue(a.DocumentHash, out var hasPdf);
                 items.Add(new DocumentActivityItemDto
                 {
                     Hash = a.DocumentHash,
@@ -105,10 +151,10 @@ namespace backend.Modules.Documents.Application
                     OwnerAddress = owner,
                     FromFallback = false,
                     Cid = cid,
+                    HasPdfFile = hasPdf,
                 });
             }
 
-            // Fallback: Documents TxHash/BlockNumber when no Issued activity row yet.
             foreach (var doc in relatedDocs)
             {
                 if (issuedLoggedHashes.Contains(doc.Hash))
@@ -121,6 +167,7 @@ namespace backend.Modules.Documents.Application
                     continue;
                 }
 
+                var previewCid = PreviewableCid(doc.Cid);
                 items.Add(new DocumentActivityItemDto
                 {
                     Hash = doc.Hash,
@@ -131,7 +178,8 @@ namespace backend.Modules.Documents.Application
                     Timestamp = doc.IssuedAt,
                     OwnerAddress = doc.OwnerAddress,
                     FromFallback = true,
-                    Cid = PreviewableCid(doc.Cid),
+                    Cid = includeCid ? previewCid : null,
+                    HasPdfFile = previewCid is not null,
                 });
             }
 
@@ -140,7 +188,6 @@ namespace backend.Modules.Documents.Application
                 .ToList();
         }
 
-        /// <summary>IPFS CID suitable for PDF preview; null for missing or metadata-only (meta:) docs.</summary>
         private static string? PreviewableCid(string? cid)
         {
             if (string.IsNullOrWhiteSpace(cid))

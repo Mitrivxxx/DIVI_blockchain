@@ -32,6 +32,18 @@ namespace backend.Modules.Members.Domain
 
         public string? Bio { get; set; }
 
+        /// <summary>External LinkedIn profile URL (non-Web3 “live” identity).</summary>
+        [MaxLength(512)]
+        public string? LinkedInUrl { get; set; }
+
+        /// <summary>External GitHub profile URL.</summary>
+        [MaxLength(512)]
+        public string? GithubUrl { get; set; }
+
+        /// <summary>Personal or project website URL.</summary>
+        [MaxLength(512)]
+        public string? WebsiteUrl { get; set; }
+
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         /// <summary>Public MinIO object URL for the profile avatar.</summary>

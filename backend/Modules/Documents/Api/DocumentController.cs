@@ -209,10 +209,11 @@ public class DocumentController : ControllerBase
     }
 
     /// <summary>
-    /// Streams the original PDF from IPFS (Pinata gateway) for authorized viewers.
+    /// Streams the original PDF from IPFS (Pinata gateway).
+    /// Owner / issuer / admin|owner, or anyone when the document visibility is public.
     /// </summary>
     [HttpGet("{hash}/file")]
-    [Authorize]
+    [AllowAnonymous]
     public async Task<IActionResult> GetFile(string hash)
     {
         if (string.IsNullOrWhiteSpace(hash))

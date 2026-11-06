@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Http.Headers;
+using System.Net.Http.Json;
 using backend.Tests.Infrastructure;
 using backend.Tests.Infrastructure.Fakes;
 
@@ -46,6 +47,38 @@ public sealed class ProfileTests : IClassFixture<DiviApiFactory>
         var body = await response.ReadJsonAsync();
         Assert.Equal(session.Address.ToLowerInvariant(), body.GetString("ethereumAddress"));
         Assert.False(body.HasProperty("email"));
+    }
+
+    [Fact]
+    public async Task External_links_can_be_saved_and_appear_on_public_profile()
+    {
+        var session = await _factory.LoginWithWalletAsync();
+
+        var bad = await session.Client.PatchAsJsonAsync("/api/GetProfile/links", new { websiteUrl = "javascript:alert(1)" });
+        await bad.AssertStatusAsync(HttpStatusCode.BadRequest);
+
+        var update = await session.Client.PatchAsJsonAsync("/api/GetProfile/links", new
+        {
+            linkedInUrl = "https://linkedin.com/in/ada",
+            githubUrl = "https://github.com/ada",
+            websiteUrl = "https://ada.dev",
+        });
+        await update.AssertStatusAsync(HttpStatusCode.NoContent);
+
+        var profile = await (await session.Client.GetAsync("/api/GetProfile")).ReadJsonAsync();
+        Assert.Equal("https://linkedin.com/in/ada", profile.GetString("linkedInUrl"));
+        Assert.Equal("https://github.com/ada", profile.GetString("githubUrl"));
+        Assert.Equal("https://ada.dev/", profile.GetString("websiteUrl"));
+
+        var publicBody = await (await _factory.CreateClient().GetAsync($"/api/profiles/{session.Address}")).ReadJsonAsync();
+        Assert.Equal("https://github.com/ada", publicBody.GetString("githubUrl"));
+        Assert.False(publicBody.HasProperty("email"));
+
+        var clear = await session.Client.PatchAsJsonAsync("/api/GetProfile/links", new { githubUrl = "" });
+        await clear.AssertStatusAsync(HttpStatusCode.NoContent);
+        var afterClear = await (await session.Client.GetAsync("/api/GetProfile")).ReadJsonAsync();
+        Assert.True(
+            !afterClear.TryGetProperty("githubUrl", out var gh) || gh.ValueKind == System.Text.Json.JsonValueKind.Null);
     }
 
     [Fact]

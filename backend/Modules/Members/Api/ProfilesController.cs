@@ -59,12 +59,16 @@ namespace backend.Modules.Members.Api
 
             return Ok(new
             {
+                profile.MemberId,
                 profile.FirstName,
                 profile.LastName,
                 profile.Name,
                 profile.EthereumAddress,
                 profile.Role,
                 profile.Bio,
+                profile.LinkedInUrl,
+                profile.GithubUrl,
+                profile.WebsiteUrl,
                 profile.AvatarUrl,
                 profile.CreatedAt,
             });

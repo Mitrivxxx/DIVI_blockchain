@@ -32,9 +32,9 @@ Per module: `Api/` (controllers) · `Application/` (services, internal) · `Cont
 | Module | Owns (tables) | Api | Public contracts (used by others) |
 | ------ | ------------- | --- | --------------------------------- |
 | Identity | `Nonces`, `BlacklistedTokens` | `/Auth/*`, `/api/user-role` | `ITokenBlacklist` (JWT `OnTokenValidated` in Host) |
-| Members | `Members`, `MemberRoles` | `/api/GetProfile/*`, `/api/profiles` directory/search/public card | `IMemberDirectory` (`MemberAccount` lookups by id/email/ETH/GoogleSub, create, set role) |
-| Issuers | `IssuerApplications`, `IssuerProfiles` | `/api/issuer*`, `/api/admins` | `IIssuerDirectory` (display name, logo with avatar fallback) |
-| Documents | `Documents`, `DocumentActivities` | `/api/documents/*`, `/api/share/*`, `/api/profiles/me/credentials*`, `/api/profiles/{address}/credentials`, `/api/profiles/me/activity` (`CredentialWalletController`) | — |
+| Members | `Members`, `MemberRoles`, `MemberFollows` | `/api/GetProfile/*`, `/api/profiles` directory/search/public card/follow | `IMemberDirectory` (`MemberAccount` lookups by id/email/ETH/GoogleSub, create, set role) |
+| Issuers | `IssuerApplications`, `IssuerProfiles` | `/api/issuer*`, `/api/institutions`, `/api/admins` | `IIssuerDirectory` (display name, logo with avatar fallback) |
+| Documents | `Documents`, `DocumentActivities` | `/api/documents/*`, `/api/share/*`, `/api/profiles/me/credentials*`, `/api/profiles/{address}/credentials`, `/api/profiles/me/activity`, `/api/profiles/{address}/activity` (`CredentialWalletController`) | — |
 
 Dependencies (contracts only): Identity → Members; Issuers → Members; Documents → Members, Issuers. Members depends on no module. A module only touches its own `DbSet`s. Cross-module FKs to `Members` (`Documents.IssuedByMemberId`, `DocumentActivities.MemberId`, `IssuerProfiles.MemberId`) are id-only and configured in `AppDbContext`. `MemberDirectory.SetRoleAsync` saves the shared scoped `AppDbContext`, so caller changes pending in the same request are committed with it (issuer approval relies on this). Members registers `AvatarBlobToMinioMigrator` as an `IPreMigrationStep`. `GetProfileController` uses `api/[controller]` — keep the class name (or an explicit route).
 
@@ -89,7 +89,7 @@ Refresh token reloads role from DB (not stale access claims).
 - Metadata types: hash `type|owner|title|from|to`, CID `meta:{hash}`, `PeriodStart`/`ExpiresAt`/`Title`; no Pinata.
 - Persist after issue: Hash, Cid, IssuerAddress=hot-wallet, OwnerAddress, IssuedByMemberId, TxHash, BlockNumber, Status=Confirmed, Visibility=private; log `DocumentActivities`.
 - Lists from DB: `GET /api/documents/owner/{addr}`, `/issuer/{addr}`, `/issued-by-me`.
-- PDF file: `GET /api/documents/{hash}/file` (owner / issuing member / admin|owner); not for `meta:`.
+- PDF file: `GET /api/documents/{hash}/file` (AllowAnonymous when visibility=public; else owner / issuing member / admin|owner); not for `meta:`.
 - Revoke: `DELETE /api/documents/{hash}/revoke` (issuer if `IssuedByMemberId` matches; admin/owner any) → on-chain + DB Status=Revoked + activity row.
 
 ### Verify (Documents)
@@ -100,20 +100,23 @@ Refresh token reloads role from DB (not stale access claims).
 ### Issuer application / institution / admins (Issuers)
 - User applies → admin/owner approve/reject.
 - Approve: on-chain `addIssuer` + `MemberRoleId = issuer` + upsert `IssuerProfile` (applicant must already be Member with that ETH).
-- Institution: `GET/PATCH /api/issuer/profile` (`issuer,admin,owner`).
+- Institution: `GET/PATCH /api/issuer/profile` (`issuer,admin,owner`); public card `GET /api/profiles/{address}/institution` (AllowAnonymous, 404 if none).
+- Catalog: `GET /api/institutions?q=&limit=` (AllowAnonymous list/search); `GET /api/institutions/{memberId}` detail (includes member `ethereumAddress` when set).
 - Owner: `POST/DELETE /api/admins` (DB + `addAdmin`/`removeAdmin`).
 
 ### Credentials / share / network / activity (Documents; directory/search/public card in Members)
 - `GET /api/profiles/me/credentials` → `{ sections: [...] }` (always 5 types); `PATCH .../visibility` (`private`|`unlisted`|`public`).
 - Unlisted → `ShareToken`; `GET /api/share/{token}` (Confirmed only, no CID).
-- Public: `GET /api/profiles/{address}/credentials` (Confirmed + public, no CID).
+- Public: `GET /api/profiles/{address}/credentials` (Confirmed + public, no CID; `hasPdfFile` for preview).
+- Ephemeral issuer check: `GET /api/profiles/{address}/verify-issuer` — `authorizedIssuers` on-chain (`isIssuer`); no DB writes.
 - Directory: `GET /api/profiles` (auth); search `GET /api/profiles/search?q=` (min 2 chars); public card `GET /api/profiles/{address}` (no email).
 - Credential items: `IssuerDisplayName` + `IssuerLogoUrl` (profile LogoUrl else member AvatarUrl).
-- Activity: `GET /api/profiles/me/activity`; fallback synthetic Issued from `Documents` when no row; `Cid` null for `meta:`.
+- Activity: `GET /api/profiles/me/activity` (auth, all related docs); public `GET /api/profiles/{address}/activity` (AllowAnonymous, only `visibility=public`, no CID); fallback synthetic Issued from `Documents` when no row; `Cid` null for `meta:` / public.
 
-### Profile / avatar (Members)
-- Name/email/bio via `GetProfile` PATCH endpoints.
+### Profile / avatar / follow (Members)
+- Name/email/bio via `GetProfile` PATCH endpoints; external links `PATCH /api/GetProfile/links` (`linkedInUrl` / `githubUrl` / `websiteUrl`, http(s) only; empty clears).
 - Avatar: JPEG/PNG/WebP ≤2 MB → MinIO; store URL only on `Member.AvatarUrl`.
+- Follow: `POST/DELETE /api/profiles/{address}/follow` (auth); `GET .../follow-status` (auth); `GET .../following` (public list of people that member follows). Public card includes `memberId` + external links (no email).
 
 ## Tests (`tests/backend.Tests`)
 

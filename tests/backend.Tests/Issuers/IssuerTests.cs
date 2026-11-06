@@ -92,6 +92,101 @@ public sealed class IssuerTests : IClassFixture<DiviApiFactory>
     }
 
     [Fact]
+    public async Task Public_institution_profile_is_anonymous_after_approval()
+    {
+        var applicant = await _factory.LoginWithWalletAsync();
+        var institution = $"Public Uni {Guid.NewGuid():N}"[..24];
+        var applicationId = await ApplyAsync(applicant.Client, applicant.Address, institution);
+        await (await OwnerClientAsync()).PatchAsync($"/api/issuer/{applicationId}/status?status=Approved", content: null);
+
+        var issuer = _factory.CreateClientAs(applicant.MemberId, Roles.IssuerId);
+        await issuer.PatchAsJsonAsync("/api/issuer/profile", new
+        {
+            institutionName = institution,
+            country = "PL",
+            websiteUrl = "https://example.edu",
+            description = "Public institution card",
+        });
+
+        var anonymous = _factory.CreateClient();
+        var response = await anonymous.GetAsync($"/api/profiles/{applicant.Address}/institution");
+        await response.AssertStatusAsync(HttpStatusCode.OK);
+        var body = await response.ReadJsonAsync();
+        Assert.Equal(institution, body.GetString("institutionName"));
+        Assert.Equal("PL", body.GetString("country"));
+        Assert.Equal("https://example.edu", body.GetString("websiteUrl"));
+        Assert.Equal("Public institution card", body.GetString("description"));
+
+        var missing = await anonymous.GetAsync(
+            $"/api/profiles/{EthECKey.GenerateKey().GetPublicAddress()}/institution");
+        await missing.AssertStatusAsync(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task Verify_issuer_onchain_reports_authorized_status_without_persisting()
+    {
+        var applicant = await _factory.LoginWithWalletAsync();
+        var anonymous = _factory.CreateClient();
+
+        var before = await anonymous.GetAsync($"/api/profiles/{applicant.Address}/verify-issuer");
+        await before.AssertStatusAsync(HttpStatusCode.OK);
+        var beforeBody = await before.ReadJsonAsync();
+        Assert.False(beforeBody.GetProperty("isIssuer").GetBoolean());
+        Assert.Contains("nie jest authorized issuer", beforeBody.GetString("message"), StringComparison.OrdinalIgnoreCase);
+
+        var applicationId = await ApplyAsync(applicant.Client, applicant.Address, "Verify Issuer Uni");
+        await (await OwnerClientAsync()).PatchAsync($"/api/issuer/{applicationId}/status?status=Approved", content: null);
+
+        var after = await anonymous.GetAsync($"/api/profiles/{applicant.Address}/verify-issuer");
+        await after.AssertStatusAsync(HttpStatusCode.OK);
+        var afterBody = await after.ReadJsonAsync();
+        Assert.True(afterBody.GetProperty("isIssuer").GetBoolean());
+        Assert.Contains("Zweryfikowany issuer", afterBody.GetString("message"), StringComparison.Ordinal);
+        Assert.Equal(applicant.Address.ToLowerInvariant(), afterBody.GetString("ethereumAddress"));
+    }
+
+    [Fact]
+    public async Task Institutions_catalog_lists_and_searches_and_gets_by_member_id()
+    {
+        var applicant = await _factory.LoginWithWalletAsync();
+        var unique = $"Catalog{Guid.NewGuid():N}"[..16];
+        var applicationId = await ApplyAsync(applicant.Client, applicant.Address, unique);
+        await (await OwnerClientAsync()).PatchAsync($"/api/issuer/{applicationId}/status?status=Approved", content: null);
+
+        var issuer = _factory.CreateClientAs(applicant.MemberId, Roles.IssuerId);
+        await issuer.PatchAsJsonAsync("/api/issuer/profile", new
+        {
+            institutionName = unique,
+            country = "PL",
+            description = "Catalog entry",
+        });
+
+        var anonymous = _factory.CreateClient();
+
+        var list = await anonymous.GetAsync("/api/institutions");
+        await list.AssertStatusAsync(HttpStatusCode.OK);
+        Assert.Contains(
+            (await list.ReadJsonAsync()).EnumerateArray(),
+            i => i.GetProperty("memberId").GetInt32() == applicant.MemberId
+                 && i.GetString("institutionName") == unique);
+
+        var search = await anonymous.GetAsync($"/api/institutions?q={unique.ToLowerInvariant()}");
+        await search.AssertStatusAsync(HttpStatusCode.OK);
+        var searchHits = (await search.ReadJsonAsync()).EnumerateArray().ToList();
+        Assert.Contains(searchHits, i => i.GetProperty("memberId").GetInt32() == applicant.MemberId);
+
+        var detail = await anonymous.GetAsync($"/api/institutions/{applicant.MemberId}");
+        await detail.AssertStatusAsync(HttpStatusCode.OK);
+        var body = await detail.ReadJsonAsync();
+        Assert.Equal(unique, body.GetString("institutionName"));
+        Assert.Equal("PL", body.GetString("country"));
+        Assert.Equal(applicant.Address.ToLowerInvariant(), body.GetString("ethereumAddress"));
+
+        var missing = await anonymous.GetAsync("/api/institutions/999999");
+        await missing.AssertStatusAsync(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
     public async Task Rejected_application_keeps_user_role()
     {
         var applicant = await _factory.LoginWithWalletAsync();

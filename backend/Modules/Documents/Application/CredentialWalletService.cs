@@ -302,6 +302,22 @@ namespace backend.Modules.Documents.Application
             IssuedByMemberId = d.IssuedByMemberId,
             IssuerDisplayName = displayName,
             IssuerLogoUrl = logoUrl,
+            HasPdfFile = HasPreviewablePdf(d.Cid, d.DocumentType),
         };
+
+        private static bool HasPreviewablePdf(string? cid, byte documentType)
+        {
+            if (DocumentTypeCatalog.IsMetadataOnly(documentType))
+            {
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(cid))
+            {
+                return false;
+            }
+
+            return !cid.StartsWith("meta:", StringComparison.OrdinalIgnoreCase);
+        }
     }
 }

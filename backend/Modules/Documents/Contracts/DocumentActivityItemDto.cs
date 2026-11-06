@@ -10,7 +10,9 @@ namespace backend.Modules.Documents.Contracts
         public DateTimeOffset Timestamp { get; set; }
         public string? OwnerAddress { get; set; }
         public bool FromFallback { get; set; }
-        /// <summary>IPFS CID when the document file is available for preview.</summary>
+        /// <summary>IPFS CID when the document file is available for preview (owner activity only).</summary>
         public string? Cid { get; set; }
+        /// <summary>True when PDF can be opened via GET /api/documents/{hash}/file.</summary>
+        public bool HasPdfFile { get; set; }
     }
 }

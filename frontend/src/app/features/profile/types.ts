@@ -13,8 +13,17 @@ export type ProfileData = {
   role?: string | null;
   email?: string | null;
   bio?: string | null;
+  linkedInUrl?: string | null;
+  githubUrl?: string | null;
+  websiteUrl?: string | null;
   createdAt?: string | null;
   avatarUrl?: string | null;
+};
+
+export type ProfileExternalLinks = {
+  linkedInUrl: string;
+  githubUrl: string;
+  websiteUrl: string;
 };
 
 export type EditableField = "name" | "email" | "bio";
@@ -56,7 +65,7 @@ export type CredentialWallet = {
   sections: CredentialSection[];
 };
 
-/** Public share / portfolio item (no CID). */
+/** Public share / portfolio item (no CID; use hasPdfFile for preview). */
 export type PublicCredential = {
   hash: string;
   documentType: number;
@@ -73,6 +82,7 @@ export type PublicCredential = {
   issuedByMemberId?: number | null;
   issuerDisplayName?: string | null;
   issuerLogoUrl?: string | null;
+  hasPdfFile?: boolean;
 };
 
 export type PublicCredentialSection = {
@@ -115,4 +125,5 @@ export type DocumentActivityItem = {
   ownerAddress?: string | null;
   fromFallback: boolean;
   cid?: string | null;
+  hasPdfFile?: boolean;
 };

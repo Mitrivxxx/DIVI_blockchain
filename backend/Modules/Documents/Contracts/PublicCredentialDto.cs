@@ -19,5 +19,7 @@ namespace backend.Modules.Documents.Contracts
         public string? IssuerDisplayName { get; set; }
         /// <summary>Issuer institution logo, or issuing member avatar as fallback.</summary>
         public string? IssuerLogoUrl { get; set; }
+        /// <summary>True when a real IPFS PDF can be opened via GET /api/documents/{hash}/file (no CID leaked).</summary>
+        public bool HasPdfFile { get; set; }
     }
 }

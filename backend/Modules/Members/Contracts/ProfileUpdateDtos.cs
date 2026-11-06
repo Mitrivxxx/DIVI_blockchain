@@ -26,4 +26,14 @@ namespace backend.Modules.Members.Contracts
         [Required]
         public string Bio { get; set; } = string.Empty;
     }
+
+    /// <summary>
+    /// Partial update of external links. Null = leave unchanged; empty/whitespace = clear.
+    /// </summary>
+    public class UpdateProfileLinksDto
+    {
+        public string? LinkedInUrl { get; set; }
+        public string? GithubUrl { get; set; }
+        public string? WebsiteUrl { get; set; }
+    }
 }

@@ -68,6 +68,8 @@ Stack/routing/styling/DI details: layer `*/AGENTS.md` + matching `.cursor/rules/
 | Frontend entry | `frontend/src/app/frontend.tsx` |
 | Router | `frontend/src/app/App.tsx` |
 | App routes / nav | `frontend/src/app/features/navigation/routes.ts` |
+| Institutions catalog | `frontend/src/app/features/institutions/` · `GET /api/institutions` |
+| Profile / institution hero UI | `frontend/src/app/features/profile/components/ProfileHeroPanel.tsx` |
 | App header | `frontend/src/app/layout/AppHeader.tsx` |
 | Shared Tailwind UI | `frontend/src/shared/ui/index.tsx` |
 | Vite config | `frontend/vite.config.ts` |
@@ -83,7 +85,8 @@ Stack/routing/styling/DI details: layer `*/AGENTS.md` + matching `.cursor/rules/
 MemberRole (1) ←——— (*) Member
    Id: 1=admin, 2=issuer, 3=user, 4=owner
 
-Member — Email? / Password? / EthereumAddress? / GoogleSub? / AvatarUrl (MinIO)
+Member — Email? / Password? / EthereumAddress? / GoogleSub? / AvatarUrl (MinIO) / LinkedInUrl? / GithubUrl? / WebsiteUrl?
+MemberFollow — FollowerMemberId → FollowingMemberId (observe)
 IssuerApplication — Pending → Approved/Rejected → addIssuer + role issuer + IssuerProfile
 IssuerProfile — 1:1 Member (InstitutionName, Description?, LogoUrl?, WebsiteUrl?, Country?, TaxId?)
 Document — PK=Hash; Cid, IssuerAddress, OwnerAddress, IssuedByMemberId?, type, tx, status, visibility, ShareToken?

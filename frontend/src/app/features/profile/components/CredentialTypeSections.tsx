@@ -22,7 +22,10 @@ export type CredentialDisplayItem = {
   expiresAt?: string | null;
   title?: string | null;
   cid?: string | null;
+  /** Public wallet: PDF available without exposing CID. */
+  hasPdfFile?: boolean;
   issuerAddress: string;
+  issuedByMemberId?: number | null;
   issuerDisplayName?: string | null;
   issuerLogoUrl?: string | null;
   visibility?: CredentialVisibility;
@@ -107,22 +110,44 @@ const CredentialEntry: React.FC<{
 }) => {
   const sharePath = credential.shareToken ? `/share/${credential.shareToken}` : null;
   const institution = formatIssuerLabel(credential.issuerDisplayName, credential.issuerAddress);
+  /** Issuer is the member (company) — open their `/u/…` profile, not a separate `/i/…` page. */
+  const institutionHref = credential.issuerAddress?.trim()
+    ? `/u/${encodeURIComponent(credential.issuerAddress.trim())}`
+    : null;
   const title = credential.title?.trim();
-  const canOpenPdf = Boolean(onOpenPdf) && hasDocumentPdfFile(credential.cid);
+  const canOpenPdf =
+    Boolean(onOpenPdf) &&
+    (credential.hasPdfFile === true || hasDocumentPdfFile(credential.cid));
   const issuedLabel = credential.periodStart
     ? formatDocumentPeriod(credential.periodStart, credential.expiresAt)
     : formatIssuedMonthYear(credential.issuedAt);
 
+  const institutionLabel = institutionHref ? (
+    <Link to={institutionHref} className="hover:underline">
+      {institution}
+    </Link>
+  ) : (
+    institution
+  );
+
+  const logoBlock = institutionHref ? (
+    <Link to={institutionHref} aria-label={`Profil wystawcy: ${institution}`} className="shrink-0">
+      <IssuerLogo name={institution} logoUrl={credential.issuerLogoUrl} />
+    </Link>
+  ) : (
+    <IssuerLogo name={institution} logoUrl={credential.issuerLogoUrl} />
+  );
+
   return (
     <article className="flex gap-4 border-t border-hairline pt-5 first:border-t-0 first:pt-0">
-      <IssuerLogo name={institution} logoUrl={credential.issuerLogoUrl} />
+      {logoBlock}
 
       <div className="min-w-0 flex-1">
         <h4 className="text-base font-semibold tracking-[-0.01em] text-neutral-900">
-          {title || institution}
+          {title || institutionLabel}
         </h4>
         {title ? (
-          <p className="mt-0.5 text-sm text-neutral-800">{institution}</p>
+          <p className="mt-0.5 text-sm text-neutral-800">{institutionLabel}</p>
         ) : null}
         <p className="mt-0.5 text-sm text-neutral-800">
           {documentStatusLabel(credential.status)}
@@ -256,7 +281,7 @@ const CredentialTypeSections: React.FC<CredentialTypeSectionsProps> = ({
                   copiedShareFor={copiedShareFor}
                   openingPdf={openingPdfHash === credential.hash}
                   pdfError={pdfErrors[credential.hash] ?? null}
-                  onOpenPdf={readOnly ? undefined : hash => void handleOpenPdf(hash)}
+                  onOpenPdf={hash => void handleOpenPdf(hash)}
                   onCopyShare={onCopyShare}
                   onVisibilityChange={onVisibilityChange}
                 />

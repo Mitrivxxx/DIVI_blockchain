@@ -1,3 +1,4 @@
+using backend.Infrastructure.Blockchain;
 using backend.Infrastructure.Persistence;
 using backend.Modules.Issuers.Contracts;
 using backend.Modules.Issuers.Domain;
@@ -10,12 +11,18 @@ namespace backend.Modules.Issuers.Application
     {
         private readonly AppDbContext _db;
         private readonly IMemberDirectory _members;
+        private readonly IBlockchainService _blockchain;
         private readonly ILogger<IssuerProfileService> _logger;
 
-        public IssuerProfileService(AppDbContext db, IMemberDirectory members, ILogger<IssuerProfileService> logger)
+        public IssuerProfileService(
+            AppDbContext db,
+            IMemberDirectory members,
+            IBlockchainService blockchain,
+            ILogger<IssuerProfileService> logger)
         {
             _db = db;
             _members = members;
+            _blockchain = blockchain;
             _logger = logger;
         }
 
@@ -61,6 +68,112 @@ namespace backend.Modules.Issuers.Application
             }
 
             return profile is null ? null : ToDto(profile);
+        }
+
+        public async Task<IssuerProfileDto?> GetByEthereumAddressAsync(string ethereumAddress)
+        {
+            if (string.IsNullOrWhiteSpace(ethereumAddress))
+            {
+                return null;
+            }
+
+            var member = await _members.FindByEthereumAddressAsync(ethereumAddress);
+            if (member is null)
+            {
+                return null;
+            }
+
+            return await GetMyProfileAsync(member.Id);
+        }
+
+        public async Task<InstitutionListItemDto?> GetInstitutionByMemberIdAsync(int memberId)
+        {
+            if (memberId <= 0)
+            {
+                return null;
+            }
+
+            var profile = await _db.IssuerProfiles.AsNoTracking()
+                .FirstOrDefaultAsync(p => p.MemberId == memberId);
+            if (profile is null)
+            {
+                return null;
+            }
+
+            var member = await _members.FindByIdAsync(memberId);
+            return ToListItem(profile, member?.EthereumAddress);
+        }
+
+        public async Task<IReadOnlyList<InstitutionListItemDto>> ListInstitutionsAsync(string? query, int limit = 100)
+        {
+            var take = Math.Clamp(limit, 1, 200);
+            var q = query?.Trim() ?? string.Empty;
+
+            var profilesQuery = _db.IssuerProfiles.AsNoTracking().AsQueryable();
+            if (q.Length >= 2)
+            {
+                var pattern = q.ToLowerInvariant();
+                profilesQuery = profilesQuery.Where(p =>
+                    p.InstitutionName.ToLower().Contains(pattern)
+                    || (p.Country != null && p.Country.ToLower().Contains(pattern))
+                    || (p.Description != null && p.Description.ToLower().Contains(pattern))
+                    || (p.TaxId != null && p.TaxId.ToLower().Contains(pattern)));
+            }
+
+            var profiles = await profilesQuery
+                .OrderBy(p => p.InstitutionName)
+                .Take(take)
+                .ToListAsync();
+
+            if (profiles.Count == 0)
+            {
+                return Array.Empty<InstitutionListItemDto>();
+            }
+
+            var members = await _members.GetByIdsAsync(profiles.Select(p => p.MemberId));
+            return profiles
+                .Select(p =>
+                {
+                    members.TryGetValue(p.MemberId, out var member);
+                    return ToListItem(p, member?.EthereumAddress);
+                })
+                .ToList();
+        }
+
+        public async Task<IssuerOnChainVerifyDto> VerifyIssuerOnChainAsync(string ethereumAddress)
+        {
+            var address = ethereumAddress?.Trim().ToLowerInvariant() ?? string.Empty;
+            var networkName = await _blockchain.GetNetworkNameAsync();
+
+            if (string.IsNullOrWhiteSpace(address)
+                || !address.StartsWith("0x", StringComparison.Ordinal)
+                || address.Length != 42)
+            {
+                return new IssuerOnChainVerifyDto
+                {
+                    EthereumAddress = address,
+                    IsIssuer = false,
+                    NetworkName = networkName,
+                    Message = "Nieprawidłowy adres Ethereum.",
+                };
+            }
+
+            var isIssuer = await _blockchain.IsIssuerAsync(address);
+            _logger.LogInformation(
+                "Issuer on-chain verify for {Address}: isIssuer={IsIssuer}, network={Network}",
+                address,
+                isIssuer,
+                networkName);
+
+            return new IssuerOnChainVerifyDto
+            {
+                EthereumAddress = address,
+                IsIssuer = isIssuer,
+                NetworkName = networkName,
+                Message = isIssuer
+                    ? $"Zweryfikowany issuer ({networkName})"
+                    : $"Ten adres nie jest authorized issuer on-chain ({networkName})",
+            };
         }
 
         public async Task<(IssuerProfileDto? Profile, int StatusCode, string? Error)> UpdateMyProfileAsync(
@@ -181,6 +294,21 @@ namespace backend.Modules.Issuers.Application
             Country = p.Country,
             TaxId = p.TaxId,
             UpdatedAt = p.UpdatedAt,
+        };
+
+        private static InstitutionListItemDto ToListItem(IssuerProfile p, string? ethereumAddress) => new()
+        {
+            MemberId = p.MemberId,
+            InstitutionName = p.InstitutionName,
+            Description = p.Description,
+            LogoUrl = p.LogoUrl,
+            WebsiteUrl = p.WebsiteUrl,
+            Country = p.Country,
+            TaxId = p.TaxId,
+            UpdatedAt = p.UpdatedAt,
+            EthereumAddress = string.IsNullOrWhiteSpace(ethereumAddress)
+                ? null
+                : ethereumAddress.Trim().ToLowerInvariant(),
         };
 
         private static string? Truncate(string? value, int max)

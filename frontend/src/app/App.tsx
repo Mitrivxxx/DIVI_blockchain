@@ -10,6 +10,7 @@ import PublicProfile from "./features/profile/PublicProfile";
 import Home from "./features/home/Home";
 import Network from "./features/network/Network";
 import Institutions from "./features/institutions/Institutions";
+import InstitutionDetail from "./features/institutions/InstitutionDetail";
 import Upload from "./features/uploadFile/Upload";
 import MyDocuments from "./features/MyDocuments";
 import IssuedDocuments from "./features/issuedDocuments/IssuedDocuments";
@@ -61,6 +62,7 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/network" element={<Network />} />
             <Route path="/institutions" element={<Institutions />} />
+            <Route path="/i/:memberId" element={<InstitutionDetail />} />
             <Route path="/verify" element={<Verify />} />
             <Route path="/profile" element={<ProfileBridge />} />
             <Route path="/u/:ethereumAddress" element={<PublicProfile />} />

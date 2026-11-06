@@ -142,6 +142,29 @@ namespace backend.Modules.Members.Api
         }
 
         /// <summary>
+        /// Updates external links (LinkedIn, GitHub, website) for the current user.
+        /// Null fields are left unchanged; empty string clears a link.
+        /// </summary>
+        [HttpPatch("links")]
+        public async Task<IActionResult> UpdateLinks([FromBody] UpdateProfileLinksDto dto)
+        {
+            var memberId = GetCurrentMemberId();
+            _logger.LogInformation("Profile LINKS update requested for memberId {MemberId}", memberId);
+            if (memberId == 0)
+            {
+                return Unauthorized("Brak identyfikatora użytkownika w tokenie.");
+            }
+
+            var (ok, statusCode, error) = await _profileService.UpdateLinksByIdAsync(memberId, dto);
+            if (!ok)
+            {
+                return StatusCode(statusCode, error);
+            }
+
+            return NoContent();
+        }
+
+        /// <summary>
         /// Deletes the name of the currently authenticated user.
         /// </summary>
         [HttpDelete("name")]

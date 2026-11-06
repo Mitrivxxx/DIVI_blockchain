@@ -17,6 +17,7 @@ namespace backend.Modules.Members.Application
         Task<bool> UpdateEmailByIdAsync(int memberId, string email);
         Task<bool> UpdateBioAsync(string ethereumAddress, string bio);
         Task<bool> UpdateBioByIdAsync(int memberId, string bio);
+        Task<(bool Ok, int StatusCode, string? Error)> UpdateLinksByIdAsync(int memberId, UpdateProfileLinksDto dto);
         Task<bool> DeleteNameAsync(string ethereumAddress);
         Task<bool> DeleteNameByIdAsync(int memberId);
         Task<bool> DeleteEmailAsync(string ethereumAddress);

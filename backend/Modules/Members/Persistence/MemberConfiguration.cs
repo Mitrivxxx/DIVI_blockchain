@@ -18,6 +18,12 @@ public sealed class MemberConfiguration : IEntityTypeConfiguration<Member>
             .HasMaxLength(42);
         entity.Property(e => e.Email)
             .HasMaxLength(255);
+        entity.Property(e => e.LinkedInUrl)
+            .HasMaxLength(512);
+        entity.Property(e => e.GithubUrl)
+            .HasMaxLength(512);
+        entity.Property(e => e.WebsiteUrl)
+            .HasMaxLength(512);
         entity.HasOne(e => e.Role)
             .WithMany(e => e.Members)
             .HasForeignKey(e => e.MemberRoleId)

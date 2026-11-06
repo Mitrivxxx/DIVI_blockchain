@@ -6,6 +6,7 @@ import {
   fetchMyCredentialsApi,
   fetchProfileApi,
   patchProfileFieldApi,
+  patchProfileLinksApi,
   resolveAvatarSrc,
   updateCredentialVisibilityApi,
   uploadProfileAvatarApi,
@@ -16,6 +17,7 @@ import type {
   DocumentActivityItem,
   EditableField,
   ProfileData,
+  ProfileExternalLinks,
 } from "../types";
 import { DOCUMENT_TYPE_SECTIONS } from "@/types/documents";
 import { useWeb3Auth } from "@/service/web3/useWeb3Auth";
@@ -50,7 +52,7 @@ export const useProfile = ({ userRole, walletAddress, fallbackAvatar }: UseProfi
   const [activity, setActivity] = useState<DocumentActivityItem[]>([]);
   const [activityLoading, setActivityLoading] = useState(false);
   const [activityError, setActivityError] = useState<string | null>(null);
-  /** Local UI toggle: public = full page; private = Profil + Instytucja card only. */
+  /** Local UI toggle: public = show email etc.; private = Web3-only (hide traditional account fields). */
   const [isPublicProfile, setIsPublicProfile] = useState(true);
 
   useEffect(() => {
@@ -84,6 +86,9 @@ export const useProfile = ({ userRole, walletAddress, fallbackAvatar }: UseProfi
   const displayName = profile?.name?.trim() || null;
   const email = profile?.email?.trim() || null;
   const bio = profile?.bio?.trim() || null;
+  const linkedInUrl = profile?.linkedInUrl?.trim() || null;
+  const githubUrl = profile?.githubUrl?.trim() || null;
+  const websiteUrl = profile?.websiteUrl?.trim() || null;
   const profileAddress = profile?.ethereumAddress || walletAddress || null;
   const hasCustomAvatar = Boolean(profile?.avatarUrl?.trim());
   const avatar = resolveAvatarSrc(profile?.avatarUrl, fallbackAvatar);
@@ -245,6 +250,29 @@ export const useProfile = ({ userRole, walletAddress, fallbackAvatar }: UseProfi
     }
   }, []);
 
+  const saveLinks = useCallback(async (links: ProfileExternalLinks) => {
+    try {
+      setSaving(true);
+      setProfileError(null);
+      await patchProfileLinksApi(links);
+      setProfile(prev =>
+        prev
+          ? {
+              ...prev,
+              linkedInUrl: links.linkedInUrl.trim() || null,
+              githubUrl: links.githubUrl.trim() || null,
+              websiteUrl: links.websiteUrl.trim() || null,
+            }
+          : prev,
+      );
+    } catch (error) {
+      setProfileError(error instanceof Error ? error.message : "Nie udało się zapisać linków.");
+      throw error;
+    } finally {
+      setSaving(false);
+    }
+  }, []);
+
   return {
     loading,
     saving,
@@ -265,6 +293,9 @@ export const useProfile = ({ userRole, walletAddress, fallbackAvatar }: UseProfi
     displayName,
     email,
     bio,
+    linkedInUrl,
+    githubUrl,
+    websiteUrl,
     profileAddress,
     shortAddress,
     joinedAt,
@@ -275,6 +306,7 @@ export const useProfile = ({ userRole, walletAddress, fallbackAvatar }: UseProfi
     cancelEditing,
     saveField,
     deleteField,
+    saveLinks,
     uploadAvatar,
     deleteAvatar,
     loadCredentials,

@@ -8,6 +8,7 @@ import type {
   IssuerInstitutionProfile,
   OwnerCertificate,
   ProfileData,
+  ProfileExternalLinks,
   PublicCredential,
   PublicCredentialWallet,
   UpdateIssuerInstitutionProfile,
@@ -120,6 +121,23 @@ export const deleteProfileFieldApi = async (token: string, field: EditableField)
 
   if (!response.ok) {
     throw new Error(await readErrorMessage(response, "Nie udało się usunąć pola profilu."));
+  }
+};
+
+export const patchProfileLinksApi = async (links: ProfileExternalLinks): Promise<void> => {
+  const response = await fetch(`${API_URL}/api/GetProfile/links`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify({
+      linkedInUrl: links.linkedInUrl,
+      githubUrl: links.githubUrl,
+      websiteUrl: links.websiteUrl,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(await readErrorMessage(response, "Nie udało się zapisać linków."));
   }
 };
 
@@ -242,14 +260,27 @@ export type MemberSearchResult = {
 };
 
 export type PublicMemberProfile = {
+  memberId?: number | null;
   firstName?: string | null;
   lastName?: string | null;
   name?: string | null;
   ethereumAddress?: string | null;
   role?: string | null;
   bio?: string | null;
+  linkedInUrl?: string | null;
+  githubUrl?: string | null;
+  websiteUrl?: string | null;
   avatarUrl?: string | null;
   createdAt?: string | null;
+};
+
+export type FollowTarget = {
+  memberId: number;
+  firstName?: string | null;
+  lastName?: string | null;
+  name?: string | null;
+  ethereumAddress?: string | null;
+  avatarUrl?: string | null;
 };
 
 const normalizeMemberSearchResult = (item: MemberSearchResult): MemberSearchResult => {
@@ -320,10 +351,111 @@ export const fetchPublicProfileApi = async (ethereumAddress: string): Promise<Pu
   };
 };
 
+const normalizeFollowTarget = (item: FollowTarget): FollowTarget => {
+  const fromParts = [item.firstName, item.lastName]
+    .map(part => part?.trim())
+    .filter((part): part is string => Boolean(part))
+    .join(" ");
+  return {
+    ...item,
+    name: item.name?.trim() || fromParts || null,
+  };
+};
+
+export const fetchFollowingApi = async (ethereumAddress: string): Promise<FollowTarget[]> => {
+  const response = await fetch(
+    `${API_URL}/api/profiles/${encodeURIComponent(ethereumAddress)}/following`,
+  );
+
+  if (!response.ok) {
+    throw new Error("Nie udało się pobrać listy obserwowanych.");
+  }
+
+  const raw = (await response.json()) as FollowTarget[];
+  return raw.map(normalizeFollowTarget);
+};
+
+export const fetchFollowStatusApi = async (ethereumAddress: string): Promise<boolean> => {
+  const response = await fetch(
+    `${API_URL}/api/profiles/${encodeURIComponent(ethereumAddress)}/follow-status`,
+    { credentials: "include" },
+  );
+
+  if (response.status === 401) {
+    return false;
+  }
+
+  if (!response.ok) {
+    throw new Error("Nie udało się sprawdzić statusu obserwacji.");
+  }
+
+  const body = (await response.json()) as { isFollowing?: boolean };
+  return Boolean(body.isFollowing);
+};
+
+export const followMemberApi = async (ethereumAddress: string): Promise<void> => {
+  const response = await fetch(
+    `${API_URL}/api/profiles/${encodeURIComponent(ethereumAddress)}/follow`,
+    { method: "POST", credentials: "include" },
+  );
+
+  if (!response.ok) {
+    throw new Error(await readErrorMessage(response, "Nie udało się zaobserwować użytkownika."));
+  }
+};
+
+export const unfollowMemberApi = async (ethereumAddress: string): Promise<void> => {
+  const response = await fetch(
+    `${API_URL}/api/profiles/${encodeURIComponent(ethereumAddress)}/follow`,
+    { method: "DELETE", credentials: "include" },
+  );
+
+  if (!response.ok) {
+    throw new Error(await readErrorMessage(response, "Nie udało się przestać obserwować."));
+  }
+};
+
+export type IssuerOnChainVerifyResult = {
+  ethereumAddress: string;
+  isIssuer: boolean;
+  networkName: string;
+  message: string;
+};
+
+/** Ephemeral: check authorizedIssuers on-chain. Nothing is persisted. */
+export const verifyIssuerOnChainApi = async (
+  ethereumAddress: string,
+): Promise<IssuerOnChainVerifyResult> => {
+  const response = await fetch(
+    `${API_URL}/api/profiles/${encodeURIComponent(ethereumAddress)}/verify-issuer`,
+  );
+
+  if (!response.ok) {
+    throw new Error(await readErrorMessage(response, "Nie udało się zweryfikować issuera."));
+  }
+
+  return (await response.json()) as IssuerOnChainVerifyResult;
+};
+
 export const fetchMyActivityApi = async (): Promise<DocumentActivityItem[]> => {
   const response = await fetch(`${API_URL}/api/profiles/me/activity`, {
     credentials: "include",
   });
+
+  if (!response.ok) {
+    throw new Error("Nie udało się pobrać historii transakcji.");
+  }
+
+  return (await response.json()) as DocumentActivityItem[];
+};
+
+/** Public activity for `/u/:address` — only documents with visibility=public. */
+export const fetchPublicActivityApi = async (
+  ethereumAddress: string,
+): Promise<DocumentActivityItem[]> => {
+  const response = await fetch(
+    `${API_URL}/api/profiles/${encodeURIComponent(ethereumAddress)}/activity`,
+  );
 
   if (!response.ok) {
     throw new Error("Nie udało się pobrać historii transakcji.");
@@ -365,6 +497,25 @@ export const fetchIssuerInstitutionProfileApi = async (): Promise<IssuerInstitut
   const response = await fetch(`${API_URL}/api/issuer/profile`, {
     credentials: "include",
   });
+
+  if (response.status === 404) {
+    return null;
+  }
+
+  if (!response.ok) {
+    throw new Error("Nie udało się pobrać profilu instytucji.");
+  }
+
+  return (await response.json()) as IssuerInstitutionProfile;
+};
+
+/** Public institution card for /u/:address (404 → null). */
+export const fetchPublicIssuerInstitutionApi = async (
+  ethereumAddress: string,
+): Promise<IssuerInstitutionProfile | null> => {
+  const response = await fetch(
+    `${API_URL}/api/profiles/${encodeURIComponent(ethereumAddress)}/institution`,
+  );
 
   if (response.status === 404) {
     return null;

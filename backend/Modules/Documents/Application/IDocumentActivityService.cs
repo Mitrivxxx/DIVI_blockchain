@@ -12,5 +12,11 @@ namespace backend.Modules.Documents.Application
             DateTimeOffset? timestamp = null);
 
         Task<IReadOnlyList<DocumentActivityItemDto>> GetMyActivityAsync(int memberId);
+
+        /// <summary>
+        /// Public timeline for a member: Issued/Revoked only for documents with visibility=public.
+        /// CID is omitted (no anonymous PDF preview).
+        /// </summary>
+        Task<IReadOnlyList<DocumentActivityItemDto>> GetPublicActivityByAddressAsync(string ethereumAddress);
     }
 }

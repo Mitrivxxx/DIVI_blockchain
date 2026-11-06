@@ -1,28 +1,53 @@
 import React, { useEffect, useState } from "react";
-import { fetchIssuerInstitutionProfileApi, resolveAvatarSrc } from "../api/profileApi";
+import {
+  fetchIssuerInstitutionProfileApi,
+  fetchPublicIssuerInstitutionApi,
+  resolveAvatarSrc,
+} from "../api/profileApi";
 import type { IssuerInstitutionProfile } from "../types";
 import { AppCard } from "@/shared/ui";
 
 type IssuerInstitutionCardProps = {
+  /** When set, skip fetching and render this profile (or empty if null). */
+  profile?: IssuerInstitutionProfile | null;
+  /** Load public institution for this address (ignored when `profile` is passed). */
+  ethereumAddress?: string | null;
   /** Shown under the heading when profile is empty. */
   emptyHint?: string;
+  /** Hide the card entirely when there is no institution data (for visitor pages). */
+  hideWhenEmpty?: boolean;
 };
 
 const IssuerInstitutionCard: React.FC<IssuerInstitutionCardProps> = ({
+  profile: profileProp,
+  ethereumAddress,
   emptyHint = "Brak danych instytucji.",
+  hideWhenEmpty = false,
 }) => {
-  const [profile, setProfile] = useState<IssuerInstitutionProfile | null>(null);
-  const [loading, setLoading] = useState(true);
+  const controlled = profileProp !== undefined;
+  const [profile, setProfile] = useState<IssuerInstitutionProfile | null>(
+    controlled ? (profileProp ?? null) : null,
+  );
+  const [loading, setLoading] = useState(!controlled);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (controlled) {
+      setProfile(profileProp ?? null);
+      setLoading(false);
+      setError(null);
+      return;
+    }
+
     let cancelled = false;
 
     const load = async () => {
       try {
         setLoading(true);
         setError(null);
-        const data = await fetchIssuerInstitutionProfileApi();
+        const data = ethereumAddress
+          ? await fetchPublicIssuerInstitutionApi(ethereumAddress)
+          : await fetchIssuerInstitutionProfileApi();
         if (!cancelled) setProfile(data);
       } catch (err) {
         if (!cancelled) {
@@ -38,7 +63,11 @@ const IssuerInstitutionCard: React.FC<IssuerInstitutionCardProps> = ({
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [controlled, profileProp, ethereumAddress]);
+
+  if (hideWhenEmpty && !loading && !error && !profile) {
+    return null;
+  }
 
   const logoSrc = profile?.logoUrl?.trim()
     ? resolveAvatarSrc(profile.logoUrl, "")

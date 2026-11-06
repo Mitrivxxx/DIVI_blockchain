@@ -17,7 +17,7 @@ namespace backend.Modules.Documents.Application
 		Task<DocumentListItemDto?> GetByHashAsync(string hash);
 		/// <summary>Returns (Ok, HttpStatusHint, Error). HttpStatusHint: 404/403/409/502.</summary>
 		Task<(bool Ok, int StatusCode, string? Error)> RevokeAsync(string hash, int? memberId, string role);
-		/// <summary>Authorized PDF bytes for owner / issuing member / admin / owner role.</summary>
+		/// <summary>PDF bytes for owner / issuing member / admin|owner, or anyone when visibility=public.</summary>
 		Task<(byte[]? Bytes, int StatusCode, string? Error)> GetFileContentAsync(string hash, int? memberId, string role);
 	}
 }

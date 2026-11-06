@@ -60,9 +60,14 @@ export const getRouteKeyByPath = (pathname: string): AppRouteKey | undefined => 
 /** Public member profile `/u/:ethereumAddress` — dynamic, not in the static map. */
 export const isPublicProfilePath = (pathname: string): boolean => /^\/u\/[^/]+$/.test(pathname);
 
-/** Shell paths that should render inside MainLayout (static routes + public profile). */
+/** Institution detail `/i/:memberId` — dynamic, not in the static map. */
+export const isInstitutionDetailPath = (pathname: string): boolean => /^\/i\/\d+$/.test(pathname);
+
+/** Shell paths that should render inside MainLayout (static routes + public / institution pages). */
 export const isKnownAppPath = (pathname: string): boolean =>
-  Boolean(getRouteKeyByPath(pathname)) || isPublicProfilePath(pathname);
+  Boolean(getRouteKeyByPath(pathname)) ||
+  isPublicProfilePath(pathname) ||
+  isInstitutionDetailPath(pathname);
 
 export const isIssuerToolRole = (role: string | null | undefined): boolean => {
   const normalized = role?.trim().toLowerCase();

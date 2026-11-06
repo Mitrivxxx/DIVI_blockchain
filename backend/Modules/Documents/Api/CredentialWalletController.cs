@@ -94,5 +94,14 @@ namespace backend.Modules.Documents.Api
             var items = await _credentials.GetPublicCredentialsByAddressAsync(ethereumAddress);
             return Ok(items);
         }
+
+        /// <summary>Public Issued/Revoked timeline for documents marked visibility=public.</summary>
+        [HttpGet("{ethereumAddress}/activity")]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetPublicActivity(string ethereumAddress)
+        {
+            var items = await _activity.GetPublicActivityByAddressAsync(ethereumAddress);
+            return Ok(items);
+        }
     }
 }

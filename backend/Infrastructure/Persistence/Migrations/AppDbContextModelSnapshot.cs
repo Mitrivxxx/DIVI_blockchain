@@ -292,11 +292,19 @@ namespace backend.Infrastructure.Persistence.Migrations
                     b.Property<string>("FirstName")
                         .HasColumnType("text");
 
+                    b.Property<string>("GithubUrl")
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
+
                     b.Property<string>("GoogleSub")
                         .HasColumnType("text");
 
                     b.Property<string>("LastName")
                         .HasColumnType("text");
+
+                    b.Property<string>("LinkedInUrl")
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
 
                     b.Property<int>("MemberRoleId")
                         .HasColumnType("integer");
@@ -304,6 +312,10 @@ namespace backend.Infrastructure.Persistence.Migrations
                     b.Property<string>("Password")
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
+
+                    b.Property<string>("WebsiteUrl")
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
 
                     b.HasKey("Id");
 
@@ -325,6 +337,26 @@ namespace backend.Infrastructure.Persistence.Migrations
                             EthereumAddress = "0x3590E41e29F2626B262A16225a207AaB33dBf782",
                             MemberRoleId = 4
                         });
+                });
+
+            modelBuilder.Entity("backend.Modules.Members.Domain.MemberFollow", b =>
+                {
+                    b.Property<int>("FollowerMemberId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("FollowingMemberId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("FollowerMemberId", "FollowingMemberId");
+
+                    b.HasIndex("FollowerMemberId");
+
+                    b.HasIndex("FollowingMemberId");
+
+                    b.ToTable("MemberFollows", (string)null);
                 });
 
             modelBuilder.Entity("backend.Modules.Members.Domain.MemberRole", b =>
@@ -398,6 +430,21 @@ namespace backend.Infrastructure.Persistence.Migrations
                         .IsRequired();
 
                     b.Navigation("Role");
+                });
+
+            modelBuilder.Entity("backend.Modules.Members.Domain.MemberFollow", b =>
+                {
+                    b.HasOne("backend.Modules.Members.Domain.Member", null)
+                        .WithMany()
+                        .HasForeignKey("FollowerMemberId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("backend.Modules.Members.Domain.Member", null)
+                        .WithMany()
+                        .HasForeignKey("FollowingMemberId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("backend.Modules.Members.Domain.MemberRole", b =>

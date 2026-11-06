@@ -11,6 +11,7 @@ public static class MembersModule
     {
         services.AddScoped<IMemberDirectory, MemberDirectory>();
         services.AddScoped<IGetProfileService, GetProfileService>();
+        services.AddScoped<IMemberFollowService, MemberFollowService>();
         services.AddSingleton<IPreMigrationStep, AvatarBlobToMinioMigrator>();
         return services;
     }

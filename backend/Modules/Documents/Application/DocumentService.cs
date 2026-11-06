@@ -15,6 +15,7 @@ namespace backend.Modules.Documents.Application
 	  {
         private const byte StatusConfirmed = 1;
         private const byte StatusRevoked = 2;
+        private const byte VisibilityPublic = 2;
 
         private readonly PinataClient _pinataClient;
         private readonly IBlockchainService _blockchainService;
@@ -613,7 +614,8 @@ namespace backend.Modules.Documents.Application
                 }
             }
 
-            if (!isPrivileged && !isIssuer && !isOwner)
+            var isPublic = document.Visibility == VisibilityPublic;
+            if (!isPrivileged && !isIssuer && !isOwner && !isPublic)
             {
                 return (null, 403, "You are not allowed to view this document");
             }

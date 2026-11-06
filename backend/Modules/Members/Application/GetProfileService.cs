@@ -42,17 +42,7 @@ namespace backend.Modules.Members.Application
 
             _logger.LogDebug("GetProfileByAddressAsync: member found for address {EthereumAddress}", ethereumAddress);
 
-            return new MemberProfileDto
-            {
-                FirstName = member.FirstName,
-                LastName = member.LastName,
-                EthereumAddress = member.EthereumAddress,
-                Role = member.Role.Name,
-                Email = member.Email,
-                Bio = member.Bio,
-                AvatarUrl = member.AvatarUrl,
-                CreatedAt = member.CreatedAt
-            };
+            return ToProfileDto(member);
         }
 
         public async Task<MemberProfileDto?> GetProfileByIdAsync(int memberId)
@@ -67,17 +57,7 @@ namespace backend.Modules.Members.Application
 
             _logger.LogDebug("GetProfileByIdAsync: member found for memberId {MemberId}", memberId);
 
-            return new MemberProfileDto
-            {
-                FirstName = member.FirstName,
-                LastName = member.LastName,
-                EthereumAddress = member.EthereumAddress,
-                Role = member.Role.Name,
-                Email = member.Email,
-                Bio = member.Bio,
-                AvatarUrl = member.AvatarUrl,
-                CreatedAt = member.CreatedAt
-            };
+            return ToProfileDto(member);
         }
 
         public async Task<IReadOnlyList<MemberSearchResultDto>> SearchMembersAsync(string query, int limit = 10)
@@ -286,6 +266,53 @@ namespace backend.Modules.Members.Application
             return true;
         }
 
+        public async Task<(bool Ok, int StatusCode, string? Error)> UpdateLinksByIdAsync(
+            int memberId,
+            UpdateProfileLinksDto dto)
+        {
+            if (dto is null)
+            {
+                return (false, 400, "Body is required");
+            }
+
+            var member = await GetMemberByIdAsync(memberId, asNoTracking: false);
+            if (member is null)
+            {
+                return (false, 404, "Nie znaleziono profilu dla zalogowanego użytkownika.");
+            }
+
+            if (dto.LinkedInUrl is not null)
+            {
+                if (!TryNormalizeExternalUrl(dto.LinkedInUrl, out var linkedIn, out var error))
+                {
+                    return (false, 400, error);
+                }
+                member.LinkedInUrl = linkedIn;
+            }
+
+            if (dto.GithubUrl is not null)
+            {
+                if (!TryNormalizeExternalUrl(dto.GithubUrl, out var github, out var error))
+                {
+                    return (false, 400, error);
+                }
+                member.GithubUrl = github;
+            }
+
+            if (dto.WebsiteUrl is not null)
+            {
+                if (!TryNormalizeExternalUrl(dto.WebsiteUrl, out var website, out var error))
+                {
+                    return (false, 400, error);
+                }
+                member.WebsiteUrl = website;
+            }
+
+            await _context.SaveChangesAsync();
+            _logger.LogInformation("Profile links updated for memberId {MemberId}", memberId);
+            return (true, 200, null);
+        }
+
         public async Task<bool> DeleteNameByIdAsync(int memberId)
         {
             _logger.LogDebug("DeleteNameByIdAsync called for memberId {MemberId}", memberId);
@@ -431,6 +458,52 @@ namespace backend.Modules.Members.Application
             }
 
             return await query.FirstOrDefaultAsync();
+        }
+
+        private static MemberProfileDto ToProfileDto(Member member) => new()
+        {
+            MemberId = member.Id,
+            FirstName = member.FirstName,
+            LastName = member.LastName,
+            EthereumAddress = member.EthereumAddress,
+            Role = member.Role.Name,
+            Email = member.Email,
+            Bio = member.Bio,
+            LinkedInUrl = member.LinkedInUrl,
+            GithubUrl = member.GithubUrl,
+            WebsiteUrl = member.WebsiteUrl,
+            AvatarUrl = member.AvatarUrl,
+            CreatedAt = member.CreatedAt,
+        };
+
+        /// <summary>
+        /// Empty/whitespace clears the field. Otherwise must be absolute http(s) URL ≤ 512 chars.
+        /// </summary>
+        private static bool TryNormalizeExternalUrl(string? raw, out string? normalized, out string? error)
+        {
+            normalized = null;
+            error = null;
+            if (string.IsNullOrWhiteSpace(raw))
+            {
+                return true;
+            }
+
+            var trimmed = raw.Trim();
+            if (trimmed.Length > 512)
+            {
+                error = "URL jest zbyt długi (max 512 znaków).";
+                return false;
+            }
+
+            if (!Uri.TryCreate(trimmed, UriKind.Absolute, out var uri)
+                || (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps))
+            {
+                error = "Podaj prawidłowy adres URL (http lub https).";
+                return false;
+            }
+
+            normalized = uri.AbsoluteUri;
+            return true;
         }
 
         private async Task<Member?> GetMemberByIdAsync(int memberId, bool asNoTracking)

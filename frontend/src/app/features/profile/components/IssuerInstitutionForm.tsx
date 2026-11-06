@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from "react";
 import {
   fetchIssuerInstitutionProfileApi,
+  resolveAvatarSrc,
   updateIssuerInstitutionProfileApi,
 } from "../api/profileApi";
 import type { IssuerInstitutionProfile } from "../types";
-import { AppCard, buttonDark } from "@/shared/ui";
+import { AppCard, buttonDark, buttonLight } from "@/shared/ui";
 
 const emptyForm = {
   institutionName: "",
@@ -18,7 +19,12 @@ const emptyForm = {
 const fieldClass =
   "mt-1.5 w-full rounded-lg border border-hairline bg-white px-3 py-2 text-sm text-neutral-900 outline-none focus:border-neutral-300";
 
-const IssuerInstitutionForm: React.FC = () => {
+type IssuerInstitutionFormProps = {
+  /** When true, render only Witryna / Branża / Siedziba inside a parent Informacje card. */
+  embedded?: boolean;
+};
+
+const IssuerInstitutionForm: React.FC<IssuerInstitutionFormProps> = ({ embedded = false }) => {
   const [form, setForm] = useState(emptyForm);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -90,76 +96,147 @@ const IssuerInstitutionForm: React.FC = () => {
     }
   };
 
-  return (
-    <AppCard className="space-y-4" aria-live="polite">
-      <div>
-        <h2 className="text-xl font-semibold text-neutral-900">Profil instytucji</h2>
-        <p className="mt-1 text-sm text-neutral-500">
-          Dane off-chain pokazywane zamiast adresu hot-wallet przy dokumentach.
-        </p>
-      </div>
+  const logoPreview = form.logoUrl.trim() ? resolveAvatarSrc(form.logoUrl.trim(), "") : "";
+  const initial = (form.institutionName.trim()[0] ?? "I").toUpperCase();
 
+  const fields = (
+    <>
       {loading ? <p className="text-sm text-neutral-500">Ładowanie...</p> : null}
       {error ? <p className="text-sm text-red-600">{error}</p> : null}
       {message ? <p className="text-sm text-emerald-600">{message}</p> : null}
 
       {!loading ? (
-        <form onSubmit={handleSubmit} className="grid max-w-lg gap-4">
-          <label className="text-sm font-medium text-neutral-800">
-            Nazwa instytucji
-            <input
-              value={form.institutionName}
-              onChange={e => handleChange("institutionName", e.target.value)}
-              required
-              className={fieldClass}
-            />
-          </label>
-          <label className="text-sm font-medium text-neutral-800">
-            Opis
-            <textarea
-              value={form.description}
-              onChange={e => handleChange("description", e.target.value)}
-              rows={3}
-              className={fieldClass}
-            />
-          </label>
-          <label className="text-sm font-medium text-neutral-800">
-            Logo URL
-            <input
-              value={form.logoUrl}
-              onChange={e => handleChange("logoUrl", e.target.value)}
-              className={fieldClass}
-            />
-          </label>
-          <label className="text-sm font-medium text-neutral-800">
-            Strona WWW
-            <input
-              value={form.websiteUrl}
-              onChange={e => handleChange("websiteUrl", e.target.value)}
-              className={fieldClass}
-            />
-          </label>
-          <label className="text-sm font-medium text-neutral-800">
-            Kraj
-            <input
-              value={form.country}
-              onChange={e => handleChange("country", e.target.value)}
-              className={fieldClass}
-            />
-          </label>
-          <label className="text-sm font-medium text-neutral-800">
-            NIP / KRS
-            <input
-              value={form.taxId}
-              onChange={e => handleChange("taxId", e.target.value)}
-              className={fieldClass}
-            />
-          </label>
-          <button type="submit" disabled={saving} className={`${buttonDark} disabled:opacity-50`}>
-            {saving ? "Zapisywanie..." : "Zapisz profil instytucji"}
-          </button>
+        <form
+          onSubmit={handleSubmit}
+          className={embedded ? "space-y-4" : "space-y-5 border-t border-hairline pt-5"}
+        >
+          <div className={`grid gap-4 ${embedded ? "" : "sm:grid-cols-2"}`}>
+            {!embedded ? (
+              <>
+                <label className="text-sm font-medium text-neutral-800 sm:col-span-2">
+                  Nazwa instytucji
+                  <input
+                    value={form.institutionName}
+                    onChange={e => handleChange("institutionName", e.target.value)}
+                    required
+                    className={fieldClass}
+                  />
+                </label>
+                <label className="text-sm font-medium text-neutral-800 sm:col-span-2">
+                  Logo URL
+                  <input
+                    value={form.logoUrl}
+                    onChange={e => handleChange("logoUrl", e.target.value)}
+                    placeholder="https://…"
+                    className={fieldClass}
+                  />
+                </label>
+                <label className="text-sm font-medium text-neutral-800 sm:col-span-2">
+                  NIP / KRS
+                  <input
+                    value={form.taxId}
+                    onChange={e => handleChange("taxId", e.target.value)}
+                    className={fieldClass}
+                  />
+                </label>
+              </>
+            ) : null}
+
+            <label className="text-sm font-medium text-neutral-800">
+              Witryna
+              <input
+                value={form.websiteUrl}
+                onChange={e => handleChange("websiteUrl", e.target.value)}
+                placeholder="https://…"
+                className={fieldClass}
+              />
+            </label>
+            <label className="text-sm font-medium text-neutral-800">
+              Branża
+              <input
+                value={form.description}
+                onChange={e => handleChange("description", e.target.value)}
+                placeholder="np. Usługi IT"
+                className={fieldClass}
+              />
+            </label>
+            <label className="text-sm font-medium text-neutral-800">
+              Siedziba główna
+              <input
+                value={form.country}
+                onChange={e => handleChange("country", e.target.value)}
+                placeholder="Miasto, kraj"
+                className={fieldClass}
+              />
+            </label>
+          </div>
+
+          <div className="flex flex-wrap gap-3">
+            <button type="submit" disabled={saving} className={`${buttonDark} disabled:opacity-50`}>
+              {saving ? "Zapisywanie..." : "Zapisz"}
+            </button>
+            <button
+              type="button"
+              className={buttonLight}
+              disabled={saving || loading}
+              onClick={() => {
+                setMessage(null);
+                setError(null);
+                void fetchIssuerInstitutionProfileApi()
+                  .then(profile => {
+                    if (profile) applyProfile(profile);
+                    else setForm(emptyForm);
+                  })
+                  .catch(err => {
+                    setError(err instanceof Error ? err.message : "Nie udało się odświeżyć.");
+                  });
+              }}
+            >
+              Anuluj zmiany
+            </button>
+          </div>
         </form>
       ) : null}
+    </>
+  );
+
+  if (embedded) {
+    return (
+      <div className="space-y-3 border-t border-hairline pt-5" aria-live="polite">
+        <h3 className="text-sm font-semibold text-neutral-900">Instytucja</h3>
+        {fields}
+      </div>
+    );
+  }
+
+  return (
+    <AppCard className="space-y-6" aria-live="polite">
+      <div className="flex flex-col gap-5 sm:flex-row sm:items-start">
+        {logoPreview ? (
+          <img
+            src={logoPreview}
+            alt=""
+            className="size-16 shrink-0 rounded-xl border border-hairline object-cover bg-neutral-100"
+          />
+        ) : (
+          <span
+            className="flex size-16 shrink-0 items-center justify-center rounded-xl bg-neutral-950 text-sm font-semibold tracking-wide text-white"
+            aria-hidden="true"
+          >
+            {initial}
+          </span>
+        )}
+        <div className="min-w-0 flex-1">
+          <p className="text-xl font-semibold tracking-[-0.02em] text-neutral-900">
+            {form.institutionName.trim() || "Profil instytucji"}
+          </p>
+          <p className="mt-1 text-sm leading-relaxed text-neutral-500">
+            Dane off-chain widoczne na publicznym profilu oraz przy dokumentach zamiast adresu
+            hot-wallet.
+          </p>
+        </div>
+      </div>
+      {fields}
     </AppCard>
   );
 };
