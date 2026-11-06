@@ -246,5 +246,21 @@ public class DocumentController : ControllerBase
         return Ok(result);
     }
 
+    /// <summary>
+    /// Ephemeral on-chain/DB verify by document hash (no file upload). Nothing is persisted.
+    /// </summary>
+    [HttpGet("{hash}/verify")]
+    [AllowAnonymous]
+    public async Task<IActionResult> VerifyDocumentByHash(string hash)
+    {
+        if (string.IsNullOrWhiteSpace(hash))
+        {
+            return BadRequest("hash is required");
+        }
+
+        var result = await _documentVerification.VerifyByHashAsync(hash);
+        return Ok(result);
+    }
+
     private int? TryGetMemberId() => User.GetMemberId();
 }

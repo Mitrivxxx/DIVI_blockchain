@@ -1,6 +1,11 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { openDocumentPdfInNewTab, resolveAvatarSrc } from "../api/profileApi";
+import {
+  openDocumentPdfInNewTab,
+  resolveAvatarSrc,
+  verifyDocumentByHashApi,
+  type DocumentVerifyByHashResult,
+} from "../api/profileApi";
 import type { CredentialItem, CredentialSection, CredentialVisibility } from "../types";
 import {
   documentStatusLabel,
@@ -94,7 +99,11 @@ const CredentialEntry: React.FC<{
   copiedShareFor: string | null;
   openingPdf: boolean;
   pdfError: string | null;
+  verifying: boolean;
+  verifyResult: DocumentVerifyByHashResult | null;
+  verifyError: string | null;
   onOpenPdf?: (hash: string) => void;
+  onVerifyDocument?: (hash: string) => void;
   onCopyShare?: (hash: string, sharePath: string) => void;
   onVisibilityChange?: (hash: string, visibility: CredentialVisibility) => void;
 }> = ({
@@ -104,7 +113,11 @@ const CredentialEntry: React.FC<{
   copiedShareFor,
   openingPdf,
   pdfError,
+  verifying,
+  verifyResult,
+  verifyError,
   onOpenPdf,
+  onVerifyDocument,
   onCopyShare,
   onVisibilityChange,
 }) => {
@@ -118,6 +131,8 @@ const CredentialEntry: React.FC<{
   const canOpenPdf =
     Boolean(onOpenPdf) &&
     (credential.hasPdfFile === true || hasDocumentPdfFile(credential.cid));
+  const canVerifyDocument =
+    Boolean(onVerifyDocument) && (readOnly || credential.visibility === "public");
   const issuedLabel = credential.periodStart
     ? formatDocumentPeriod(credential.periodStart, credential.expiresAt)
     : formatIssuedMonthYear(credential.issuedAt);
@@ -171,6 +186,17 @@ const CredentialEntry: React.FC<{
             </button>
           ) : null}
 
+          {canVerifyDocument ? (
+            <button
+              type="button"
+              className="font-medium underline disabled:opacity-50"
+              disabled={verifying}
+              onClick={() => onVerifyDocument?.(credential.hash)}
+            >
+              {verifying ? "Weryfikacja…" : "Zweryfikuj dokument"}
+            </button>
+          ) : null}
+
           {!readOnly && credential.visibility && onVisibilityChange ? (
             <>
               <label className="inline-flex items-center gap-1.5">
@@ -209,6 +235,31 @@ const CredentialEntry: React.FC<{
           ) : null}
         </div>
         {pdfError ? <p className="mt-2 text-xs text-red-600">{pdfError}</p> : null}
+        {verifyError ? <p className="mt-2 text-xs text-red-600">{verifyError}</p> : null}
+        {verifyResult ? (
+          <div
+            className={`mt-3 rounded-lg border px-3 py-2 ${
+              verifyResult.isAuthentic
+                ? "border-emerald-200 bg-emerald-50"
+                : "border-red-200 bg-red-50"
+            }`}
+            role="status"
+            aria-live="polite"
+          >
+            <p
+              className={`text-xs font-semibold ${
+                verifyResult.isAuthentic ? "text-emerald-800" : "text-red-700"
+              }`}
+            >
+              {verifyResult.message}
+            </p>
+            <p className="mt-0.5 font-mono text-[11px] text-neutral-600">
+              {shortHex(verifyResult.hash)}
+              {verifyResult.networkName ? ` · ${verifyResult.networkName}` : ""}
+              {" · wynik jednorazowy, bez zapisu."}
+            </p>
+          </div>
+        ) : null}
       </div>
     </article>
   );
@@ -226,6 +277,11 @@ const CredentialTypeSections: React.FC<CredentialTypeSectionsProps> = ({
 }) => {
   const [openingPdfHash, setOpeningPdfHash] = useState<string | null>(null);
   const [pdfErrors, setPdfErrors] = useState<Record<string, string>>({});
+  const [verifyingHash, setVerifyingHash] = useState<string | null>(null);
+  const [verifyResults, setVerifyResults] = useState<Record<string, DocumentVerifyByHashResult>>(
+    {},
+  );
+  const [verifyErrors, setVerifyErrors] = useState<Record<string, string>>({});
 
   const handleOpenPdf = async (hash: string) => {
     try {
@@ -243,6 +299,31 @@ const CredentialTypeSections: React.FC<CredentialTypeSectionsProps> = ({
       }));
     } finally {
       setOpeningPdfHash(null);
+    }
+  };
+
+  const handleVerifyDocument = async (hash: string) => {
+    try {
+      setVerifyErrors(prev => {
+        const next = { ...prev };
+        delete next[hash];
+        return next;
+      });
+      setVerifyingHash(hash);
+      const result = await verifyDocumentByHashApi(hash);
+      setVerifyResults(prev => ({ ...prev, [hash]: result }));
+    } catch (err) {
+      setVerifyResults(prev => {
+        const next = { ...prev };
+        delete next[hash];
+        return next;
+      });
+      setVerifyErrors(prev => ({
+        ...prev,
+        [hash]: err instanceof Error ? err.message : "Nie udało się zweryfikować dokumentu.",
+      }));
+    } finally {
+      setVerifyingHash(null);
     }
   };
 
@@ -281,7 +362,11 @@ const CredentialTypeSections: React.FC<CredentialTypeSectionsProps> = ({
                   copiedShareFor={copiedShareFor}
                   openingPdf={openingPdfHash === credential.hash}
                   pdfError={pdfErrors[credential.hash] ?? null}
+                  verifying={verifyingHash === credential.hash}
+                  verifyResult={verifyResults[credential.hash] ?? null}
+                  verifyError={verifyErrors[credential.hash] ?? null}
                   onOpenPdf={hash => void handleOpenPdf(hash)}
+                  onVerifyDocument={hash => void handleVerifyDocument(hash)}
                   onCopyShare={onCopyShare}
                   onVisibilityChange={onVisibilityChange}
                 />

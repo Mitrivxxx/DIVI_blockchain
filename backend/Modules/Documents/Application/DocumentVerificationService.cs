@@ -44,16 +44,33 @@ namespace backend.Modules.Documents.Application
             }
 
             _logger.LogDebug("VerifyDocumentAsync computed SHA-256 hash: {Hash}", hash);
+            return await VerifyByHashAsync(hash);
+        }
+
+        public async Task<DocumentVerificationResultDto> VerifyByHashAsync(string hash)
+        {
+            var normalized = NormalizeHash(hash);
+            if (string.IsNullOrWhiteSpace(normalized))
+            {
+                return new DocumentVerificationResultDto
+                {
+                    Hash = string.Empty,
+                    IsAuthentic = false,
+                    IsRevoked = false,
+                    Status = null,
+                    Message = "Brak poprawnego hasha dokumentu.",
+                };
+            }
 
             var networkName = await _blockchainService.GetNetworkNameAsync();
-            var stored = await _documentService.GetByHashAsync(hash);
+            var stored = await _documentService.GetByHashAsync(normalized);
 
             byte? status = stored?.Status;
             if (status is null)
             {
-                if (await _blockchainService.DocumentExistsAsync(hash))
+                if (await _blockchainService.DocumentExistsAsync(normalized))
                 {
-                    status = await _blockchainService.GetDocumentStatusAsync(hash);
+                    status = await _blockchainService.GetDocumentStatusAsync(normalized);
                 }
             }
 
@@ -75,7 +92,7 @@ namespace backend.Modules.Documents.Application
                 }
                 else
                 {
-                    blockchainInfo = await _blockchainService.GetDocumentBlockchainInfoAsync(hash);
+                    blockchainInfo = await _blockchainService.GetDocumentBlockchainInfoAsync(normalized);
                     if (blockchainInfo is not null)
                     {
                         blockchainInfo.NetworkName = networkName;
@@ -93,7 +110,7 @@ namespace backend.Modules.Documents.Application
 
             return new DocumentVerificationResultDto
             {
-                Hash = hash,
+                Hash = normalized,
                 IsAuthentic = isAuthentic,
                 IsRevoked = isRevoked,
                 Status = status,
@@ -106,6 +123,22 @@ namespace backend.Modules.Documents.Application
                 IssuedByMemberId = stored?.IssuedByMemberId,
                 IssuerDisplayName = stored?.IssuerDisplayName,
             };
+        }
+
+        private static string NormalizeHash(string? hash)
+        {
+            var value = hash?.Trim() ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                return string.Empty;
+            }
+
+            if (!value.StartsWith("0x", StringComparison.OrdinalIgnoreCase))
+            {
+                value = "0x" + value;
+            }
+
+            return value.ToLowerInvariant();
         }
     }
 }

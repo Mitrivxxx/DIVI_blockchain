@@ -437,6 +437,32 @@ export const verifyIssuerOnChainApi = async (
   return (await response.json()) as IssuerOnChainVerifyResult;
 };
 
+export type DocumentVerifyByHashResult = {
+  hash: string;
+  isAuthentic: boolean;
+  isRevoked: boolean;
+  status?: number | null;
+  message: string;
+  transactionHash?: string | null;
+  blockNumber?: number | null;
+  networkName?: string | null;
+};
+
+/** Ephemeral: verify document by hash (DB + chain). Nothing is persisted. */
+export const verifyDocumentByHashApi = async (
+  hash: string,
+): Promise<DocumentVerifyByHashResult> => {
+  const response = await fetch(
+    `${API_URL}/api/documents/${encodeURIComponent(hash)}/verify`,
+  );
+
+  if (!response.ok) {
+    throw new Error(await readErrorMessage(response, "Nie udało się zweryfikować dokumentu."));
+  }
+
+  return (await response.json()) as DocumentVerifyByHashResult;
+};
+
 export const fetchMyActivityApi = async (): Promise<DocumentActivityItem[]> => {
   const response = await fetch(`${API_URL}/api/profiles/me/activity`, {
     credentials: "include",

@@ -93,7 +93,7 @@ Refresh token reloads role from DB (not stale access claims).
 - Revoke: `DELETE /api/documents/{hash}/revoke` (issuer if `IssuedByMemberId` matches; admin/owner any) → on-chain + DB Status=Revoked + activity row.
 
 ### Verify (Documents)
-- PDF → SHA-256 → DB/chain status → tx metadata from `Documents` (event-scan fallback).
+- PDF → SHA-256 → DB/chain status → tx metadata from `Documents` (event-scan fallback); also `GET /api/documents/{hash}/verify` (AllowAnonymous, by hash, ephemeral).
 - Returns `IsAuthentic` (Confirmed), `IsRevoked`, `Status`, blockchain fields.
 - DTOs expose `IssuedByMemberId` + `IssuerDisplayName` (IssuerProfile); hot-wallet stays `IssuerAddress`.
 

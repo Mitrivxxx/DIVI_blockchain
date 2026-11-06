@@ -160,6 +160,25 @@ public sealed class DocumentTests : IClassFixture<DiviApiFactory>
     }
 
     [Fact]
+    public async Task Verify_by_hash_matches_file_verify_for_public_document()
+    {
+        var (issuer, _) = await NewIssuerAsync();
+        var owner = await _factory.LoginWithWalletAsync();
+        var hash = await TestDocuments.IssuePdfHashAsync(issuer, owner.Address);
+        await (await owner.Client.PatchAsJsonAsync(
+            $"/api/profiles/me/credentials/{hash}/visibility",
+            new { visibility = "public" })).AssertStatusAsync(HttpStatusCode.OK);
+
+        var anonymous = _factory.CreateClient();
+        var response = await anonymous.GetAsync($"/api/documents/{hash}/verify");
+        await response.AssertStatusAsync(HttpStatusCode.OK);
+        var body = await response.ReadJsonAsync();
+        Assert.Equal(hash, body.GetString("hash"));
+        Assert.True(body.GetProperty("isAuthentic").GetBoolean());
+        Assert.False(body.GetProperty("isRevoked").GetBoolean());
+    }
+
+    [Fact]
     public async Task Revoke_enforces_issuer_ownership_and_is_not_repeatable()
     {
         var (issuer, _) = await NewIssuerAsync();
