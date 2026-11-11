@@ -1,20 +1,11 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { Container, LogoLink } from "@/shared/ui";
-import {
-  getRoutePath,
-  isAdminReviewRole,
-  isIssuerToolRole,
-  isPlainUserRole,
-  primaryNav,
-} from "../features/navigation/routes";
-import {
-  resolveAvatarSrc,
-  searchMembersApi,
-  type MemberSearchResult,
-} from "../features/profile/api/profileApi";
-import { shortHex } from "@/types/documents";
-import userIcon from "../../assets/icons/user.svg";
+import { getRoutePath, primaryNav } from "@/shared/lib/routes";
+import { isAdminReviewRole, isIssuerToolRole, isPlainUserRole } from "@/modules/identity";
+import { searchMembersApi, type MemberSearchResult } from "@/modules/members";
+import { resolveAvatarSrc, shortHex } from "@/shared/lib/format";
+import userIcon from "@/assets/icons/user.svg";
 
 type AppHeaderProps = {
   userRole?: string | null;

@@ -16,10 +16,7 @@ public static class TestEnvironment
         Environment.SetEnvironmentVariable("JWT_ISSUER", JwtIssuer);
         Environment.SetEnvironmentVariable("JWT_AUDIENCE", JwtAudience);
         Environment.SetEnvironmentVariable("PINATA_JWT", "test-pinata-jwt");
-
-        // Aspire-style connection string skips DatabaseOptions validation; the context is replaced with InMemory.
         Environment.SetEnvironmentVariable("ConnectionStrings__divi", "Host=localhost;Database=divi_tests_unused");
-
         Environment.SetEnvironmentVariable("Blockchain__RpcUrl", "http://localhost:8545");
         Environment.SetEnvironmentVariable(
             "Blockchain__PrivateKey",

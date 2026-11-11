@@ -1,30 +1,27 @@
 ---
-description: DIVI backend hard conventions (ASP.NET Core net10.0, modular monolith)
+description: DIVI backend development guidelines and rules
 globs: backend/**/*.{cs,csproj,json}
 alwaysApply: false
 ---
 
-# Backend
+# Backend Rules & Guidelines
 
-**TFM:** `net10.0` (see `backend/backend.csproj`). Do not invent another .NET version. Context: `backend/AGENTS.md`.
+Detailed context, flows, and endpoints: `backend/AGENTS.md`.
 
-**Architecture:** modular monolith — one `backend.csproj`, one process, one `AppDbContext`. Modules: `Identity`, `Members`, `Issuers`, `Documents`.
+## 1. Modular Monolith Boundaries
+- **Cross-module calls**: ONLY via the target module's `Contracts/` interfaces and DTOs. Never reference another module's `Application/`, `Domain/`, or `Persistence/`.
+- **Foreign Keys**: No navigation properties across modules—store IDs only (e.g., `MemberId`). Configure cross-module FKs in `AppDbContext.OnModelCreating`.
+- **Registration**: Register new services in `Modules/{Module}/{Module}Module.cs`. `Host/` only composes modules.
 
-## Must
+## 2. Architecture & Patterns
+- **Layering**: Controller → Service (`Application/`). Do not add a repository layer; use EF Core via `AppDbContext` directly in services.
+- **External Services**: Nethereum, Pinata, MinIO, etc. must go through `Infrastructure/*` adapters. `BuildingBlocks/` contains only module-agnostic utilities.
+- **Entities & Migrations**: Entity in `Domain/`, configuration in `Persistence/`, `DbSet` in `AppDbContext`. Add migrations via `dotnet ef migrations add <Name> -p backend -o Infrastructure/Persistence/Migrations`.
 
-- Feature code lives in `Modules/{Module}/` with `Api/` (controllers), `Application/` (services, internal), `Contracts/` (public interfaces + DTOs), `Domain/` (entities), `Persistence/` (`IEntityTypeConfiguration`), and `{Module}Module.cs`.
-- Cross-module calls **only** via the other module's `Contracts/`. Never reference another module's `Application/`, `Domain/` or `Persistence/`.
-- Pattern: **controller → module service**; EF Core in services via shared `AppDbContext`; **no** repository layer.
-- New service → register in that module's `Add{Module}Module()`; `Host/` only composes modules.
-- New entity → `Modules/X/Domain/` + `IEntityTypeConfiguration` in `Modules/X/Persistence/` (picked up by `ApplyConfigurationsFromAssembly`) + `DbSet` in `Infrastructure/Persistence/AppDbContext.cs` + EF migration (`dotnet ef migrations add <Name> -p backend -o Infrastructure/Persistence/Migrations`).
-- No navigation properties across modules: store the id only (e.g. `MemberId`); configure the FK in `AppDbContext.OnModelCreating` with `HasOne<T>()` without a navigation.
-- External systems (Nethereum, Pinata, MinIO, Google) only through `Infrastructure/*` adapters; `BuildingBlocks/` holds only module-agnostic helpers (`MemberRoles` ids/names, `ClaimsPrincipal.GetMemberId()`).
-- Namespaces: `backend.Modules.{Module}.*`, `backend.Infrastructure.*`, `backend.BuildingBlocks.*`, `backend.Host.*`.
-- Auth routes under `/Auth`; everything else under `/api/...`. Do not change HTTP contracts as part of refactors.
-- Prefer **Serilog**; do not add new `Console.WriteLine`.
-- Never commit `.env`. Env via root `.env.example` / `.env` (DotNetEnv).
-- After contract ABI change: sync `Infrastructure/Contracts/DocumentIssuer.abi.json` + `Infrastructure/Blockchain/IBlockchainService` / `BlockchainService*`.
+## 3. API & Code Standards
+- **Routing**: Auth routes belong under `/Auth`; all other business routes belong under `/api/...`. Do not break existing HTTP contracts.
+- **Logging**: Use `ILogger<T>` (Serilog). Never use `Console.WriteLine`.
+- **Secrets**: Never commit `.env` files.
 
-## Do not duplicate here
-
-JWT details, roles, module ownership, endpoint catalogs, and business flows live in `backend/AGENTS.md` only.
+## 4. Verification
+- Verify changes by running tests: `/task-verification.mdc`.

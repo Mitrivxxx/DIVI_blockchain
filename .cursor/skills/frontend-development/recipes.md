@@ -120,6 +120,6 @@ Inline SVG: `viewBox="0 0 24 24"`, `strokeWidth="1.6"`, `strokeLinecap="round"`,
 - Tokens / reset: `frontend/src/styles/tailwind.css`
 - Primitives: `frontend/src/shared/ui` (landing `./ui` re-exports the same)
 - App chrome: `frontend/src/app/layout/AppHeader.tsx`, `MainLayout.tsx`
-- Features: `frontend/src/app/features/`
+- Modules / slices: `frontend/src/modules/<module>/<slice>/`
 - Landing composition: `MainPage.tsx` + `Landing*.tsx`
-- Verify UI: `frontend/src/shared/verify/` + `features/Verify`
+- Verify UI: `frontend/src/modules/documents/verify/` (`VerifyPage` + `widget/VerifyWidget`)

@@ -2,11 +2,13 @@ import React, { useEffect } from "react";
 import { Navigate, Outlet, useLocation, useNavigate } from "react-router-dom";
 import AppHeader from "./AppHeader";
 import { Container } from "@/shared/ui";
-import { fetchUserRole } from "../features/sidebar/api/api";
-import { useUserRole } from "../features/sidebar/hooks/useUserRole";
-import { useWeb3Auth } from "../../service/web3/useWeb3Auth";
-import { EMAIL_LOGIN_STORAGE_KEY } from "../../service/auth/constants";
-import { isKnownAppPath } from "../features/navigation/routes";
+import {
+  EMAIL_LOGIN_STORAGE_KEY,
+  fetchUserRole,
+  useUserRole,
+  useWeb3Auth,
+} from "@/modules/identity";
+import { isKnownAppPath } from "@/shared/lib/routes";
 
 const MainLayout: React.FC = () => {
   const navigate = useNavigate();

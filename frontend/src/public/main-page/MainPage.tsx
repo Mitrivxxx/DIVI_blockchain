@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useWeb3Auth } from "../../service/web3/useWeb3Auth";
-import { useIsAuthenticated } from "../../service/auth/useIsAuthenticated";
+import { useIsAuthenticated, useWeb3Auth } from "@/modules/identity";
 import { LandingHeader } from "./components/LandingHeader";
 import { LandingHero } from "./components/LandingHero";
 import { LandingStack } from "./components/LandingStack";

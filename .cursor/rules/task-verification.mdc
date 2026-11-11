@@ -1,6 +1,7 @@
 ---
 description: Mandatory verification before marking any coding task complete
-alwaysApply: true
+globs: backend/**/*.{cs,csproj,json}
+alwaysApply: false
 ---
 
 # Task verification (required)
@@ -22,18 +23,11 @@ If you changed EF models / `AppDbContext` / migrations:
 
 ## 3. Tests
 
-- **Backend** (`backend/**`): `dotnet test tests/backend.Tests` — must pass (skipped tests document known bugs; do not add new skips to hide failures). New endpoint or changed HTTP contract → add/adjust a test there.
-- Frontend and blockchain have no test suite — state what you verified manually (build, Swagger/UI smoke paths) and what you **did not** test.
-- Never claim “tests passed” unless you actually ran them.
+- **Backend** (`backend/**`):
+  - Module changes: test only that module with `dotnet test tests/backend.Tests --filter <ModuleName>`.
+  - Full backend / cross-cutting: `dotnet test tests/backend.Tests`.
+  - New feature: always add tests for it. Test folders in `tests/backend.Tests/{Module}/` must match backend module names.
+- **Frontend & Blockchain**: No test suite — state manual verification (build, Swagger/UI) and what was **not** tested.
+- Never claim tests passed without running them.
 
-## 4. Diff review
 
-- Skim your own diff: no secrets (`.env`, keys), no unrelated drive-by edits, no leftover debug noise.
-- Update the relevant `AGENTS.md` / root map if assumptions, flows, or key files changed (see `agents-md-maintenance`).
-
-## 5. Final report
-
-In the closing reply, include briefly:
-
-- what was verified (commands + outcome)
-- what was **not** verified / residual risk

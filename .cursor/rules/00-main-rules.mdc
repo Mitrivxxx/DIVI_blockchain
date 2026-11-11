@@ -1,0 +1,16 @@
+---
+description: Always read the root and layer-specific AGENTS.md files before working on features
+alwaysApply: true
+---
+
+# Core Rule: Read AGENTS.md First
+
+Whenever you work on a feature or make changes in the codebase, you must first read:
+
+1. **Root Guide**: `AGENTS.md` (architecture, data models, cross-layer flows, environment).
+2. **Corresponding Layer Guide**:
+   - `backend/AGENTS.md` (when working on backend)
+   - `frontend/AGENTS.md` (when working on frontend)
+   - `blockchain/AGENTS.md` (when working on blockchain)
+
+Always consult these files before writing code to ensure alignment with existing conventions, endpoints, and architecture.

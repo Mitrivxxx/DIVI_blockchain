@@ -4,25 +4,3 @@ globs: blockchain/**/*.{sol,js,ts,json}
 alwaysApply: false
 ---
 
-# Blockchain
-
-Stack: Solidity 0.8.28, Hardhat 3, Sepolia (chainId 11155111). Backend talks via Nethereum. Details: `blockchain/AGENTS.md`.
-
-## Contracts
-
-- `DocumentIssuer.sol` + `DocumentTypes.sol` (enums + `Document` struct).
-- On-chain roles: `owner` (deployer), `isAdmin` (owner-managed), `authorizedIssuers` (gates `issueDocument`; owner or admin via `addIssuer`/`removeIssuer`).
-- Issuer **applications are off-chain** (Postgres) — no on-chain apply/approve flow.
-- Document key = `bytes32` hash; types Education(0)…HonorsAndAwards(4); status includes Revoked (`exists` stays true).
-
-## After any contract / ABI change
-
-1. Compile (`npm run compile` in `blockchain/`).
-2. Copy ABI → `backend/Infrastructure/Contracts/DocumentIssuer.abi.json`.
-3. Update `IBlockchainService` + `BlockchainService*` if the API changed.
-4. Redeploy if needed; set `Blockchain__ContractAddress` / env from root `.env` / `.env.example`.
-
-## Local
-
-- Hardhat node: `docker compose --profile tools up` (RPC `localhost:8545`).
-- Deploy scripts: `npm run deploy:local` / `deploy:sepolia` (see `blockchain/AGENTS.md`).

@@ -35,7 +35,7 @@ Reuse `@/shared/ui` — do not invent parallel button/heading/card systems.
 6. **Polish copy** for user-facing UI; keep claims honest (SHA-256, Sepolia, IPFS/Pinata, issuer approval, revoke, PDF ≤ 5 MB).
 7. **Logo** is white line-art — always sit it on `bg-neutral-950` (see `LogoLink`), never bare on canvas.
 8. Gaps vs backend/blockchain: use red `MissingBackendNote` — do not fake working APIs.
-9. **Features:** `frontend/src/app/features/<name>/` with `hooks/`, `components/`, `api/` + main component; route in `App.tsx` under `MainLayout`; nav in `navigation/routes.ts` / `AppHeader` if needed.
+9. **Structure:** follow `.cursor/rules/frontend.mdc` — UI slice in `frontend/src/modules/<module>/<slice>/`, exported via the module `index.ts`; route in `app/App.tsx` under `MainLayout`; path/nav in `shared/lib/routes.ts` / `AppHeader` if needed.
 
 ## Visual system (do not drift)
 
@@ -81,16 +81,17 @@ Reuse `@/shared/ui` — do not invent parallel button/heading/card systems.
 ## New authenticated feature checklist
 
 ```
-- [ ] Feature folder under frontend/src/app/features/<name>/
-- [ ] Route in App.tsx under MainLayout; path/nav in routes.ts / AppHeader if needed
+- [ ] Slice folder under frontend/src/modules/<module>/<slice>/ (XxxPage.tsx + hooks)
+- [ ] Export the page from modules/<module>/index.ts
+- [ ] Route in app/App.tsx under MainLayout; path/nav in shared/lib/routes.ts / AppHeader if needed
 - [ ] Tailwind + AppCard / shared/ui; Polish copy
-- [ ] API helpers in feature api/; no fake backends (use MissingBackendNote)
+- [ ] API calls in modules/<module>/api.ts; no fake backends (use MissingBackendNote)
 ```
 
 ## Verify widget
 
-- Landing hero framed card `#verify` on `/public`; app also has `features/Verify`.
-- Shared components under `src/shared/verify` stay Tailwind; errors = “BŁĄD WERYFIKACJI”.
+- Landing hero framed card `#verify` on `/public` renders `VerifyWidget`; app `/verify` renders `VerifyPage` (both in `modules/documents/verify/`).
+- Widget components stay Tailwind; errors = “BŁĄD WERYFIKACJI”.
 
 ## After visual / FE structure changes
 

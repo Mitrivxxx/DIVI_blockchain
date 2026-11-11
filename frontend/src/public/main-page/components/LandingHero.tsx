@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import Verify from "@/shared/verify/Verify";
+import { VerifyWidget } from "@/modules/documents";
 import { Container, buttonDark, buttonLight } from "./ui";
 
 export const LandingHero = () => (
@@ -43,7 +43,7 @@ export const LandingHero = () => (
           className="pointer-events-none absolute inset-x-[10%] top-[12%] bottom-[18%] rounded-full bg-linear-to-l from-brand/25 to-brand-pink/25 blur-3xl"
         />
         <div className="relative mx-auto max-w-[1000px] rounded-[20px] border-[12px] border-white/50 bg-white bg-clip-padding shadow-soft">
-          <Verify />
+          <VerifyWidget />
         </div>
         <ul className="mx-auto mt-6 flex max-w-[1000px] flex-wrap justify-center gap-x-8 gap-y-2 text-sm text-neutral-500">
           <li>Bez konta i bez opłat</li>

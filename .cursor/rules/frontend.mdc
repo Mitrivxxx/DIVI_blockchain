@@ -1,28 +1,35 @@
 ---
-description: DIVI frontend conventions (React 19 + Vite + Tailwind app-shell/landing)
-globs: frontend/**/*.{ts,tsx,css}
+description: DIVI frontend development guidelines and rules
+globs: frontend/**/*.{ts,tsx,css,json}
 alwaysApply: false
-
 ---
 
-# Frontend
+# Frontend Rules & Guidelines
 
-Stack: React 19, Vite 7, TypeScript, React Router 7, Axios, ethers.js 6. Alias `@` → `frontend/src/`. Details: `frontend/AGENTS.md`.
+Detailed context, modules and routes: `frontend/AGENTS.md`. UI/styling: `.cursor/skills/frontend-development/`.
 
-## Structure
+## 1. Modular Monolith Boundaries
+- **Modules** (`src/modules/{identity,members,issuers,documents}`) mirror backend modules.
+- **Cross-module imports**: ONLY via `@/modules/<name>` (its `index.ts`). Never deep-import another module's files (`@/modules/<name>/...`).
+- **Dependency direction** (no cycles): `members → documents, issuers, identity`; `documents → identity`; `issuers → identity`; `identity →` none. Need the reverse? Move the code to `shared/` or the lower module.
+- **Inside a module**: relative imports only.
+- **`app/`** only composes (router, layout, thin cross-module pages). Modules and `shared/` never import `app/`.
 
-- Features live in `frontend/src/app/features/<name>/` with `hooks/`, `components/`, `api/` + main component.
-- New authenticated page: feature folder → route in `App.tsx` under `MainLayout` → path/nav in `navigation/routes.ts` / `AppHeader` if needed.
-- No Redux/Zustand — Context (`Web3AuthContext`) + local hooks.
+## 2. Structure & Patterns
+- **Vertical slice**: one folder per use case, `modules/<module>/<slice>/` with `XxxPage.tsx` + `useXxx.ts`. Add `components/` / `hooks/` only when a slice has more than ~3 of them.
+- **Module root**: `api.ts` (all HTTP calls for the module), `types.ts` (DTOs mirroring backend camelCase), `index.ts` (public API — export only what other modules/app need).
+- **HTTP**: use `API_URL` / `readErrorMessage` from `@/shared/lib/api`; send cookies (`credentials: "include"` / `withCredentials: true`). No HTTP calls in components.
+- **`shared/`**: domain-free code only — `ui/` (primitives), `components/` (generic widgets), `lib/` (`api`, `format`, `routes`). If it knows a backend endpoint or DTO, it belongs in a module.
+- **State**: React Context + local hooks. No Redux/Zustand.
+- **New page**: slice → export from module `index.ts` → `<Route>` in `app/App.tsx` (under `MainLayout` if authenticated) → path in `shared/lib/routes.ts` (+ `AppHeader` nav if needed).
 
-## UI
+## 3. Code Standards
+- TypeScript strict, alias `@` → `src/`. Tailwind only (no new SCSS/CSS modules); reuse `@/shared/ui`.
+- Polish UI copy; missing backend capability → `MissingBackendNote`, never fake data.
+- Do not break existing routes or HTTP contracts.
+- **Secrets**: only `VITE_*` env vars reach the client; never commit `.env`.
 
-- Landing (`.landing`) and app shell (`.app-shell`): Tailwind v4 only; tokens from `styles/tailwind.css`; reuse `@/shared/ui`.
-- Auth pages (`/login`, `/register`, `/auth`): keep existing auth CSS — do not rewrite to Tailwind unless asked. No new SCSS.
-- Missing backend/blockchain gaps: `MissingBackendNote` — do not fake APIs.
-- Visual system for the whole frontend UI: follow skill `.cursor/skills/frontend-development/` (do not invent parallel button/heading systems).
-
-## API / copy
-
-- Call backend via feature `api/` helpers; proxy `/api` and `/Auth` in dev.
-- User-facing UI copy: Polish. Honest product claims only (SHA-256, Sepolia, IPFS/Pinata, PDF ≤ 5 MB).
+## 4. Verification
+- `npm run build` in `frontend/` must pass.
+- Boundary check: `rg "@/modules/\w+/" frontend/src` returns nothing.
+- No test suite — state what was manually checked (see `/task-verification.mdc`).
